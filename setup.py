@@ -4,14 +4,14 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name="LQTMomentMag",
-    version="1.0.0",
+    name="lqt-moment-magnitude",
+    version="0.1.0",
     author= "Arham Zakki Edelo",
     author_email= "edelo.arham@gmail.com",
     description= "Calculate seismic moment magnitude in full LQT energy components",
     long_description= long_description,
     long_description_content_type="text/markdown",
-    url = "https://github.com/bgjx/LQTMomentMag",
+    url = "https://github.com/bgjx/lqt-moment-magnitude",
     license="MIT",
     keywords='Seismology, Moment Magnitude, Spectral Fitting, LQT Component',
     packages=find_packages(where="src"),
@@ -25,10 +25,12 @@ setup(
         "tqdm>=4.60.0",
         "configparser>=5.0.0",
     ],
-    tests_requires = ["pytest>=7.0.0"],
+    extras_require={
+        "tests": ["pytest>=8.0.0"],
+    },
     entry_points={
         "console_scripts": [
-            "LQTMwCalc = LQTMomentMag.main:main",
+            "LQTMagnitude = lqt_moment_magnitude.main:main",
         ]
     },
     python_requires = ">=3.8",
