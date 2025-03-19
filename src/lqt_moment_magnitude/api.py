@@ -42,6 +42,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("lqtmoment")
 
+
 def load_catalog(catalog_dir: str) -> pd.DataFrame:
     """"
     Load catalog from given catalog dir, this function will handle
