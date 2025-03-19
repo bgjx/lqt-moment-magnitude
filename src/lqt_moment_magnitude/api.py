@@ -22,13 +22,17 @@ Notes:
     - See https://github.com/bgjx/lqt-moment-magnitude for detailed usage and configuration options.
 """
 
-import warnings
 import logging
+import warnings
 import pandas as pd
 from pathlib import Path
 from typing import Optional, Tuple, List
 from .config import CONFIG
-from .processing import start_calculate
+
+try:
+    from .processing import start_calculate
+except ImportError as e:
+    raise ImportError("Failed to import processing module. Ensure lqtmoment is installed correctly.") from e
 
 
 # Set up logging handler
@@ -95,6 +99,8 @@ def magnitude_estimator(
     for path in [wave_dir, cal_dir]:
         if not path.exists():
             raise FileNotFoundError(f"Path not found: {path}")
+        if not path.is_dir():
+            raise NotADirectoryError(f"Path is not a directory: {path}")
     
     # Create output directories
     try:

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Main entry point for the LQTMomentMag package.
+Main entry point for the lqt-moment-magnitude package.
 
 This module provides complete automatic calculation for seismic moment magnitude
 in the LQT component system.
@@ -15,8 +15,9 @@ Dependencies:
     - tqdm: For progress feedback
 
 Usage:
-    LQTMwCalc --wave-dir data/waveforms --catalog-file data/catalog/lqt_catalog.xlsx
-    LQTMwCalc --wave-dir data/waveforms --catalog-file data/catalog/lqt_catalog.xlsx --config path/to/new_config.ini
+    $ LQTMagnitude --help
+    $ LQTMagnitude --wave-dir data/waveforms --catalog-file data/catalog/lqt_catalog.xlsx
+    $ LQTMagnitude --wave-dir data/waveforms --catalog-file data/catalog/lqt_catalog.xlsx --config path/to/new_config.ini
 """
 
 import sys
@@ -32,7 +33,8 @@ from .config import CONFIG
 try:
     from .processing import start_calculate
 except ImportError as e:
-    raise ImportError("Failed to import processing module. Ensure LQTMomentMag is installed correctly.") from e
+    raise ImportError("Failed to import processing module. Ensure lqtmoment is installed correctly.") from e
+
 
 # Set up logging handler
 warnings.filterwarnings("ignore")
@@ -42,7 +44,7 @@ logging.basicConfig(
     format = "%(asctime)s - %(levelname)s - %(message)s",
     datefmt = "%Y-%m-%d %H:%M:%S"
 )
-logger = logging.getLogger("LQTMomentMag")
+logger = logging.getLogger("lqtmoment")
 
 
 def main(args: Optional[List[str]] = None) -> None:
@@ -65,8 +67,8 @@ def main(args: Optional[List[str]] = None) -> None:
         ValueError: If calculation output is invalid.
     
     Example:
-        LQTMwCalc --wave-dir data/waveforms --catalog-file data/catalog/lqt_catalog.xlsx
-        LQTMwCalc --wave-dir data/waveforms --catalog-file data/catalog/lqt_catalog.xlsx --config path/to/new_config.ini
+        $ LQTMagnitude --wave-dir data/waveforms --catalog-file data/catalog/lqt_catalog.xlsx
+        $ LQTMagnitude --wave-dir data/waveforms --catalog-file data/catalog/lqt_catalog.xlsx --config path/to/new_config.ini
 
     """
 
@@ -74,32 +76,37 @@ def main(args: Optional[List[str]] = None) -> None:
     parser.add_argument(
         "--wave-dir",
         type=Path,
-        default="data/waveforms",
+        default=Path("data/waveforms"),
         help="Path to waveform directory")
     parser.add_argument(
         "--cal-dir",
         type=Path,
-        default="data/calibration",
+        default=Path("data/calibration"),
         help="Path to the calibration directory")
     parser.add_argument(
         "--fig-dir",
         type=Path,
-        default="figures",
+        default=Path("figures"),
         help="Path to save figures")
     parser.add_argument(
         "--catalog-file",
         type=Path,
-        default="data/catalog/lqt_catalog.xlsx",
+        default=Path("data/catalog/lqt_catalog.xlsx"),
         help="LQT formatted catalog file")
     parser.add_argument(
         "--output-dir",
         type=Path,
-        default="results",
+        default=Path("results"),
         help="Output directory for results")
     parser.add_argument(
         "--config",
         type=Path,
-        help="Path to custom config.ini file to reload"
+        help="Path to custom config.ini file to reload")
+    parser.add_argument(
+        "--version",
+        action='version',
+        version=f"%(prog)s {__import__('lqt_moment_magnitude').__version__}",
+        help = "Show the version and exit"
     )
     args = parser.parse_args(args if args is not None else sys.argv[1:])
 
@@ -115,10 +122,17 @@ def main(args: Optional[List[str]] = None) -> None:
         pass
 
     # Validate input paths
-    for path in [args.wave_dir, args.cal_dir, args.catalog_file]:
+    for path in [args.wave_dir, args.cal_dir]:
         if not path.exists():
             raise FileNotFoundError(f"Path not found: {path}")
+        if not path.is_dir():
+            raise NotADirectoryError(f"Path is not a directory:{path}")
     
+    if not args.catalog_file.exists():
+        raise FileNotFoundError(f"Catalog file not found: {args.catalog_file}")
+    if not args.catalog_file.is_file():
+        raise ValueError(f"Catalog file must be a file, not a directory")
+
     # Create output directories
     try:
         args.fig_dir.mkdir(parents=True, exist_ok=True)
