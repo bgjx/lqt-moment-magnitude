@@ -269,8 +269,8 @@ def calculate_moment_magnitude(
         
         # Calculate the source distance and the azimuth (hypo to station azimuth)
         epicentral_distance, azimuth, _ = gps2dist_azimuth(source_lat, source_lon, station_lat, station_lon)
+        epicentral_distance_degrees = locations2degrees(source_lat, source_lon, station_lat, station_lon)
         source_distance_m = np.sqrt(epicentral_distance**2 + ((source_depth_m + station_elev_m)**2))
-        source_distance_degrees = locations2degrees(source_lat, source_lon, station_lat, station_lon)
             
         # Read the waveform 
         stream = read_waveforms(wave_path, source_id, station)
@@ -298,9 +298,12 @@ def calculate_moment_magnitude(
                 model = TauPyModel(model=CONFIG.magnitude.TAUP_MODEL)
                 arrivals = model.get_travel_times(
                     source_depth_in_km=(source_depth_m/1e3),
-                    distance_in_degree=source_distance_degrees,
+                    distance_in_degree=epicentral_distance_degrees,
                     phase_list=["P", "S"]
                 )
+                # Deg to m conversion for teleseismic earthquake
+                deg_to_m = (2*np.pi*6371e3)/360
+                source_distance_m = arrivals[0].distance * deg_to_m
                 incidence_angle_p = arrivals[0].incident_angle
                 incidence_angle_s = arrivals[1].incident_angle
                 stream_lqt_p = stream_displacement.copy()
