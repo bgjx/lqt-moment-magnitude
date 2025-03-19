@@ -161,7 +161,7 @@ def main(args: Optional[List[str]] = None) -> None:
     except PermissionError as e:
         raise PermissionError(f"Permission denied creating directories: {e}")
             
-    # Load vand validate catalog
+    # Load and validate catalog
     try:
         catalog_df = pd.read_excel(args.catalog_file, index_col=None)
     except Exception as e:
