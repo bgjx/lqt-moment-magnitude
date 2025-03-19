@@ -2,20 +2,24 @@
 # -*- coding: utf-8 -*-
 
 """
-A public API for the LQTMomentMag package.
+A public API for the lqt-moment-magnitude package.
 
 This module provides functions to calculate seismic moment magnitude in the LQT
 component system. Users can import and use these functions in their own Python scripts.
 
 Example:
-    >>> from LQTMomentMag import magnitude_estimator
-    >>> result_df, fitting_df, magnitude_estimator(
+    >>> from lqtmoment import magnitude_estimator
+    >>> result_df, fitting_df = magnitude_estimator(
     ...     wave_dir = "user_dir/data/waveforms",  
     ...     cal_dir = "user_dir/data/calibration"
     ...     fig_dir = "user_dir/figures",
     ...     catalog_df = catalog_df,
     ...     config_file = "user_dir/data/config.ini"
     ... )
+
+Notes:
+    - `catalog_df` should contain columns like 'event_id' and 'time' (see documentation for full schema).
+    - See https://github.com/bgjx/lqt-moment-magnitude for detailed usage and configuration options.
 """
 
 import warnings
@@ -35,16 +39,16 @@ logging.basicConfig(
     format = "%(asctime)s - %(levelname)s - %(message)s",
     datefmt = "%Y-%m-%d %H:%M:%S"
 )
-logger = logging.getLogger("LQTMomentMag")
+logger = logging.getLogger("lqtmoment")
 
 
 def magnitude_estimator(
     wave_dir: str,
     cal_dir: str,
-    fig_dir: str,
     catalog_df: pd.DataFrame,
-    output_dir: str = "results",
-    config_file: Optional[str] = None
+    config_file: Optional[str] = None,
+    fig_dir: str = "figures",
+    output_dir: str = "results"    
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
 
     """
@@ -56,11 +60,11 @@ def magnitude_estimator(
     Args:
         wave_dir (str): Path to the waveform directory.
         cal_dir (str): Path to the calibration directory.
-        fig_dir (str): path to save figures.
-        catalog_df (pd.DataFrame): DataFrame containing the seismic catalog.
-        output_dir (str, optional): Output directory for results. Defaults to "results".
         config_file (str, optional): Path to a custom config.ini file to reload. Defaults to None.
-    
+        catalog_df (pd.DataFrame): DataFrame containing the seismic catalog.
+        fig_dir (str): path to save figures.
+        output_dir (str, optional): Output directory for results. Defaults to "results".
+        
     Returns:
         Tuple[pd.DataFrame, pd.DataFrame]: A tuple containing the result DataFrame and fitting DataFrame
     
@@ -83,10 +87,9 @@ def magnitude_estimator(
             try:
                 CONFIG.reload(config_path)
             except (FileNotFoundError, ValueError) as e:
-                raise ValueError(f"Failed to reload configuration form {config_file}: {e}")
-            
+                raise ValueError(f"Failed to reload configuration form {config_file}: {e}")      
         else:
-            raise FileNotFoundError(f"Config file {config_file} not found")
+            raise FileNotFoundError(f"Config file not found: {config_path}")
     
     # Validate input paths
     for path in [wave_dir, cal_dir]:
@@ -118,10 +121,10 @@ def magnitude_estimator(
     except Exception as e:
         raise RuntimeError(f"Failed to save results: {e}")
     
-    return mw_fitting_df, mw_fitting_df
+    return mw_result_df, mw_fitting_df
+
 
 # Optional: Expose a function to reload config without running calculation
-
 def reload_configuration(config_file: str) -> None:
     """
     Reload the configuration from a specified config.ini file.
@@ -133,4 +136,10 @@ def reload_configuration(config_file: str) -> None:
         FileNotFoundError: If the config file is not found.
         ValueError: If the configuration is invalid.   
     """
-    CONFIG.reload(Path(config_file))
+    config_path = Path(config_file)
+    if not config_path.exists():
+        raise FileNotFoundError(f"Config file not found: {config_path}")
+    try:
+        CONFIG.reload(config_path)
+    except ValueError as e:
+        raise ValueError(f"Failed to reload configuration form {config_path}: {e}")
