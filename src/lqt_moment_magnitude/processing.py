@@ -28,10 +28,10 @@ from scipy.signal import windows
 from tqdm import tqdm
 
 from .config import CONFIG
-from .fitting_spectral import *
+from .fitting_spectral import fit_spectrum_bayesian, fit_spectrum_grid_search, fit_spectrum_qmc
 from .refraction import calculate_inc_angle
 from .plotting import plot_spectral_fitting
-from .utils import get_user_input, instrument_remove, read_waveforms, trace_snr
+from .utils import instrument_remove, read_waveforms, trace_snr
 
 
 logger = logging.getLogger("lqtmoment")
@@ -58,7 +58,7 @@ def calculate_seismic_spectra(
         ValueError: If trace_data is empty or invalid sampling rate
     """
 
-    if not trace_data.data.size or sampling_rate <= 0:
+    if not trace_data.size or sampling_rate <= 0:
         raise ValueError("Trace data cannot be empty and sampling rate must be positive")
     
     n_samples = len(trace_data)
@@ -101,13 +101,14 @@ def window_trace(
         lqt_mode (Optional[bool]): Use LQT components if True, ZRT if false. Default to True. 
 
     Returns:
-        Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]: 
+        Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]: 
             - P_data: The data windowed around the P phase in the L/Z component.
             - SV_data: The data windowed around the S phase in the Q/R component.
             - SH_data: The data windowed around the S phase in the T component.
             - P_noise: The data windowed around the noise period before the P phase in the L/Z component.
             - SV_noise: The data windowed around the noise period before the P phase in the Q/R component.
             - SH_noise: The data windowed around the noise period before the P phase in the T component.
+
     Raises:
         ValueError: If component traces are missing.
     
@@ -441,7 +442,7 @@ def calculate_moment_magnitude(
     
     # Calculate average and std of moment magnitude
     moment_average, moment_std  = np.mean(moments), np.std(moments)
-    mw = ((2.0 / 3.0) * np.log10(moment_average)) - 6.0667
+    mw = ((2.0 / 3.0) * np.log10(moment_average)) - 6.07
     mw_std = (2.0 /3.0) * moment_std/(moment_average * np.log(10))
  
     results = {"source_id":[f"{source_id}"], 
@@ -491,10 +492,9 @@ def start_calculate(
         figure_statement (Optional[bool]): Generate and save figures if True. If not provided, prompts user.
 
     Returns:
-        Tuple [pd.Dataframe, pd.DataFrame, str]:
+        Tuple [pd.Dataframe, pd.DataFrame]:
             - First DataFrame: Magnitude results with columns ['source_id', 'fc_avg', 'fc_std', ...].
             - Second DataFrame: Fitting results with columns ['source_id', 'station', 'f_corner_p', ...].
-            - Output filename (str) for saving results.
     
     Raises:
         ValueError: If catalog_data is empty or missing required columns.
