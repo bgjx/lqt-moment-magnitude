@@ -1,23 +1,12 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-Created on Fri Dec 15 19:32:03 2023.
-Python code for seismic wave refraction calculations in layered medium.
-
-Developed by Arham Zakki Edelo.
-Version: 0.2.0
-License: MIT
-
-Contact:
-- edelo.arham@gmail.com
-- https://github.com/bgjx
-
-Pre-requisite modules:
-- [numpy, scipy, matplotlib, obspy, configparser]
+Functionality module for lqt-moment-magnitude package.
 
 This module calculates incidence angles, travel times, and ray paths for seismic waves (P-waves, S-waves)
-using a layered velocity model and Snell’s Law-based shooting method, suitable for shallow borehole data
-in local earthquake monitoring.
+using a layered 1-D velocity model and Snell’s Law-based shooting method, suitable for shallow borehole 
+3-C sensor.
+
+Dependencies:
+    - See `requirements.txt` or `pip install lqt-moment-magnitude` for required packages.
 
 References:
 - Aki, K., & Richards, P. G. (2002). Quantitative Seismology, 2nd Edition. University Science Books.
