@@ -45,6 +45,7 @@ class MagnitudeConfig:
     VELOCITY_VP: List[float] = None
     VELOCITY_VS: List[float] = None
     DENSITY: List[float] = None
+    TAUP_MODEL: str = 'iasp91'
 
 
     def __post_init__(self):
@@ -156,6 +157,8 @@ class Config:
                 self.magnitude.DENSITY = [float(x) for x in mag_section.get("density", fallback="2700, 2700, 2700, 2700, 2700, 2700, 2700, 2700, 2700").split(",")]
             except ValueError as e:
                 raise ValueError(f"Invalid format for velocity or density in config.ini: {e}")
+            self.magnitude.TAUP_MODEL = mag_section.get("taup_model", fallback=self.magnitude.TAUP_MODEL)
+
 
         # Load spectral config section
         if "Spectral" in config:
