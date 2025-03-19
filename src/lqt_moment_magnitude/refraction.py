@@ -41,7 +41,7 @@ def build_raw_model(layer_boundaries: List[List[float]], velocities: List) -> Li
     """
 
     if len(layer_boundaries) != len(velocities):
-        raise ValueError("Length of layer_boundaries must match velocites")
+        raise ValueError("Length of layer_boundaries must match velocities")
     model = []
     for (top_km, bottom_km), velocity_km_s in zip(layer_boundaries, velocities):
         top_m = top_km*-1000
@@ -123,7 +123,7 @@ def up_refract(epi_dist_m: float,
     Args:
         epi_dist_m (float): Epicentral distance in meters.
         up_model (List[List[float]]): List of [top_m, thickness_m, velocity_m_s], ordered top-down.
-        take_off (Optional[float]): User-spesified take-off angle input in degrees; if None, computed via brentq.
+        take_off (Optional[float]): User-specified take-off angle input in degrees; if None, computed via brentq.
 
     Returns:
         Tuple[Dict[str, List], float]:
@@ -184,8 +184,8 @@ def down_refract(epi_dist_m: float,
 
     Args:
         epi_dist_m (float): Epicenter distance in m.
-        up_model (List[List[float]]): List of sublists containing modified raw model results from the 'upward_model' function.
-        down_model (List[List[float]]): List of sublists containing modified raw model results from the 'downward_model' function.
+        up_model (List[List[float]]): List of sublist containing modified raw model results from the 'upward_model' function.
+        down_model (List[List[float]]): List of sublist containing modified raw model results from the 'downward_model' function.
 
     Returns:
         Tuple[Dict[str, List], Dict[str, List]]:
