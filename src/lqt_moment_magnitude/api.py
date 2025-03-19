@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 """
 A public API for the lqt-moment-magnitude package.
 
@@ -12,9 +9,9 @@ Example:
     >>> result_df, fitting_df = magnitude_estimator(
     ...     wave_dir = "user_dir/data/waveforms",  
     ...     cal_dir = "user_dir/data/calibration"
-    ...     fig_dir = "user_dir/figures",
     ...     catalog_df = catalog_df,
     ...     config_file = "user_dir/data/config.ini"
+    ...     fig_dir = "user_dir/figures",
     ... )
 
 Notes:
@@ -49,10 +46,14 @@ logger = logging.getLogger("lqtmoment")
 def magnitude_estimator(
     wave_dir: str,
     cal_dir: str,
-    catalog_df: pd.DataFrame,
+    catalog_dir: str,
     config_file: Optional[str] = None,
     fig_dir: str = "figures",
-    output_dir: str = "results"    
+    output_dir: str = "results",
+    id_start: Optional[int] = None,
+    id_end: Optional[int] = None,
+    figure_statement : bool = None,
+    lqt_mode: Optional[bool] = None    
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
 
     """
@@ -68,6 +69,10 @@ def magnitude_estimator(
         catalog_df (pd.DataFrame): DataFrame containing the seismic catalog.
         fig_dir (str): path to save figures.
         output_dir (str, optional): Output directory for results. Defaults to "results".
+        id_start (Optional[int]): Starting earthquake ID. Defaults to min ID or interactive input.
+        id_end (Optional[int]): Ending earthquake ID. Defaults to max ID or interactive input.
+        figure_statement (Optional[bool]): Generate and save figures if True. Defaults to False or interactive input.
+        lqt_mode (Optional[bool]): Use LQT rotation if True, ZRT otherwise. Defaults to True or interactive input.
         
     Returns:
         Tuple[pd.DataFrame, pd.DataFrame]: A tuple containing the result DataFrame and fitting DataFrame
@@ -81,6 +86,7 @@ def magnitude_estimator(
     # Convert string paths to Path objects
     wave_dir = Path(wave_dir)
     cal_dir = Path(cal_dir)
+    catalog_dir = Path(catalog_dir)
     fig_dir = Path(fig_dir)
     output_dir = Path(output_dir)
 
@@ -109,12 +115,20 @@ def magnitude_estimator(
     except PermissionError as e:
         raise PermissionError(f"Permission denied creating directories: {e}")
     
-    # Validate catalog
+    # Load and validate catalog
+    try:
+        catalog_df = pd.read_excel(catalog_dir, index_col=None)
+    except Exception as e:
+        raise ValueError(f"Failed to load catalog file: {e}")
     if catalog_df.empty:
         raise ValueError("Catalog DataFrame is empty")
 
     # Call the processing function
-    mw_result_df, mw_fitting_df, output_name = start_calculate(wave_dir, cal_dir, fig_dir, catalog_df)
+    mw_result_df, mw_fitting_df = start_calculate(wave_dir, cal_dir, fig_dir, catalog_df,
+                                                               id_start=id_start, id_end=id_end,
+                                                               lqt_mode=lqt_mode,
+                                                               figure_statement=figure_statement,
+                                                               )
 
     # Validate calculation output:
     if mw_result_df is None or mw_fitting_df is None:
@@ -122,8 +136,8 @@ def magnitude_estimator(
     
     # Saving the results
     try:
-        mw_result_df.to_excel(output_dir/f"{output_name}_result.xlsx", index=False)
-        mw_fitting_df.to_excel(output_dir/f"{output_name}_fitting_result.xlsx", index=False)
+        mw_result_df.to_excel(output_dir/"lqt_magnitude_result.xlsx", index=False)
+        mw_fitting_df.to_excel(output_dir/"lqt_magnitude_fitting_result.xlsx", index=False)
     except Exception as e:
         raise RuntimeError(f"Failed to save results: {e}")
     

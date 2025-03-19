@@ -58,18 +58,13 @@ def get_user_input() -> Tuple[int, int, str, bool]:
     Get user inputs for processing parameters.
     
     Returns:
-        Tuple[int, int, str, bool]: Start ID, end ID, output name, and whether to generate figures.
+        Tuple[int, int, str, bool]: Start ID, end ID, crate figure statement,
+            and lqt mode statement.
     """
     
     id_start    = get_valid_input("Event ID to start: ", lambda x: int(x) >= 0, "Please input non-negative integer")
     id_end      = get_valid_input("Event ID to end: ", lambda x: int(x) >= id_start, f"Please input an integer >= {id_start}")
     
-    while True:
-        mw_output   = input("Result file name? (ex. mw_out, press ENTER for default): ").strip() or "mw_output"
-        if not any(c in mw_output for c in r'<>:"/\\|?*'):
-            break
-        print("Enter a valid filename without special characters")
-
     while True:
         lqt_mode = input("Do you want to calculate all earthquakes in LQT mode regardless the source distance? [yes/no], if [no] let this program decide:").strip().lower()
         if lqt_mode in ['yes', 'no']:
@@ -84,7 +79,7 @@ def get_user_input() -> Tuple[int, int, str, bool]:
             break
         print("Please enter 'yes' or 'no'")
         
-    return id_start, id_end, mw_output, figure_statement, lqt_mode
+    return id_start, id_end, lqt_mode, figure_statement 
 
 
 def read_waveforms(path: Path, event_id: int, station:str) -> Stream:

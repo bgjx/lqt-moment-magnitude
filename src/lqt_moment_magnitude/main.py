@@ -103,6 +103,27 @@ def main(args: Optional[List[str]] = None) -> None:
         type=Path,
         help="Path to custom config.ini file to reload")
     parser.add_argument(
+        "--id-start",
+        type=int,
+        help = "Starting earthquake ID (overrides interactive input)"
+    )
+    parser.add_argument(
+        "--id-end",
+        type=int,
+        help="Ending earthquake ID (overrides interactive input)"
+    )
+    parser.add_argument(
+        "--create-figure",
+        action="store_true",
+        help="Generate and save spectral fitting figures (overrides interactive input)"
+    )
+    parser.add_argument(
+        "--zrt-mode",
+        action="store_false",
+        dest="lqt_mode",
+        help="Use ZRT rotation instead of LQT for very local earthquake (overrides interactive input, default is LQT)"
+    )
+    parser.add_argument(
         "--version",
         action='version',
         version=f"%(prog)s {__import__('lqt_moment_magnitude').__version__}",
@@ -140,18 +161,20 @@ def main(args: Optional[List[str]] = None) -> None:
     except PermissionError as e:
         raise PermissionError(f"Permission denied creating directories: {e}")
             
-    # Load catalog with error handling
+    # Load vand validate catalog
     try:
         catalog_df = pd.read_excel(args.catalog_file, index_col=None)
     except Exception as e:
         raise ValueError(f"Failed to load catalog file: {e}")
-
-    # Validate catalog
     if catalog_df.empty:
         raise ValueError("Catalog Dataframe is empty.")
 
     # Call the function to start calculating moment magnitude
-    mw_result_df, mw_fitting_df, output_name = start_calculate(args.wave_dir, args.cal_dir, args.fig_dir, catalog_df)
+    mw_result_df, mw_fitting_df = start_calculate(args.wave_dir, args.cal_dir, args.fig_dir,
+                                                catalog_df, id_start=args.id_start, id_end=args.id_end,
+                                                lqt_mode=args.lqt_mode,
+                                                figure_statement=args.create_figure,
+                                                )
     
     # Validate calculation output
     if mw_result_df is None or mw_fitting_df is None:
@@ -159,8 +182,8 @@ def main(args: Optional[List[str]] = None) -> None:
 
     # save and set dataframe index
     try:
-        mw_result_df.to_excel(args.output_dir / f"{output_name}_result.xlsx", index = False)
-        mw_fitting_df.to_excel(args.output_dir/ f"{output_name}_fitting_result.xlsx", index = False)
+        mw_result_df.to_excel(args.output_dir / "lqt_magnitude_result.xlsx", index = False)
+        mw_fitting_df.to_excel(args.output_dir/ "lqt_magnitude_fitting_result.xlsx", index = False)
     except Exception as e:
         raise RuntimeError(f"Failed to save results: {e}")
 

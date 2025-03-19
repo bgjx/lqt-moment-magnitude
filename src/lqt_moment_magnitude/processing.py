@@ -1,22 +1,17 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-Created on Thu Dec 15 19:32:03 2022.
-Python code to calculate moment magnitude.
+Core processing module for the lqt-moment-magnitude package.
 
-Developed by arham zakki edelo.
+This module implements the seismic moment magnitude calculation using the LQT component system.
+It handles instrument response removal, waveform rotation (ZNE to LQT or ZRT), spectral fitting
+with quasi-Monte Carlo optimization, and moment magnitude estimation based on user-configured
+parameters from `config.ini`. The module processes waveforms, calibrates data, and generates
+spectral fitting figures, aggregating results into DataFrames.
 
-contact: 
-    - edelo.arham@gmail.com
-    - https://github.com/bgjx
+Dependencies:
+    - See `requirements.txt` or `pip install lqt-moment-magnitude` for required packages.
 
-Pre-requisite modules:
-    ->[pathlib, tqdm, numpy, pandas, obspy, scipy]
-
-Description:
-    This module implements seismic moment magnitude calculation using LQT component system.
-    It includes instrument removal, waveform rotation, spectral fitting and moment magnitude
-    estimation based on user configured parameters.
+Note:
+    This module is intended for internal use by the `lqt-moment-magnitude` API and CLI.
 """
 
 import logging
@@ -33,13 +28,13 @@ from scipy.signal import windows
 from tqdm import tqdm
 
 from .config import CONFIG
-import LQTMomentMag.fitting_spectral as fit
-from LQTMomentMag.refraction import calculate_inc_angle
+from .fitting_spectral import *
+from .refraction import calculate_inc_angle
 from .plotting import plot_spectral_fitting
 from .utils import get_user_input, instrument_remove, read_waveforms, trace_snr
 
 
-logger = logging.getLogger("LQTMomentMag")
+logger = logging.getLogger("lqtmoment")
 
 def calculate_seismic_spectra(
     trace_data: np.ndarray,
@@ -132,18 +127,18 @@ def window_trace(
     time_after_pick_s = 1.75 * s_p_time
     
     # Find the data index for phase windowing
-    p_phase_start_index = int(round((p_arr_time - trace_P.stats.starttime - CONFIG.magnitude.PADDING_BEFORE_ARRIVAL)/trace_P.stats.delta), 4)
-    p_phase_end_index = int(round((p_arr_time - trace_P.stats.starttime + time_after_pick_p )/trace_P.stats.delta, 4))
-    s_phase_start_index = int(round((p_arr_time - trace_SV.stats.starttime - CONFIG.magnitude.PADDING_BEFORE_ARRIVAL)/trace_SV.stats.delta), 4)
-    s_phase_end_index = int(round((p_arr_time - trace_SV.stats.starttime + time_after_pick_s )/ trace_SV.stats.delta, 4))
-    noise_start_index = int(round((p_arr_time - trace_P.stats.starttime - CONFIG.magnitude.NOISE_DURATION)/trace_P.stats.delta, 4))                             
-    noise_end_index  = int(round((p_arr_time - trace_P.stats.starttime - CONFIG.magnitude.NOISE_PADDING )/trace_P.stats.delta, 4))
+    p_phase_start_index = int((p_arr_time - trace_P.stats.starttime - CONFIG.magnitude.PADDING_BEFORE_ARRIVAL)/trace_P.stats.delta)
+    p_phase_end_index = int((p_arr_time - trace_P.stats.starttime + time_after_pick_p )/trace_P.stats.delta)
+    s_phase_start_index = int((p_arr_time - trace_SV.stats.starttime - CONFIG.magnitude.PADDING_BEFORE_ARRIVAL)/trace_SV.stats.delta)
+    s_phase_end_index = int((p_arr_time - trace_SV.stats.starttime + time_after_pick_s )/trace_SV.stats.delta)
+    noise_start_index = int((p_arr_time - trace_P.stats.starttime - CONFIG.magnitude.NOISE_DURATION)/trace_P.stats.delta)                             
+    noise_end_index  = int((p_arr_time - trace_P.stats.starttime - CONFIG.magnitude.NOISE_PADDING )/trace_P.stats.delta)
 
     # Window the data by the index
-    P_data     = trace_P.data[p_phase_start_index : p_phase_end_index + 1]
-    SV_data     = trace_SV.data[s_phase_start_index : s_phase_end_index + 1]
-    SH_data     = trace_SH.data[s_phase_start_index : s_phase_end_index + 1]
-    P_noise  = trace_P.data[noise_start_index : noise_end_index + 1]
+    P_data  = trace_P.data[p_phase_start_index : p_phase_end_index + 1]
+    SV_data = trace_SV.data[s_phase_start_index : s_phase_end_index + 1]
+    SH_data = trace_SH.data[s_phase_start_index : s_phase_end_index + 1]
+    P_noise = trace_P.data[noise_start_index : noise_end_index + 1]
     SV_noise = trace_SV.data[noise_start_index : noise_end_index + 1]
     SH_noise = trace_SH.data[noise_start_index : noise_end_index + 1]
 
@@ -157,8 +152,8 @@ def calculate_moment_magnitude(
     calibration_path: Path, 
     source_id: int, 
     figure_path: Path, 
-    figure_statement: bool = False,
-    lqt_mode: bool = True
+    lqt_mode: bool = True,
+    figure_statement: bool = False
     ) -> Tuple[Dict[str, str], Dict[str,List]]:
     
     """
@@ -174,9 +169,9 @@ def calculate_moment_magnitude(
         calibration_path (Path): Path to the calibration files for instrument response removal.
         source_id (int): Unique identifier for the earthquake.
         figure_path (Path): Path to save the generated figures.
-        figure_statement (bool): Boolean statement to generate and save figures (default is False).
         lqt_mode (bool): If True, perform LQT rotation; otherwise, use ZRT for very local earthquakes
                             default to True.
+        figure_statement (bool): Boolean statement to generate and save figures (default is False).
 
     Returns:
         Tuple[Dict[str, str], Dict[str, List]]:
@@ -358,9 +353,9 @@ def calculate_moment_magnitude(
 
         # Fitting the spectrum, find the optimal value of Omega_O, corner frequency and Q using systematic/stochastic algorithm available
         try:
-            fit_P  = fit.fit_spectrum_qmc(freq_P,  spec_P,  abs(float(p_arr_time - source_origin_time)), CONFIG.magnitude.F_MIN, CONFIG.magnitude.F_MAX, CONFIG.spectral.DEFAULT_N_SAMPLES)
-            fit_SV = fit.fit_spectrum_qmc(freq_SV, spec_SV, abs(float(s_arr_time - source_origin_time)), CONFIG.magnitude.F_MIN, CONFIG.magnitude.F_MAX, CONFIG.spectral.DEFAULT_N_SAMPLES)
-            fit_SH = fit.fit_spectrum_qmc(freq_SH, spec_SH, abs(float(s_arr_time - source_origin_time)), CONFIG.magnitude.F_MIN, CONFIG.magnitude.F_MAX, CONFIG.spectral.DEFAULT_N_SAMPLES)
+            fit_P  = fit_spectrum_qmc(freq_P,  spec_P,  abs(float(p_arr_time - source_origin_time)), CONFIG.magnitude.F_MIN, CONFIG.magnitude.F_MAX, CONFIG.spectral.DEFAULT_N_SAMPLES)
+            fit_SV = fit_spectrum_qmc(freq_SV, spec_SV, abs(float(s_arr_time - source_origin_time)), CONFIG.magnitude.F_MIN, CONFIG.magnitude.F_MAX, CONFIG.spectral.DEFAULT_N_SAMPLES)
+            fit_SH = fit_spectrum_qmc(freq_SH, spec_SH, abs(float(s_arr_time - source_origin_time)), CONFIG.magnitude.F_MIN, CONFIG.magnitude.F_MAX, CONFIG.spectral.DEFAULT_N_SAMPLES)
         except (ValueError, RuntimeError) as e:
             logger.warning(f"Earthquake_{source_id}: Error during spectral fitting for event {source_id}, {e}.", exc_info=True)
             continue
@@ -470,9 +465,12 @@ def start_calculate(
     wave_path: Path,
     calibration_path: Path,
     figure_path: Path,
-    catalog_data: pd.DataFrame
+    catalog_data: pd.DataFrame,
+    id_start:Optional[int] = None,
+    id_end: Optional[int] = None,
+    lqt_mode: Optional[bool] = None,
+    figure_statement: Optional[bool] = None,
     ) -> Tuple [pd.DataFrame, pd.DataFrame, str]:
-
     """
     This function processes moment magnitude calculation by iterating over a user-specified range
     of earthquake IDs. For each event of earthquake, it extracts source and station data, and 
@@ -484,7 +482,11 @@ def start_calculate(
         calibration_path (Path) : Path to the directory containing calibration file (.RESP format).
         figure_path (Path) : Path to the directory where spectral fitting figures will be saved.
         catalog_data (pd.DataFrame): Catalog DataFrame in LQTMomentMag format.
-        
+        id_start (Optional[int]): Starting earthquake ID. If not provided, prompts user or uses min ID.
+        id_end (Optional[int]): Ending earthquake ID. If not provided, prompts user or uses max ID.
+        lqt_mode (Optional[bool]): Use LQT rotation if True, ZRT otherwise. If not provided, prompts user.
+        figure_statement (Optional[bool]): Generate and save figures if True. If not provided, prompts user.
+
     Returns:
         Tuple [pd.Dataframe, pd.DataFrame, str]:
             - First DataFrame: Magnitude results with columns ['source_id', 'fc_avg', 'fc_std', ...].
@@ -514,9 +516,30 @@ def start_calculate(
         logger.error(f"Catalog missing required columns: {missing_columns}")
         raise ValueError(f"catalog missing required columns: {missing_columns}")
     
-    # Get the user input.
-    id_start, id_end, mw_output, figure_statement, lqt_mode = get_user_input()
+    # Set defaults ID range if not provided through API or CLI use.
+    default_id_start = int(catalog_data["source_id"].min())
+    default_id_end = int(catalog_data["source_id"].max())
+    default_lqt_mode = True
+    default_figure_statement = False
+    # Use user arguments if provided, otherwise fall back to interactive input.
+    if id_start is None or id_end is None or figure_statement is None or lqt_mode is None:
+        from .utils import get_user_input
+        try:
+            id_start_input, id_end_input, lqt_mode_input, figure_statement_input = get_user_input()
+            id_start = id_start if id_start is not None else id_start_input
+            id_end = id_end if id_end is not None else id_end_input
+            lqt_mode = lqt_mode if lqt_mode is not None else lqt_mode_input
+            figure_statement = figure_statement if figure_statement is not None else figure_statement_input
+        except ValueError as e:
+            logger.error(f"Invalid interactive input: {e}")
+            raise ValueError(f"Invalid interactive input: {e}")
 
+    # Use defaults if still None after interactive input
+    id_start = id_start if id_start is not None else default_id_start
+    id_end = id_end if id_end is not None else default_id_end
+    lqt_mode = lqt_mode if lqt_mode is not None else default_lqt_mode
+    figure_statement = figure_statement if figure_statement is not None else default_figure_statement
+    
     # Initiate dataframe for magnitude calculation results
     df_result = pd.DataFrame(
             columns=["source_id", "fc_avg", "fc_std", "Src_rad_avg_m",
@@ -582,7 +605,7 @@ def start_calculate(
                                             wave_path, source_data_handler,
                                             pick_data_handler, calibration_path,
                                             source_id, figure_path,
-                                            figure_statement, lqt_mode
+                                            lqt_mode, figure_statement 
                                             )
                 result_list.append(pd.DataFrame.from_dict(mw_results))
                 fitting_list.append(pd.DataFrame.from_dict(fitting_result))
@@ -608,4 +631,4 @@ def start_calculate(
         f"Finished. Proceed {total_earthquakes - failed_events} earthquakes successfully,"
         f"{failed_events} failed. Check runtime.log for details. \n"
     )
-    return df_result, df_fitting, mw_output
+    return df_result, df_fitting
