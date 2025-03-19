@@ -29,7 +29,7 @@ logger = logging.getLogger("mw_calculator")
 
 def get_valid_input(prompt: str, validate_func: callable, error_msg: str) -> int:
     """
-    Get valid user input.
+    Function to get valid user input.
     
     Args:
         prompt(str): Prompt to be shown in the terminal.
@@ -38,6 +38,9 @@ def get_valid_input(prompt: str, validate_func: callable, error_msg: str) -> int
     
     Returns:
         int: Returns an integer event ID”.
+
+    Raises:
+        KeyboardInterrupt: If the user interrupts the input(Ctrl+C).
     """
     
     while True:
@@ -55,29 +58,41 @@ def get_valid_input(prompt: str, validate_func: callable, error_msg: str) -> int
 
 def get_user_input() -> Tuple[int, int, str, bool]:
     """
-    Get user inputs for processing parameters.
+    Get user inputs for processing parameters interactively.
     
     Returns:
         Tuple[int, int, str, bool]: Start ID, end ID, crate figure statement,
             and lqt mode statement.
     """
     
-    id_start    = get_valid_input("Event ID to start: ", lambda x: int(x) >= 0, "Please input non-negative integer")
-    id_end      = get_valid_input("Event ID to end: ", lambda x: int(x) >= id_start, f"Please input an integer >= {id_start}")
+    id_start = get_valid_input("Event ID to start: ", lambda x: int(x) >= 0, "Please input non-negative integer")
+    id_end   = get_valid_input("Event ID to end: ", lambda x: int(x) >= id_start, f"Please input an integer >= {id_start}")
     
     while True:
-        lqt_mode = input("Do you want to calculate all earthquakes in LQT mode regardless the source distance? [yes/no], if [no] let this program decide:").strip().lower()
-        if lqt_mode in ['yes', 'no']:
-            lqt_mode = (lqt_mode == "yes")
-            break
-        print("Please enter 'yes' or 'no'")
+        try:
+            lqt_mode = input("Do you want to calculate all earthquakes in LQT mode regardless the source distance? [yes/no, default: yes], if [no] let this program decide:").strip().lower()
+            if lqt_mode == "":
+                lqt_mode = True
+                break
+            if lqt_mode in ['yes', 'no']:
+                lqt_mode = (lqt_mode == "yes")
+                break
+            print("Please enter 'yes' or 'no'")
+        except KeyboardInterrupt:
+            sys.exit("\nOperation cancelled by user")
 
     while True:
-        figure_statement = input("Do you want to produce the spectral fitting figures [yes/no]?: ").strip().lower()
-        if figure_statement in ['yes', 'no']:
-            figure_statement = (figure_statement == 'yes')
-            break
-        print("Please enter 'yes' or 'no'")
+        try:
+            figure_statement = input("Do you want to produce the spectral fitting figures [yes/no, default: no]?: ").strip().lower()
+            if figure_statement == "":
+                figure_statement = False
+                break
+            if figure_statement in ['yes', 'no']:
+                figure_statement = (figure_statement == 'yes')
+                break
+            print("Please enter 'yes' or 'no'")
+        except KeyboardInterrupt:
+            sys.exit("\nOperation cancelled by user")
         
     return id_start, id_end, lqt_mode, figure_statement 
 
