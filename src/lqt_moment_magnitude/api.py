@@ -9,13 +9,13 @@ Example:
     >>> result_df, fitting_df = magnitude_estimator(
     ...     wave_dir = "user_dir/data/waveforms",  
     ...     cal_dir = "user_dir/data/calibration"
-    ...     catalog_df = catalog_df,
+    ...     catalog_dir = "user_dir/data/catalog.xlsx",
     ...     config_file = "user_dir/data/config.ini"
     ...     fig_dir = "user_dir/figures",
     ... )
 
 Notes:
-    - `catalog_df` should contain columns like 'event_id' and 'time' (see documentation for full schema).
+    - `catalog_df` should contain columns like 'source_id', 'source_lat' and so on... (see documentation for full schema).
     - See https://github.com/bgjx/lqt-moment-magnitude for detailed usage and configuration options.
 """
 
@@ -33,7 +33,7 @@ except ImportError as e:
 
 
 # Set up logging handler
-warnings.filterwarnings("ignore")
+warnings.filterwarnings("ignore", category=DeprecationWarning, module="pandas")
 logging.basicConfig(
     filename = 'lqt_runtime.log',
     level = logging.INFO,
@@ -41,6 +41,33 @@ logging.basicConfig(
     datefmt = "%Y-%m-%d %H:%M:%S"
 )
 logger = logging.getLogger("lqtmoment")
+
+def load_catalog(catalog_dir: str) -> pd.DataFrame:
+    """"
+    Load catalog from given catalog dir, this function will handle
+    catalog suffix/format (.xlsx / .csv) for more dynamic inputs.
+
+    Args:
+        catalog_dir (str): Directory of the catalog file.
+
+    Returns:
+        pd.DataFrame: DataFrame of earthquake catalog.
+    
+    Raises:
+        FileNotFoundError: If catalog files do not exist.
+        ValueError: If catalog files fail to load or unsupported format.
+    """
+
+    catalog_path = Path(catalog_dir)
+    if not catalog_path.is_file():
+        raise FileNotFoundError(f"Catalog path is not a file: {catalog_path}")
+    if catalog_path.suffix == ".xlsx":
+        return pd.read_excel(catalog_path, index_col=None)
+    elif catalog_path.suffix == ".csv":
+        return pd.read_csv(catalog_path, index_col=None)
+    else:
+        raise ValueError(f"Unsupported catalog file format: {catalog_path.suffix}. Supported formats: .csv, .xlsx")
+    
 
 
 def magnitude_estimator(
@@ -66,7 +93,7 @@ def magnitude_estimator(
         wave_dir (str): Path to the waveform directory.
         cal_dir (str): Path to the calibration directory.
         config_file (str, optional): Path to a custom config.ini file to reload. Defaults to None.
-        catalog_df (pd.DataFrame): DataFrame containing the seismic catalog.
+        catalog_dir (str): Path to the seismic catalog.
         fig_dir (str): path to save figures.
         output_dir (str, optional): Output directory for results. Defaults to "results".
         id_start (Optional[int]): Starting earthquake ID. Defaults to min ID or interactive input.
@@ -86,7 +113,6 @@ def magnitude_estimator(
     # Convert string paths to Path objects
     wave_dir = Path(wave_dir)
     cal_dir = Path(cal_dir)
-    catalog_dir = Path(catalog_dir)
     fig_dir = Path(fig_dir)
     output_dir = Path(output_dir)
 
@@ -116,12 +142,15 @@ def magnitude_estimator(
         raise PermissionError(f"Permission denied creating directories: {e}")
     
     # Load and validate catalog
-    try:
-        catalog_df = pd.read_excel(catalog_dir, index_col=None)
-    except Exception as e:
-        raise ValueError(f"Failed to load catalog file: {e}")
-    if catalog_df.empty:
-        raise ValueError("Catalog DataFrame is empty")
+    catalog_df = load_catalog(catalog_dir)
+    required_columns = [
+        "network", "source_id", "source_lat", "source_lon", "source_depth_m",
+        "source_origin_time", "station_code", "station_lat", "station_lon",
+        "station_elev_m", "p_arr_time", "s_arr_time", "earthquake_type" 
+    ]
+    missing_columns = [col for col in required_columns if col not in catalog_df.columns]
+    if missing_columns:
+        raise ValueError(f"Catalog missing required columns: {missing_columns}")
 
     # Call the processing function
     mw_result_df, mw_fitting_df = start_calculate(wave_dir, cal_dir, fig_dir, catalog_df,

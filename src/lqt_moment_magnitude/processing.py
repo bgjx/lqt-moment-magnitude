@@ -506,19 +506,6 @@ def start_calculate(
         ...     Path("figures"), catalog)
     """
     
-    # Validate catalog columns
-    required_columns = [
-        "source_id", "source_lat", "source_lon", "source_depth_m",
-        "source_origin_time", "earthquake_type", "station_code", 
-        "station_lat", "station_lon", "station_elev_m", "p_arr_time",
-        "s_arr_time" 
-    ]
-
-    missing_columns = [col for col in required_columns if col not in catalog_data.columns]
-    if missing_columns:
-        logger.error(f"Catalog missing required columns: {missing_columns}")
-        raise ValueError(f"catalog missing required columns: {missing_columns}")
-    
     # Set defaults ID range if not provided through API or CLI use.
     default_id_start = int(catalog_data["source_id"].min())
     default_id_end = int(catalog_data["source_id"].max())
