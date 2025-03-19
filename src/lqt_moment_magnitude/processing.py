@@ -539,6 +539,12 @@ def start_calculate(
     id_end = id_end if id_end is not None else default_id_end
     lqt_mode = lqt_mode if lqt_mode is not None else default_lqt_mode
     figure_statement = figure_statement if figure_statement is not None else default_figure_statement
+
+    # Validate ID range
+    if not (isinstance(id_start, int) and isinstance(id_end, int) and id_start <= id_end):
+        raise ValueError(f"Invalid ID range: id_start={id_start}, id_end={id_end}")
+    if not (id_start in catalog_data["source_id"].values and id_end in catalog_data["source_id"].values):
+        raise ValueError(f"ID range {id_start} - {id_end} not found in catalog")
     
     # Initiate dataframe for magnitude calculation results
     df_result = pd.DataFrame(
