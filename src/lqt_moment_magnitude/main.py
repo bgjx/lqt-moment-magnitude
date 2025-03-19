@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Main entry point for the lqt-moment-magnitude package.
 
@@ -37,7 +35,7 @@ except ImportError as e:
 
 
 # Set up logging handler
-warnings.filterwarnings("ignore")
+warnings.filterwarnings("ignore", category=DeprecationWarning, module="pandas")
 logging.basicConfig(
     filename = 'lqt_runtime.log',
     level = logging.INFO,
@@ -46,6 +44,33 @@ logging.basicConfig(
 )
 logger = logging.getLogger("lqtmoment")
 
+
+def load_catalog(catalog_dir: str) -> pd.DataFrame:
+    """"
+    Load catalog from given catalog dir, this function will handle
+    catalog suffix/format (.xlsx / .csv) for more dynamic inputs.
+
+    Args:
+        catalog_dir (str): Directory of the catalog file.
+
+    Returns:
+        pd.DataFrame: DataFrame of earthquake catalog.
+    
+    Raises:
+        FileNotFoundError: If catalog files do not exist.
+        ValueError: If catalog files fail to load or unsupported format.
+    """
+
+    catalog_path = Path(catalog_dir)
+    if not catalog_path.is_file():
+        raise FileNotFoundError(f"Catalog path is not a file: {catalog_path}")
+    if catalog_path.suffix == ".xlsx":
+        return pd.read_excel(catalog_path, index_col=None)
+    elif catalog_path.suffix == ".csv":
+        return pd.read_csv(catalog_path, index_col=None)
+    else:
+        raise ValueError(f"Unsupported catalog file format: {catalog_path.suffix}. Supported formats: .csv, .xlsx")
+    
 
 def main(args: Optional[List[str]] = None) -> None:
     """ 
@@ -162,12 +187,15 @@ def main(args: Optional[List[str]] = None) -> None:
         raise PermissionError(f"Permission denied creating directories: {e}")
             
     # Load and validate catalog
-    try:
-        catalog_df = pd.read_excel(args.catalog_file, index_col=None)
-    except Exception as e:
-        raise ValueError(f"Failed to load catalog file: {e}")
-    if catalog_df.empty:
-        raise ValueError("Catalog Dataframe is empty.")
+    catalog_df = load_catalog(args.catalog_file)
+    required_columns = [
+        "network", "source_id", "source_lat", "source_lon", "source_depth_m",
+        "source_origin_time", "station_code", "station_lat", "station_lon",
+        "station_elev_m", "p_arr_time", "s_arr_time", "earthquake_type" 
+    ]
+    missing_columns = [col for col in required_columns if col not in catalog_df.columns]
+    if missing_columns:
+        raise ValueError(f"Catalog missing required columns: {missing_columns}")
 
     # Call the function to start calculating moment magnitude
     mw_result_df, mw_fitting_df = start_calculate(args.wave_dir, args.cal_dir, args.fig_dir,
