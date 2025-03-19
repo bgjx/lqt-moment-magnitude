@@ -295,7 +295,7 @@ def calculate_moment_magnitude(
                 stream_zrt.rotate(method="NE->RT", back_azimuth=azimuth)
                 p, sv, sh = stream_zrt.traces # Z, R, T components
             elif source_type =='teleseismic_earthquake':
-                model = TauPyModel(model="iasp91")
+                model = TauPyModel(model=CONFIG.magnitude.TAUP_MODEL)
                 arrivals = model.get_travel_times(
                     source_depth_in_km=(source_depth_m/1e3),
                     distance_in_degree=source_distance_degrees,
