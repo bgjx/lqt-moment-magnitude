@@ -438,7 +438,7 @@ def calculate_moment_magnitude(
     
     # Calculate average and std of moment magnitude
     moment_average, moment_std  = np.mean(moments), np.std(moments)
-    mw = ((2.0 / 3.0) * np.log10(moment_average)) - 6.07
+    mw = ((2.0 / 3.0) * np.log10(moment_average)) - 6.0667
     mw_std = (2.0 /3.0) * moment_std/(moment_average * np.log(10))
  
     results = {"source_id":[f"{source_id}"], 
