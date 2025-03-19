@@ -2,8 +2,8 @@
 lqtmoment: A Python package for calculating moment magnitude using full P, SV, and SH energy components.
 
 This package computes moment magnitude using full P, SV, and SH energy components, with support for
-seismic data processing, ray tracing in a 1-D velocity model, and rapid spectral fitting via
-quasi-Monte Carlo methods. It is designed for seismologists and researchers analyzing earthquake data.
+seismic data processing, ray tracing in a 1-D velocity model, and rapid spectral fitting via advanced
+stochastic methods. It is designed for seismologists and researchers analyzing earthquake data.
 
 Key Features:
 - Vectorized computation for incidence angles (LQT rotation)
@@ -30,6 +30,8 @@ See the full documentation at https://github.com/bgjx/lqt-moment-magnitude.
 
 import sys
 
+if "lqt_moment_magnitude" not in sys.modules:
+    raise ImportError("Failed to set up lqtmoment alias: lqt_moment_magnitude not found in sys.modules")
 if "lqtmoment" not in sys.modules:
     sys.modules["lqtmoment"] = sys.modules["lqt_moment_magnitude"]
 
