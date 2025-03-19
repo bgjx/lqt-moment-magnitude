@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Created on Thu Dec 15 19:32:03 2022.
 Catalog builder utility for LQTMomentMag.
