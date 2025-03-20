@@ -32,7 +32,8 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "LQTMagnitude = lqt_moment_magnitude.main:main",
+            "LQT-Magnitude = lqt_moment_magnitude.main:main",
+            "LQTCat-Build = lqt_moment_magnitude.catalog_builder:main"
         ]
     },
     python_requires = ">=3.8",
