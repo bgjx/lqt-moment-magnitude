@@ -19,7 +19,7 @@ Pre-requisite modules:
 
 import logging
 from obspy import Stream
-from typing import List, Dict
+from typing import List, Dict, Optional
 from pathlib import Path
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -103,19 +103,18 @@ def plot_spectral_fitting(
     plt.close(fig)
 
 
-
 def plot_rays (hypo_depth_m: float, 
                 sta_elev_m: float,
+                epi_dist_m: float,
                 velocity: List, 
                 base_model: List[List[float]],
                 up_model: List[List[float]],
                 down_model: List[List[float]],
-                reached_up_ref: Dict[str, List],
-                critical_ref: Dict[str, List],
-                down_ref: Dict[str, List],
-                down_up_ref: Dict[str, List],
-                epi_dist_m: float,
-                figure_path: Path
+                reached_up_ref: Optional[Dict[str, List]] = None,
+                critical_ref: Optional[Dict[str, List]] = None,
+                down_ref: Optional[Dict[str, List]] = None,
+                down_up_ref: Optional[Dict[str, List]] = None,
+                figure_path: Path = None
                 ) -> None:
     """
     Plot the raw/base model, hypocenter, station, and the relative distance between the hypocenter and station
@@ -123,7 +122,8 @@ def plot_rays (hypo_depth_m: float,
 
     Args:
         hypo_depth_m (float) : Hypocenter depth in meters (negative).
-        sta_elev_m (float): Elevation of station
+        sta_elev_m (float): Elevation of station in meters.
+        epi_dist_m (float): Epicenter distance in meters.
         velocity: List of velocities. 
         base_model (List[List[float]]): List of [top_m, thickness_m, velocity_m_s]
         up_model (List[List]): List of [top_m, thickness_m, velocity_m_s] from the 'upward_model' function.
@@ -132,7 +132,7 @@ def plot_rays (hypo_depth_m: float,
         critical_ref (Dict[str, List]): A dictionary of {'refract_angles': [], 'distances': [], 'travel_times': []} from all critically refracted waves.
         down_ref (Dict[str, List]): A dictionary of {'refract_angles': [], 'distances': [], 'travel_times': []} from all downward segments of critically refracted waves.
         down_up_ref (Dict[str, List]): A dictionary of {'refract_angles': [], 'distances': [], 'travel_times': []} from all upward segments of downward critically refracted waves.
-        epi_dist_m (float): Epicenter distance in m.
+        
         figure_path(Path): Directory to save the plot.
     """
     
@@ -149,28 +149,29 @@ def plot_rays (hypo_depth_m: float,
         axs.add_patch(rect)
     
     # Plot only the last ray of direct upward wave that reaches the station
-    x, y = 0, hypo_depth_m
-    for dist, layer in zip(reached_up_ref['distances'], reversed(up_model)):
-        x_next = dist
-        y_next = layer[0]
-        axs.plot([x, x_next], [y, y_next], 'k')
-        x, y = x_next, y_next
-
-    
-    for take_off in critical_ref:
+    if reached_up_ref:
         x, y = 0, hypo_depth_m
-        for i , (dist, angle) in enumerate(zip(down_ref[take_off]['distances'], down_ref[take_off]['refract_angles'])):
+        for dist, layer in zip(reached_up_ref['distances'], reversed(up_model)):
             x_next = dist
-            y_next = down_model[i][0] if i == 0 else down_model[i - 1][0] + down_model[i - 1][1]
-            axs.plot([x, x_next], [y,y_next], 'b')
+            y_next = layer[0]
+            axs.plot([x, x_next], [y, y_next], 'k')
             x, y = x_next, y_next
-            if angle == 90:
-                for j, dist_up in enumerate(down_up_ref[take_off]['distances']):
-                    x_next = x + dist_up
-                    y_next = up_model[-j - 1][0]
-                    axs.plot([x,x_next], [y, y_next], 'b')
-                    x, y = x_next, y_next
-                break
+
+    if critical_ref:
+        for take_off in critical_ref:
+            x, y = 0, hypo_depth_m
+            for i , (dist, angle) in enumerate(zip(down_ref[take_off]['distances'], down_ref[take_off]['refract_angles'])):
+                x_next = dist
+                y_next = down_model[i][0] if i == 0 else down_model[i - 1][0] + down_model[i - 1][1]
+                axs.plot([x, x_next], [y,y_next], 'b')
+                x, y = x_next, y_next
+                if angle == 90:
+                    for j, dist_up in enumerate(down_up_ref[take_off]['distances']):
+                        x_next = x + dist_up
+                        y_next = up_model[-j - 1][0]
+                        axs.plot([x,x_next], [y, y_next], 'b')
+                        x, y = x_next, y_next
+                    break
 
     axs.plot(epi_dist_m, sta_elev_m, marker = 'v', color = 'black', markersize = 15, label='Station')
     axs.plot(0, hypo_depth_m, marker = '*', color = 'red', markersize = 12)
@@ -180,5 +181,7 @@ def plot_rays (hypo_depth_m: float,
     axs.set_xlabel('Distance (m)')
     axs.set_title("Seismic Ray Paths (Snell's Shooting Method)")
     axs.legend()
+    if figure_path is None:
+        figure_path = '.'
     plt.savefig(f"{figure_path}/ray_path_event.png")
     plt.close(fig)
