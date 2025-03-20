@@ -1,24 +1,12 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 """
-Created on Thu Dec 15 19:32:03 2022.
-Python code for spectral fitting of seismic data using Abercrombie/Boatwright model.
-
-Developed by Arham Zakki Edelo.
-Version: 0.2.0
-License: MIT
-
-Contact:
-- edelo.arham@gmail.com
-- https://github.com/bgjx
-
-Pre-requisite modules:
-- [numpy, scipy, scikit-optimize]
+Functionality module for lqt-moment-magnitude package.
 
 This module fits seismic displacement spectra to estimate Omega_0, corner frequency, and quality factor
 using Quasi-Monte Carlo (QMC) sampling, Bayesian optimization, and grid search, based on Abercrombie
 (1995) and Boatwright (1980) models for volcanic geothermal systems.
+
+Dependencies:
+    - See `requirements.txt` or `pip install lqt-moment-magnitude` for required packages.
 
 References:
 - Abercrombie, R. E. (1995). Earthquake locations using single-station deep borehole recordings:
@@ -27,17 +15,13 @@ References:
 
 """
 
-from typing import Dict, Tuple, List, Optional
-import logging
+from typing import Tuple
 import numpy as np
 from skopt import gp_minimize
-from skopt.space import Real , Integer
+from skopt.space import Real
 from skopt.utils import use_named_args
 from scipy.stats import qmc
-from scipy import optimize
 from .config import CONFIG
-
-logger = logging.getLogger("mw_calculator")
 
 
 def window_band(frequencies: np.ndarray, spectrums: np.ndarray, f_min: float, f_max: float) -> Tuple[np.ndarray, np.ndarray]:
@@ -117,7 +101,7 @@ def fit_spectrum_grid_search (
     Args:
         frequencies (np.ndarray): Frequency values in Hz.
         spectrums (np.ndarray): Spectral amplitudes in nm·s.
-        traveltime (float): Travel time in seconds for attenuation (must be positive).
+        traveltime (float): Travel time of the phase in second.
         f_min (float): Minimum frequency in Hz for fitting.
         f_max (float): Maximum frequency in Hz for fitting.
         
@@ -182,7 +166,7 @@ def fit_spectrum_qmc (
     Args:
         frequencies (np.ndarray): Array of frequency values in Hz.
         spectrums (np.ndarray): Spectral amplitude in nms.
-        traveltime (float): Travel time in seconds for attenuation (must be positive).
+        traveltime (float): Travel time of the phase in second.
         f_min (float): Minimum frequency in Hz for fitting.
         f_max (float): Maximum frequency in Hz for fitting.
         n_samples(int): Number of samples for QMC sampling (default: 2000).
@@ -252,8 +236,7 @@ def fit_spectrum_bayesian(
     spectrums: np.ndarray,
     traveltime: float,
     f_min: float,
-    f_max: float,
-    n_samples: int= CONFIG.spectral.DEFAULT_N_SAMPLES
+    f_max: float
     ) -> Tuple[float, float, float, float, np.ndarray, np.ndarray]:
     """
     Fit seismic spectrum using Bayesian optimization.
@@ -261,7 +244,7 @@ def fit_spectrum_bayesian(
     Args:
         frequencies (np.ndarray): Frequency values in Hz.
         spectrums (np.ndarray): Spectral amplitudes in nm·s.
-        traveltime (float): Travel time in seconds for attenuation (must be positive).
+        traveltime (float): Travel time of the phase in second.
         f_min (float): Minimum frequency in Hz for fitting.
         f_max (float): Maximum frequency in Hz for fitting.
         n_samples (int): Number of calls for Bayesian optimization (default: 1000).
@@ -276,7 +259,6 @@ def fit_spectrum_bayesian(
     # windowing frequencies and spectrum within f band    
     freq, spec = window_band(frequencies, spectrums, f_min, f_max)
 
-    
     if not (freq.size and spec.size):
         return None, None, None, None, np.array([]), np.array([])
    
