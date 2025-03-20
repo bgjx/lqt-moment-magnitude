@@ -40,6 +40,7 @@ from .processing import instrument_remove
 from .utils import read_waveforms
 from .refraction import calculate_inc_angle
 from .fitting_spectral import fit_spectrum_qmc
+from .catalog_builder import build_catalog
 
 from .main import main
 
@@ -49,7 +50,8 @@ __all__ = [
     "calculate_inc_angle",
     "read_waveforms",
     "fit_spectrum_qmc",
-    "instrument_remove"
+    "instrument_remove",
+    "build_catalog"
     ]
 
 # Package metadata
