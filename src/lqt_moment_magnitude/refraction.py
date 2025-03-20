@@ -38,6 +38,9 @@ def build_raw_model(layer_boundaries: List[List[float]], velocities: List) -> Li
     
     Raises:
         ValueError: If lengths of layer boundaries and velocities don't match.
+
+    Notes:
+        Assumes layer_boundaries and velocities are ordered top-down (shallow to deep).
     """
 
     if len(layer_boundaries) != len(velocities):
@@ -149,7 +152,10 @@ def up_refract(epi_dist_m: float,
 
     # Find the take-off angle where distance_error = 0, between 0 and 90 degrees
     if take_off is None:
-        take_off = brentq(distance_error, *ANGLE_BOUNDS)
+        try:
+            take_off = brentq(distance_error, *ANGLE_BOUNDS)
+        except ValueError as e:
+            raise ValueError("Failed to find take-off angle: {e}. Check velocity model and epicentral distance")
     else:
         if not 0 <= take_off < 90:
             raise ValueError("The take_off angle must be between 0 and 90 degrees.")
@@ -191,6 +197,8 @@ def down_refract(epi_dist_m: float,
         Tuple[Dict[str, List], Dict[str, List]]:
             - Downward segment results (Dict[str, List]): Dict mapping take-off angles to {'refract_angles': [], 'distances': [], 'travel_times': []}.
             - Upward segment results (Dict[str, List]): Dict for second half of critically refracted rays.
+    Notes:
+        Assumes velocity generally increases with depth for critical refraction to occur. Low-velocity zones are not supported.
     """
     half_dist = epi_dist_m/2
     thicknesses = np.array([layer[1] for layer in down_model])
@@ -296,14 +304,24 @@ def calculate_inc_angle(hypo: List[float],
     down_model = downward_model(hypo_depth_m, raw_model.copy())
     
     #  start calculating all refracted waves for all layers they may propagate through
-    up_ref, final_take_off = up_refract(epicentral_distance, up_model)
-    down_ref, down_up_ref = down_refract(epicentral_distance, up_model, down_model)
+    try:
+        up_ref, final_take_off = up_refract(epicentral_distance, up_model)
+    except RuntimeError as e:
+        up_ref, final_take_off = None, None
+
+    try:
+        down_ref, down_up_ref = down_refract(epicentral_distance, up_model, down_model)
+    except RuntimeError as e:
+        down_ref, down_up_ref = None, None
     
     # result from direct upward refracted wave only
-    last_ray = up_ref[f"take_off_{final_take_off}"]
-    take_off_upward_refract = 180 - last_ray['refract_angles'][0]
-    upward_refract_tt = np.sum(last_ray['travel_times'])
-    upward_incidence_angle = last_ray['refract_angles'][-1]
+    if up_ref is not None:
+        last_ray = up_ref[f"take_off_{final_take_off}"]
+        take_off_upward_refract = 180 - last_ray['refract_angles'][0]
+        upward_refract_tt = np.sum(last_ray['travel_times'])
+        upward_incidence_angle = last_ray['refract_angles'][-1]
+    else:
+        upward_refract_tt = np.inf
 
     critical_ref = {} # list of downward critically refracted ray (take_off_angle, total_tt, incidence_angle)
     for take_off_key in down_ref:

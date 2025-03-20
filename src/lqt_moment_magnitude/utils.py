@@ -1,18 +1,11 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-Created on Thu Dec 15 19:32:03 2022.
-Python code to calculate moment magnitude.
+Functionality module for lqt-moment-magnitude package.
 
-Developed by arham zakki edelo.
+This module calculates provides useful functionalities such as user input validation,
+waveform reader, instrument response removal and Signal-to-Noise ratio calculator.
 
-contact: 
-- edelo.arham@gmail.com
-- https://github.com/bgjx
-
-Pre-requisite modules:
-->[pathlib, numpy, obpsy] 
-
+Dependencies:
+    - See `requirements.txt` or `pip install lqt-moment-magnitude` for required packages.
 """
 
 import os, glob, sys, warnings, logging
