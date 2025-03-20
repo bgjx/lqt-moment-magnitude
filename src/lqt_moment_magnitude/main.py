@@ -15,7 +15,7 @@ Dependencies:
 Usage:
     $ LQTMagnitude --help
     $ LQTMagnitude --wave-dir data/waveforms --catalog-file data/catalog/lqt_catalog.xlsx
-    $ LQTMagnitude --wave-dir data/waveforms --catalog-file data/catalog/lqt_catalog.xlsx --config path/to/new_config.ini
+    $ LQTMagnitude --wave-dir data/waveforms --catalog-file data/catalog/lqt_catalog.xlsx --config data/new_config.ini
 """
 
 import sys
@@ -93,7 +93,7 @@ def main(args: Optional[List[str]] = None) -> None:
     
     Example:
         $ LQTMagnitude --wave-dir data/waveforms --catalog-file data/catalog/lqt_catalog.xlsx
-        $ LQTMagnitude --wave-dir data/waveforms --catalog-file data/catalog/lqt_catalog.xlsx --config path/to/new_config.ini
+        $ LQTMagnitude --wave-dir data/waveforms --catalog-file data/catalog/lqt_catalog.xlsx --config data/new_config.ini
 
     """
 
@@ -111,7 +111,7 @@ def main(args: Optional[List[str]] = None) -> None:
     parser.add_argument(
         "--fig-dir",
         type=Path,
-        default=Path("figures"),
+        default=Path("result/figures"),
         help="Path to save figures")
     parser.add_argument(
         "--catalog-file",
@@ -121,11 +121,12 @@ def main(args: Optional[List[str]] = None) -> None:
     parser.add_argument(
         "--output-dir",
         type=Path,
-        default=Path("results"),
+        default=Path("results/calculation"),
         help="Output directory for results")
     parser.add_argument(
         "--config",
         type=Path,
+        default=Path("data/new_config.ini"),
         help="Path to custom config.ini file to reload")
     parser.add_argument(
         "--id-start",
