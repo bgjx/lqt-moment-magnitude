@@ -1,3 +1,45 @@
+"""
+Configuration module for the lqt-moment-magnitude package.
+
+This module defines the `CONFIG` singleton, which provides configuration parameters for
+magnitude calculations, spectral fitting, and performance options. Configurations are
+organized into three dataclasses: `MagnitudeConfig`, `SpectralConfig`, and `PerformanceConfig`.
+Default values are defined in the dataclasses, but users can override them by providing a
+`config.ini` file in the parent directory of this module.
+
+Usage:
+    The `CONFIG` object is automatically loaded when the module is imported. To use the default
+    configuration:
+
+    ```python
+    from lqt_moment_magnitude.config import CONFIG
+    print(CONFIG.magnitude.SNR_THRESHOLD)  # Access magnitude configuration
+    print(CONFIG.spectral.F_MIN)          # Access spectral configuration
+    ```
+
+    To override the configuration, create a `config.ini` file in the parent directory with the
+    following structure:
+
+    ```ini
+    [Magnitude]
+    snr_threshold = 2.0
+    pre_filter = 0.01,0.02,55,60
+
+    [Spectral]
+    f_min = 0.5
+    f_max = 40.0
+
+    [Performance]
+    use_parallel = true
+    ```
+
+    You can also reload the configuration from a custom file:
+
+    ```python
+    CONFIG.reload(config_file="new_config.ini")
+    ```
+"""
+
 from dataclasses import dataclass
 from configparser import ConfigParser
 from typing import List, Tuple
@@ -26,7 +68,8 @@ class MagnitudeConfig:
         LAYER_BOUNDARIES (List[Tuple[float, float]]): Depth boundaries in km (default: placeholder).
         VELOCITY_VP (List[float]): P-wave velocities in km/s (default: placeholder).
         VELOCITY_VS (List[float]): S-wave velocities in km/s (default: placeholder).
-        DENSITY (List[float]): Densities in kg/m³ (default: placeholder). 
+        DENSITY (List[float]): Densities in kg/m³ (default: placeholder).
+        TAUP_MODEL (str): ObsPy 1-D Velocity model.
     """
     SNR_THRESHOLD: float = 1.5
     WATER_LEVEL: int = 30
@@ -77,8 +120,8 @@ class SpectralConfig:
         Q_RANGE_MAX (float): Maximum quality factor Q (default: 250.0).
         FC_RANGE_BUFFER (float): Buffer factor for corner frequency range (default: 2.0).
         DEFAULT_N_SAMPLES (int): Default number for stochastic random sampling (default: 3000).
-        N_FACTOR (int): Brune model n factor (default: 2).
-        Y_FACTOR (int): Brune model y factor (default: 1).
+        N_FACTOR (int): Brune model n factor for spectral decay (default: 2).
+        Y_FACTOR (int): Brune model y factor for spectral decay (default: 1).
     """
     F_MIN: float = 1.0
     F_MAX: float = 45.0
@@ -103,7 +146,32 @@ class PerformanceConfig:
     USE_PARALLEL: bool = False
 
 class Config:
-    """ Combines magnitude, spectral, and performance configurations with loading from INI file. """
+    """
+    A config class for combines magnitude, spectral, and performance configurations with loading from INI file.
+
+    The configuration is loaded from a `config.ini` file, with fallback to defaults if the file
+    or specific parameters are not found. The INI file should have the following structure:
+
+    Example:
+        ```ini
+        [Magnitude]
+        snr_threshold = 2.0
+        pre_filter = 0.01,0.02,55,60
+        layer_boundaries = -3.00,-1.90; -1.90,-0.59; -0.59,0.22; 0.22,2.50; 2.50,7.00; 7.00,9.00; 9.00,15.00; 15.00,33.00; 33.00,9999
+        velocity_vp = 2.68,2.99,3.95,4.50,4.99,5.60,5.80,6.40,8.00
+        velocity_vs = 1.60,1.79,2.37,2.69,2.99,3.35,3.47,3.83,4.79
+        density = 2700,2700,2700,2700,2700,2700,2700,2700,2700
+
+        [Spectral]
+        f_min = 0.5
+        f_max = 40.0
+        default_n_samples = 2000
+
+        [Performance]
+        use_parallel = true
+        ```
+    """
+
     def __init__(self):
         self.magnitude = MagnitudeConfig()
         self.spectral = SpectralConfig()
@@ -121,6 +189,7 @@ class Config:
             FileNotFoundError: If the configuration file is not found or unreadable.
             ValueError: If configuration parameters are invalid.       
         """
+
         config  = ConfigParser()
         if config_file is None:
             config_file = Path(__file__).parent.parent/ "config.ini"
