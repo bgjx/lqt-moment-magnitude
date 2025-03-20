@@ -277,7 +277,7 @@ def calculate_inc_angle(hypo: List[float],
                         model: List[List],
                         velocity: List, 
                         figure_statement: bool = False,
-                        figure_path: Path = None
+                        figure_path: Optional[Path] = None
                         ) -> Tuple [float, float, float]:
     """
     Calculate the take-off angle, total travel-time and the incidence angle at the station for 
@@ -289,7 +289,7 @@ def calculate_inc_angle(hypo: List[float],
         model (List[List[float]]): List of list where each sublist contains top and bottom depths for a layer.
         velocity (List[float]): List of layer velocities.
         figure_statement (bool): Whether to generate and save figures (default is False).
-        figure_path (Path): A directory to save plot figures.
+        figure_path (Optional[Path]): A directory to save plot figures.
         
     Returns:
         Tuple[float, float, float]: take-off angle, total travel time and incidence angle.

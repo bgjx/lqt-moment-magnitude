@@ -176,7 +176,7 @@ def plot_rays (hypo_depth_m: float,
     axs.plot(epi_dist_m, sta_elev_m, marker = 'v', color = 'black', markersize = 15, label='Station')
     axs.plot(0, hypo_depth_m, marker = '*', color = 'red', markersize = 12)
     axs.set_xlim(-2000, max_width)
-    axs.set_ylim((hypo_depth_m-1000), (sta_elev_m+1000))
+    axs.set_ylim((hypo_depth_m-5000), (sta_elev_m+1000))
     axs.set_ylabel('Depth (m)')
     axs.set_xlabel('Distance (m)')
     axs.set_title("Seismic Ray Paths (Snell's Shooting Method)")
