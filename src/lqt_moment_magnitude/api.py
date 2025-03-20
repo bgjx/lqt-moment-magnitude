@@ -7,11 +7,11 @@ component system. Users can import and use these functions in their own Python s
 Example:
     >>> from lqtmoment import magnitude_estimator
     >>> result_df, fitting_df = magnitude_estimator(
-    ...     wave_dir = "user_dir/data/waveforms",  
-    ...     cal_dir = "user_dir/data/calibration"
-    ...     catalog_dir = "user_dir/data/catalog.xlsx",
-    ...     config_file = "user_dir/data/config.ini"
-    ...     fig_dir = "user_dir/figures",
+    ...     wave_dir = "data/waveforms",  
+    ...     cal_dir = "data/calibration"
+    ...     catalog_dir = "data/catalog/catalog.xlsx",
+    ...     config_file = "data/new_config.ini"
+    ...     fig_dir = "results/figures",
     ... )
 
 Notes:
@@ -23,7 +23,7 @@ import logging
 import warnings
 import pandas as pd
 from pathlib import Path
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple
 from .config import CONFIG
 
 try:
