@@ -24,7 +24,7 @@ def build_catalog(
         network:str = "LQTID", 
         ) -> pd.DataFrame:
     """
-    Build a combined catalog from seperate hypocenter, pick, and station file.
+    Build a combined catalog from separate hypocenter, pick, and station file.
 
     Args:
         hypo_path (Path): Path to the hypocenter catalog file.
@@ -116,6 +116,7 @@ def build_catalog(
             rows.append(row)
     return pd.DataFrame(rows)
 
+
 def main(args=None):
     """
     Runs the catalog builder from command line.
@@ -131,12 +132,31 @@ def main(args=None):
     
     
     """
-    parser = argparse.ArgumentParser(description="Build a combined catalog for LQTMomentMag.")
-    parser.add_argument("--hypo-file", type=Path, default="tests/sample_tests_data/catalog/hypo_catalog.xlsx", help="Hypocenter data file")
-    parser.add_argument("--pick-file", type=Path, default="tests/sample_tests_data/catalog/picking_catalog.xlsx", help="Arrival picking data file")
-    parser.add_argument("--station-file", type=Path, default="tests/sample_tests_data/station/station.xlsx", help="Station data file")
-    parser.add_argument("--output-dir", type=Path, default="built_catalog", help="Output directory for results")
-    parser.add_argument("--network", type=str, default="LQTID", help="Network code (default: LQTID)")
+    parser = argparse.ArgumentParser(description="Build lqt-moment-magnitude acceptable catalog format automatically.")
+    parser.add_argument(
+        "--hypo-file",
+        type=Path,
+        default="data/catalog/hypo_catalog.xlsx",
+        help="Hypocenter data file")
+    parser.add_argument(
+        "--pick-file",
+        type=Path, default="data/catalog/picking_catalog.xlsx",
+        help="Arrival picking data file")
+    parser.add_argument(
+        "--station-file",
+        type=Path,
+        default="data/station/station.xlsx",
+        help="Station data file")
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default="results",
+        help="Output directory for results")
+    parser.add_argument(
+        "--network",
+        type=str,
+        default="LQTID",
+        help="Network code (default: LQTID)")
     args = parser.parse_args(args if args is not None else sys.argv[1:])
 
     for path in [args.hypo_file, args.pick_file, args.station_file]:
@@ -144,7 +164,7 @@ def main(args=None):
             raise FileNotFoundError(f"Path not found: {path}")
     args.output_dir.mkdir(parents=True, exist_ok=True)
     combined_dataframe = build_catalog(args.hypo_file, args.pick_file, args.station_file, args.network)
-    combined_dataframe.to_excel(args.output_dir/ f"combined_catalog.xlsx", index=False)
+    combined_dataframe.to_excel(args.output_dir/"combined_catalog.xlsx", index=False)
     return None
 
 if __name__ == "__main__":
