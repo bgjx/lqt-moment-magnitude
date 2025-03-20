@@ -1,20 +1,11 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-Created on Thu Dec 15 19:32:03 2022.
-Python code to calculate moment magnitude.
+Plotting module for lqt-moment-magnitude package.
 
+This module provides internal modular function for plotting purpose in lqt-moment-magnitude package.
+Users can generate spectral fitting and 1-D refraction figures from the earthquake during calculation
 
-Developed by arham zakki edelo.
-
-
-contact: 
-- edelo.arham@gmail.com
-- https://github.com/bgjx
-
-Pre-requisite modules:
-->[matplotlib, obspy, pathlib] 
-
+Dependencies:
+    - See `requirements.txt` or `pip install lqt-moment-magnitude` for required packages.
 """
 
 import logging
@@ -28,7 +19,7 @@ import matplotlib.colors as mcolors
 
 from .config import CONFIG
 
-logger = logging.getLogger("mw_calculator")
+logger = logging.getLogger("lqtmoment")
 
 def plot_spectral_fitting(
         event_id: int,
