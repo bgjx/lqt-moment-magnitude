@@ -251,7 +251,7 @@ def calculate_moment_magnitude(
 
     # Find the correct velocity and DENSITY value for the specific layer depth
     velocity_P, velocity_S, density_value = None, None, None
-    for (top, bottom), vp, vs, rho in zip(CONFIG.magnitude.LAYER_BOUNDARIES, CONFIG.magnitude.VELOCITY_VP, CONFIG.magnitude.VELOCITY_VS, CONFIG.magnitude.DENSITY):
+    for (top, bottom, vp, vs, rho) in zip(CONFIG.magnitude.LAYER_BOUNDARIES, CONFIG.magnitude.VELOCITY_VP, CONFIG.magnitude.VELOCITY_VS, CONFIG.magnitude.DENSITY):
         if (top*1000)   <= source_depth_m <= (bottom*1000):
             velocity_P, velocity_S, density_value = vp*1000, vs*1000, rho
             break
