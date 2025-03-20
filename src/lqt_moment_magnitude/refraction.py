@@ -65,7 +65,8 @@ def upward_model(hypo_depth_m: float, sta_elev_m: float, raw_model: List[List[fl
         raw_model (List[List[float]]): List of [top_m, thickness_m, velocity_m_s]
 
     Returns:
-        List[List[float]] : List of modified model corrected by station elevation and hypocenter depth.
+        List[List[float]] : A subset of the raw model, adjusted for station elevation and hypocenter depth,
+                             containing layers between the station elevation and hypocenter depth.
     """
 
     if hypo_depth_m >= sta_elev_m:
@@ -101,7 +102,7 @@ def downward_model(hypo_depth_m: float, raw_model: List[List[float]]) -> List[Li
                                 thickness, and velocity of each layer.
 
     Returns:
-        List[List[float]] : List of modified model from hypocenter depth downward.
+        List[List[float]] :  A subset of the raw model, containing layers from the hypocenter depth downward.
     """
     
     hypo_idx = -1
@@ -189,7 +190,7 @@ def down_refract(epi_dist_m: float,
     and the total travel time for all layers based on the downward critically refracted wave.
 
     Args:
-        epi_dist_m (float): Epicenter distance in m.
+        epi_dist_m (float): Epicenter distance in meters.
         up_model (List[List[float]]): List of sublist containing modified raw model results from the 'upward_model' function.
         down_model (List[List[float]]): List of sublist containing modified raw model results from the 'downward_model' function.
 
@@ -292,7 +293,12 @@ def calculate_inc_angle(hypo: List[float],
         
     Returns:
         Tuple[float, float, float]: take-off angle, total travel time and incidence angle.
+    
+    Notes:
+        The function compares direct upward-refracted and critically refracted ray paths,
+        selecting the fastest path to determine the final take-off angle, travel time, and incidence angle.
     """
+
     # initialize hypocenter, station, model, and calculate the epicentral distance
     hypo_lat,hypo_lon, hypo_depth_m = hypo
     sta_lat, sta_lon, sta_elev_m = station
@@ -306,12 +312,12 @@ def calculate_inc_angle(hypo: List[float],
     #  start calculating all refracted waves for all layers they may propagate through
     try:
         up_ref, final_take_off = up_refract(epicentral_distance, up_model)
-    except RuntimeError as e:
+    except (RuntimeError, ValueError) as e:
         up_ref, final_take_off = None, None
 
     try:
         down_ref, down_up_ref = down_refract(epicentral_distance, up_model, down_model)
-    except RuntimeError as e:
+    except (RuntimeError, ValueError) as e:
         down_ref, down_up_ref = None, None
     
     # result from direct upward refracted wave only
@@ -324,13 +330,14 @@ def calculate_inc_angle(hypo: List[float],
         upward_refract_tt = np.inf
 
     critical_ref = {} # list of downward critically refracted ray (take_off_angle, total_tt, incidence_angle)
-    for take_off_key in down_ref:
-        if down_ref[take_off_key]["refract_angles"][-1] == 90:
-            tt_down = sum(down_ref[take_off_key]['travel_times'])
-            tt_up_seg = sum(down_up_ref[take_off_key]['travel_times'])
-            total_tt = tt_down + tt_up_seg
-            inc_angle = down_up_ref[take_off_key]["refract_angles"][-1]
-            critical_ref[take_off_key] = {"total_tt": [total_tt], "incidence_angle": [inc_angle]}
+    if down_ref is not None:
+        for take_off_key in down_ref:
+            if down_ref[take_off_key]["refract_angles"][-1] == 90:
+                tt_down = sum(down_ref[take_off_key]['travel_times'])
+                tt_up_seg = sum(down_up_ref[take_off_key]['travel_times'])
+                total_tt = tt_down + tt_up_seg
+                inc_angle = down_up_ref[take_off_key]["refract_angles"][-1]
+                critical_ref[take_off_key] = {"total_tt": [total_tt], "incidence_angle": [inc_angle]}
     if critical_ref:
         fastest_tt = min(data["total_tt"][0] for data in critical_ref.values())
         fastest_key = next(k for k, v in critical_ref.items() if v['total_tt'][0] == fastest_tt)
@@ -348,7 +355,6 @@ def calculate_inc_angle(hypo: List[float],
         inc_angle = upward_incidence_angle
     
     if figure_statement:
-        figure_path = figure_path or "."
-        plot_rays(hypo_depth_m, sta_elev_m, velocity, raw_model, up_model, down_model, last_ray, critical_ref, down_ref, down_up_ref, epicentral_distance, figure_path)
+        plot_rays(hypo_depth_m, sta_elev_m, epicentral_distance, velocity, raw_model, up_model, down_model, last_ray, critical_ref, down_ref, down_up_ref, figure_path)
 
     return take_off, total_tt, inc_angle
