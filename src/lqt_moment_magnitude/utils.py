@@ -8,19 +8,19 @@ Dependencies:
     - See `requirements.txt` or `pip install lqt-moment-magnitude` for required packages.
 """
 
-import os, glob, sys, warnings, logging
+import os, glob, sys, logging
 from typing import Tuple, Callable, Optional
 from pathlib import Path
 
 import numpy as np
-from obspy import UTCDateTime, Stream, Trace, read, read_inventory
+from obspy import Stream, read, read_inventory
 
 from .config import CONFIG
 
 logger = logging.getLogger("lqtmoment")
 
 
-def get_valid_input(prompt: str, validate_func: callable, error_msg: str) -> int:
+def get_valid_input(prompt: str, validate_func: Callable, error_msg: str) -> int:
     """
     Function to get valid user input.
     
