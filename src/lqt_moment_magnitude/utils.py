@@ -17,7 +17,7 @@ from obspy import UTCDateTime, Stream, Trace, read, read_inventory
 
 from .config import CONFIG
 
-logger = logging.getLogger("mw_calculator")
+logger = logging.getLogger("lqtmoment")
 
 
 def get_valid_input(prompt: str, validate_func: callable, error_msg: str) -> int:
@@ -27,10 +27,10 @@ def get_valid_input(prompt: str, validate_func: callable, error_msg: str) -> int
     Args:
         prompt(str): Prompt to be shown in the terminal.
         validate_func(callable) : A function to validate the input value.
-        error_msg(str): Error messages if get wrong input value.
+        error_msg(str): Error message to display if the input is invalid.
     
     Returns:
-        int: Returns an integer event ID”.
+        int: Returns an integer, earthquake ID”.
 
     Raises:
         KeyboardInterrupt: If the user interrupts the input(Ctrl+C).
@@ -49,17 +49,17 @@ def get_valid_input(prompt: str, validate_func: callable, error_msg: str) -> int
             sys.exit("Interrupted by user")
 
 
-def get_user_input() -> Tuple[int, int, str, bool]:
+def get_user_input() -> Tuple[int, int, bool, bool]:
     """
     Get user inputs for processing parameters interactively.
     
     Returns:
-        Tuple[int, int, str, bool]: Start ID, end ID, crate figure statement,
-            and lqt mode statement.
+        Tuple[int, int, bool, bool]: Start ID, End ID, LQT mode statement 
+                                     and crate figure statement.
     """
     
-    id_start = get_valid_input("Event ID to start: ", lambda x: int(x) >= 0, "Please input non-negative integer")
-    id_end   = get_valid_input("Event ID to end: ", lambda x: int(x) >= id_start, f"Please input an integer >= {id_start}")
+    id_start = get_valid_input("Earthquake ID to start: ", lambda x: int(x) >= 0, "Please input non-negative integer")
+    id_end   = get_valid_input("Earthquake ID to end: ", lambda x: int(x) >= id_start, f"Please input an integer >= {id_start}")
     
     while True:
         try:
@@ -90,26 +90,31 @@ def get_user_input() -> Tuple[int, int, str, bool]:
     return id_start, id_end, lqt_mode, figure_statement 
 
 
-def read_waveforms(path: Path, event_id: int, station:str) -> Stream:
+def read_waveforms(path: Path, source_id: int, station:str) -> Stream:
     """
-    Read waveforms file (.mseed) from the specified path and event id.
+    Read waveforms file (.mseed) from the specified path and earthquake ID.
 
     Args:
         path (Path): Parent path of separated by id waveforms directory.
-        event_id (int): Unique identifier for the earthquake event.
+        source_id (int): Unique identifier for the earthquake.
         station (str): Station name.
     Returns:
-        Stream: A Stream object containing all the waveforms from specific event id.
+        Stream: A Stream object containing all the waveforms from specific earthquake id.
+    
+    Notes:
+        Expects waveform file to be in a subdirectory named after the earthquake id
+        (e.g., path/earthquake_id/*{station}*.mseed). For current version the program
+        only accept .mseed format. 
     """
     
     stream = Stream()
-    pattern = os.path.join(path/f"{event_id}", f"*{station}*.mseed")
+    pattern = os.path.join(path/f"{source_id}", f"*{station}*.mseed")
     for w in glob.glob(pattern, recursive = True):
         try:
             stread = read(w)
             stream += stread
         except Exception as e:
-            logger.warning(f"Skip reading waveform {w} for event {event_id}: {e}.", exc_info=True)
+            logger.warning(f"Skip reading waveform {w} for earthquake {source_id}: {e}.", exc_info=True)
             continue
             
     return stream
@@ -132,6 +137,9 @@ def instrument_remove (
 
     Returns:
         Stream: A Stream object containing traces with instrument responses removed.
+    Note:
+        The naming convention of the calibration or the RESP is RESP.NETWORK.STATIO.LOCATION.COMPONENT
+        (e.g., LQID.LQ.LQT1..BHZ) in the calibration directory.
     """
     
     displacement_stream = Stream()
@@ -160,7 +168,6 @@ def instrument_remove (
                                     taper_fraction = 0.05,
                                     plot = plot_path
                                     )
-
             # Re-detrend the trace
             displacement_trace.detrend("linear")
             
@@ -168,7 +175,7 @@ def instrument_remove (
             displacement_stream+=displacement_trace
             
         except Exception as e:
-            logger.warning(f"Error process instrument removal in trace {trace.id}: {e}.", exc_info=True)
+            logger.warning(f"Error process instrument removal in trace {trace}: {e}.", exc_info=True)
             continue
             
     return displacement_stream
@@ -186,6 +193,8 @@ def trace_snr(data: np.ndarray, noise: np.ndarray) -> float:
         float: The Signal-to-Noise Ratio (SNR), calculated as the ratio of the RMS of the signal to the RMS of the noise.
     """
     
+    if not data.size or not noise.size:
+        raise ValueError("Data and noise arrays must be non-empty.")
     # Compute RMS of the signal
     data_rms = np.sqrt(np.mean(np.square(data)))
     
