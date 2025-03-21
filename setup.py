@@ -24,7 +24,7 @@ setup(
         "scikit-optimize>=0.10.0",
         "obspy>=1.3.0",
         "tqdm>=4.60.0",
-        "pathlib>=1.0.0"
+        "pathlib>=1.0.0",
         "configparser>=5.0.0",
     ],
     extras_require={
