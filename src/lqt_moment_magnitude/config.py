@@ -192,7 +192,7 @@ class Config:
 
         config  = ConfigParser()
         if config_file is None:
-            config_file = Path(__file__).parent.parent/ "config.ini"
+            config_file = Path(__file__).parent.parent.parent/ "config.ini"
         if not config.read(config_file):
             raise FileNotFoundError(f"Configuration file {config_file} not found or unreadable")
         
