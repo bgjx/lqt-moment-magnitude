@@ -3,8 +3,8 @@
 import pytest
 import numpy as np
 
-from LQTMomentMag.fitting_spectral import fit_spectrum_qmc
-from LQTMomentMag.config import CONFIG
+from lqtmoment import fit_spectrum_qmc
+from lqtmoment import CONFIG
 
 
 @pytest.fixture

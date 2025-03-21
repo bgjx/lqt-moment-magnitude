@@ -6,7 +6,6 @@ import pandas as pd
 
 from lqtmoment import build_catalog
 
-
 @pytest.fixture
 def test_data():
     hypo_dir = Path(r"tests/sample_tests_data/catalog/hypo_catalog.xlsx")
