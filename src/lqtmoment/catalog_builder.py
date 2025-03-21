@@ -43,27 +43,33 @@ def load_data(data_dir: str) -> pd.DataFrame:
         raise ValueError(f"Unsupported data file format: {data_path.suffix}. Supported formats: .csv, .xlsx")
     
 def build_catalog(
-        hypo_path: str,
-        picks_path: str,
-        station_path: str,
+        hypo_dir: str,
+        picks_dir: str,
+        station_dir: str,
         network:str = "LQTID", 
         ) -> pd.DataFrame:
     """
     Build a combined catalog from separate hypocenter, pick, and station file.
 
     Args:
-        hypo_path (str): Path to the hypocenter catalog file.
-        picks_path (str): Path to the picking catalog file.
-        station_path (str): Path to the station file.
+        hypo_dir (str): Path to the hypocenter catalog file.
+        picks_dir (str): Path to the picking catalog file.
+        station_dir (str): Path to the station file.
         network (str): Network code to assign to the combine catalog (default: "project_0").
 
     Returns:
         pd.DataFrame : Dataframe object of combined catalog.
 
     """
-    hypo_df = pd.read_excel(hypo_path, index_col=None)
-    picking_df = pd.read_excel(picks_path, index_col=None)
-    station_df = pd.read_excel(station_path, index_col=None)
+    # Convert string paths to Path objects
+    hypo_dir = Path(hypo_dir)
+    picks_dir = Path(picks_dir)
+    station_dir = Path(station_dir)
+
+    # Load and validate tabular data input (catalog, picks, and station)
+    hypo_df = load_data(hypo_dir)
+    picking_df = load_data(picks_dir)
+    station_df = load_data(station_dir)
 
     # Validate the required columns
     required_hypo_columns = ['id', 'lat', 'lon', 'depth_m', 'year', 'month', 'day', 'hour', 'minute', 
@@ -83,7 +89,7 @@ def build_catalog(
             raise ValueError(f"Missing required columns in {name}: {missing_columns}")
         if df.empty:
             raise ValueError(f"{name} is empty")
-
+        
     rows = []
     for id in hypo_df.get("id"):
         pick_data = picking_df[picking_df["id"] == id]

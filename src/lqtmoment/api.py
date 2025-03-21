@@ -143,7 +143,7 @@ def magnitude_estimator(
         raise PermissionError(f"Permission denied creating directories: {e}")
     
     # Load and validate catalog
-    catalog_df = load_catalog(catalog_dir)
+    catalog_df = load_data(catalog_dir)
     required_columns = [
         "network", "source_id", "source_lat", "source_lon", "source_depth_m",
         "source_origin_time", "station_code", "station_lat", "station_lon",
