@@ -8,9 +8,9 @@ from lqtmoment import build_catalog
 
 @pytest.fixture
 def test_data():
-    hypo_dir = Path(r"tests/data/sample_tests_data/catalog/hypo_catalog.xlsx")
-    pick_dir = Path(r"tests/data/sample_tests_data/catalog/picking_catalog.xlsx")
-    sta_dir = Path(r"tests/data/sample_tests_data/station/station.xlsx")
+    hypo_dir = Path(r"tests/sample_tests_data/data/catalog/hypo_catalog.xlsx")
+    pick_dir = Path(r"tests/sample_tests_data/data/catalog/picking_catalog.xlsx")
+    sta_dir = Path(r"tests/sample_tests_data/data/station/station.xlsx")
     return hypo_dir, pick_dir, sta_dir
 
 def test_catalog_builder(test_data):
