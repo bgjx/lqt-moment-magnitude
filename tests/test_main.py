@@ -1,7 +1,7 @@
 """ Unit test for main.py """
 
 import pytest
-from LQTMomentMag.main import main
+from lqtmoment import main
 
 def test_main_help(capsys):
     """ Test main() handles help. """

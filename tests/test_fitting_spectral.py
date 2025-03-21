@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 
 from lqtmoment import fit_spectrum_qmc
-from lqtmoment import CONFIG
+from lqtmoment.config import CONFIG
 
 
 @pytest.fixture

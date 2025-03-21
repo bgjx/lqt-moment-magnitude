@@ -3,7 +3,7 @@
 import pytest
 import numpy as np
 
-from LQTMomentMag.refraction import (
+from lqtmoment.refraction import (
     build_raw_model,
     upward_model,
     downward_model,
@@ -11,7 +11,7 @@ from LQTMomentMag.refraction import (
     calculate_inc_angle
 )
 
-from LQTMomentMag.config import CONFIG 
+from lqtmoment.config import CONFIG 
 
 @pytest.fixture
 def test_data():
