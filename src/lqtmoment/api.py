@@ -43,31 +43,31 @@ logging.basicConfig(
 logger = logging.getLogger("lqtmoment")
 
 
-def load_catalog(catalog_dir: str) -> pd.DataFrame:
+def load_data(data_dir: str) -> pd.DataFrame:
     """"
-    Load catalog from given catalog dir, this function will handle
-    catalog suffix/format (.xlsx / .csv) for more dynamic inputs.
+    Load tabular data from given data dir, this function will handle
+    data suffix/format (.xlsx / .csv) for more dynamic inputs.
 
     Args:
-        catalog_dir (str): Directory of the catalog file.
+        data_dir (str): Directory of the data file.
 
     Returns:
-        pd.DataFrame: DataFrame of earthquake catalog.
+        pd.DataFrame: DataFrame of tabular data.
     
     Raises:
-        FileNotFoundError: If catalog files do not exist.
-        ValueError: If catalog files fail to load or unsupported format.
+        FileNotFoundError: If data files do not exist.
+        ValueError: If data files fail to load or unsupported format.
     """
 
-    catalog_path = Path(catalog_dir)
-    if not catalog_path.is_file():
-        raise FileNotFoundError(f"Catalog path is not a file: {catalog_path}")
-    if catalog_path.suffix == ".xlsx":
-        return pd.read_excel(catalog_path, index_col=None)
-    elif catalog_path.suffix == ".csv":
-        return pd.read_csv(catalog_path, index_col=None)
+    data_path = Path(data_dir)
+    if not data_path.is_file():
+        raise FileNotFoundError(f"Given data path is not a file: {data_path}")
+    if data_path.suffix == ".xlsx":
+        return pd.read_excel(data_path, index_col=None)
+    elif data_path.suffix == ".csv":
+        return pd.read_csv(data_path, index_col=None)
     else:
-        raise ValueError(f"Unsupported catalog file format: {catalog_path.suffix}. Supported formats: .csv, .xlsx")
+        raise ValueError(f"Unsupported data file format: {data_path.suffix}. Supported formats: .csv, .xlsx")
     
 
 
