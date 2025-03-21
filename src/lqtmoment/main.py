@@ -192,8 +192,8 @@ def main(args: Optional[List[str]] = None) -> None:
     required_columns = [
         "network", "source_id", "source_lat", "source_lon", "source_depth_m",
         "source_origin_time", "station_code", "station_lat", "station_lon",
-        "station_elev_m", "p_arr_time", "p_travel_time", "s_arr_time", "s_travel_time",
-        "s_p_lag_time", "earthquake_type"
+        "station_elev_m", "p_arr_time", "p_travel_time_sec", "s_arr_time",
+        "s_travel_time_sec", "s_p_lag_time_sec", "earthquake_type"
     ]
     missing_columns = [col for col in required_columns if col not in catalog_df.columns]
     if missing_columns:
