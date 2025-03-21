@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 import pandas as pd
 
-from LQTMomentMag.catalog_builder import build_catalog
+from lqtmoment import build_catalog
 
 
 @pytest.fixture
