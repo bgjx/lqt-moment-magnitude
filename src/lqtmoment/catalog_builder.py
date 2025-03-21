@@ -16,20 +16,45 @@ from datetime import datetime
 
 from obspy.geodetics import gps2dist_azimuth
 
+def load_data(data_dir: str) -> pd.DataFrame:
+    """"
+    Load tabular data from given data dir, this function will handle
+    data suffix/format (.xlsx / .csv) for more dynamic inputs.
 
+    Args:
+        data_dir (str): Directory of the data file.
+
+    Returns:
+        pd.DataFrame: DataFrame of tabular data.
+    
+    Raises:
+        FileNotFoundError: If data files do not exist.
+        ValueError: If data files fail to load or unsupported format.
+    """
+
+    data_path = Path(data_dir)
+    if not data_path.is_file():
+        raise FileNotFoundError(f"Given data path is not a file: {data_path}")
+    if data_path.suffix == ".xlsx":
+        return pd.read_excel(data_path, index_col=None)
+    elif data_path.suffix == ".csv":
+        return pd.read_csv(data_path, index_col=None)
+    else:
+        raise ValueError(f"Unsupported data file format: {data_path.suffix}. Supported formats: .csv, .xlsx")
+    
 def build_catalog(
-        hypo_path: Path,
-        picks_path: Path,
-        station_path: Path,
+        hypo_path: str,
+        picks_path: str,
+        station_path: str,
         network:str = "LQTID", 
         ) -> pd.DataFrame:
     """
     Build a combined catalog from separate hypocenter, pick, and station file.
 
     Args:
-        hypo_path (Path): Path to the hypocenter catalog file.
-        picks_path (Path): Path to the picking catalog file.
-        station_path (Path): Path to the station file.
+        hypo_path (str): Path to the hypocenter catalog file.
+        picks_path (str): Path to the picking catalog file.
+        station_path (str): Path to the station file.
         network (str): Network code to assign to the combine catalog (default: "project_0").
 
     Returns:
