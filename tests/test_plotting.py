@@ -2,7 +2,7 @@
 
 import pytest
 import matplotlib.pyplot as plt 
-from LQTMomentMag.plotting import plot_rays
+from lqtmoment.plotting import plot_rays
 
 @pytest.fixture
 def ray_data():
