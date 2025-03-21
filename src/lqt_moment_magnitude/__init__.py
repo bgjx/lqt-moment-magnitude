@@ -28,13 +28,6 @@ For CLI use, run:
 See the full documentation at https://github.com/bgjx/lqt-moment-magnitude.
 """
 
-import sys
-
-if "lqt_moment_magnitude" not in sys.modules:
-    raise ImportError("Failed to set up lqtmoment alias: lqt_moment_magnitude not found in sys.modules")
-if "lqtmoment" not in sys.modules:
-    sys.modules["lqtmoment"] = sys.modules["lqt_moment_magnitude"]
-
 from .api import magnitude_estimator, reload_configuration
 from .processing import instrument_remove
 from .utils import read_waveforms
@@ -51,13 +44,14 @@ __all__ = [
     "read_waveforms",
     "fit_spectrum_qmc",
     "instrument_remove",
-    "build_catalog"
+    "build_catalog",
+    "main"
     ]
 
 # Package metadata
 try:
     from importlib.metadata import version
-    __version__ = version("lqt-moment-magnitude")
+    __version__ = version("lqtmoment")
 except ImportError:
     __version__ = "0.1.0"
 
