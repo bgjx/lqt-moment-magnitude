@@ -125,7 +125,10 @@ def build_catalog(
             int_s_second = int(second_s)
             microsecond_s = int((second_s - int_s_second)*1e6)
             p_arr_time = datetime(year, month, day, hour, minute_p, int_p_second, microsecond_p)
+            p_travel_time = p_arr_time - source_origin_time
             s_arr_time = datetime(year, month, day, hour, minute_s, int_s_second, microsecond_s)
+            s_travel_time = s_arr_time - source_origin_time
+            s_p_lag_time = s_arr_time - p_arr_time
             row = {
                 "network": network,
                 "source_id": id,
@@ -138,9 +141,12 @@ def build_catalog(
                 "station_lon": station_lon, 
                 "station_elev_m": station_elev,
                 "p_arr_time": p_arr_time,
+                "p_travel_time": p_travel_time,
                 "p_polarity": p_polarity,
                 "p_onset": p_onset,
                 "s_arr_time": s_arr_time,
+                "s_travel_time": s_travel_time,
+                "s_p_lag_time": s_p_lag_time,
                 "earthquake_type": earthquake_type,
                 "remarks": hypo_remarks
             }
