@@ -23,8 +23,8 @@ def test_catalog_builder(test_data):
     # check the dataframe structure
     expected_columns = [
         "network", "source_id", "source_lat", "source_lon", "source_depth_m", "source_origin_time",
-        "station_code", "station_lat", "station_lon", "station_elev_m", "p_arr_time", "p_travel_time",
-        "p_polarity", "p_onset",  "s_arr_time", "s_travel_time", "s_p_lag_time", "earthquake_type", "remarks"
+        "station_code", "station_lat", "station_lon", "station_elev_m", "p_arr_time", "p_travel_time_sec",
+        "p_polarity", "p_onset",  "s_arr_time", "s_travel_time_sec", "s_p_lag_time_sec", "earthquake_type", "remarks"
     ]
     assert list(built_dataframe.columns) == expected_columns, "Missing or extra columns"
     assert len(built_dataframe) > 1, "Expected more than one row"
