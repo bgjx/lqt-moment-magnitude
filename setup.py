@@ -4,7 +4,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name="lqt-moment-magnitude",
+    name="lqtmoment",
     version="0.1.0",
     author= "Arham Zakki Edelo",
     author_email= "edelo.arham@gmail.com",
@@ -13,7 +13,7 @@ setup(
     long_description_content_type="text/markdown",
     url = "https://github.com/bgjx/lqt-moment-magnitude",
     license="MIT",
-    keywords='Seismology, Moment Magnitude, Spectral Fitting, LQT Component',
+    keywords="Seismology, Moment Magnitude, Spectral Fitting, LQT Component",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     install_requires=[
@@ -32,8 +32,8 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "LQT-Magnitude = lqt_moment_magnitude.main:main",
-            "LQTCat-Build = lqt_moment_magnitude.catalog_builder:main"
+            "LQTMagnitude = lqt_moment_magnitude.main:main",
+            "LQTCatBuild = lqt_moment_magnitude.catalog_builder:main"
         ]
     },
     python_requires = ">=3.8",
