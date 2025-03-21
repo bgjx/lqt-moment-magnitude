@@ -130,6 +130,8 @@ def main(args=None):
     Raises:
         FileNotFoundError: If required input paths do not exists.
     
+    Example:
+        $ LQTCat-Build --hypo-file data/hypo_catalog.xlsx --pick-file data/catalog/picking_catalog.xlsx
     
     """
     parser = argparse.ArgumentParser(description="Build lqt-moment-magnitude acceptable catalog format automatically.")
