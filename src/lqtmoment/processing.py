@@ -357,9 +357,9 @@ def calculate_moment_magnitude(
 
         # Fitting the spectrum, find the optimal value of Omega_O, corner frequency and Q using systematic/stochastic algorithm available
         try:
-            fit_P  = fit_spectrum_qmc(freq_P,  spec_P,  abs(float(p_arr_time - source_origin_time)), CONFIG.magnitude.F_MIN, CONFIG.magnitude.F_MAX, CONFIG.spectral.DEFAULT_N_SAMPLES)
-            fit_SV = fit_spectrum_qmc(freq_SV, spec_SV, abs(float(s_arr_time - source_origin_time)), CONFIG.magnitude.F_MIN, CONFIG.magnitude.F_MAX, CONFIG.spectral.DEFAULT_N_SAMPLES)
-            fit_SH = fit_spectrum_qmc(freq_SH, spec_SH, abs(float(s_arr_time - source_origin_time)), CONFIG.magnitude.F_MIN, CONFIG.magnitude.F_MAX, CONFIG.spectral.DEFAULT_N_SAMPLES)
+            fit_P  = fit_spectrum_qmc(freq_P,  spec_P,  abs(float(p_arr_time - source_origin_time)), CONFIG.spectral.F_MIN, CONFIG.spectral.F_MAX, CONFIG.spectral.DEFAULT_N_SAMPLES)
+            fit_SV = fit_spectrum_qmc(freq_SV, spec_SV, abs(float(s_arr_time - source_origin_time)), CONFIG.spectral.F_MIN, CONFIG.spectral.F_MAX, CONFIG.spectral.DEFAULT_N_SAMPLES)
+            fit_SH = fit_spectrum_qmc(freq_SH, spec_SH, abs(float(s_arr_time - source_origin_time)), CONFIG.spectral.F_MIN, CONFIG.spectral.F_MAX, CONFIG.spectral.DEFAULT_N_SAMPLES)
         except (ValueError, RuntimeError) as e:
             logger.warning(f"Earthquake_{source_id}: Error during spectral fitting for event {source_id}, {e}.", exc_info=True)
             continue
