@@ -152,7 +152,7 @@ def main(args: Optional[List[str]] = None) -> None:
     parser.add_argument(
         "--version",
         action='version',
-        version=f"%(prog)s {__import__('lqt_moment_magnitude').__version__}",
+        version=f"%(prog)s {__import__('lqtmoment').__version__}",
         help = "Show the version and exit"
     )
     args = parser.parse_args(args if args is not None else sys.argv[1:])
