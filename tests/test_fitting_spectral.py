@@ -19,7 +19,7 @@ def sample_spectrum():
 
 def test_fit_spectrum(sample_spectrum):
     freq, spectrum = sample_spectrum
-    omega_0,  q_factor,  f_c,  err,  x_fit,  y_fit = fit_spectrum_qmc(freq, spectrum, 1.75, CONFIG.magnitude.F_MIN, CONFIG.magnitude.F_MAX, CONFIG.spectral.DEFAULT_N_SAMPLES )
+    omega_0,  q_factor,  f_c,  err,  x_fit,  y_fit = fit_spectrum_qmc(freq, spectrum, 1.75, CONFIG.spectral.F_MIN, CONFIG.spectral.F_MAX, CONFIG.spectral.DEFAULT_N_SAMPLES )
     assert isinstance(omega_0, float)
     assert isinstance(q_factor, float)
     assert isinstance(f_c, float)
