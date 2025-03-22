@@ -23,6 +23,6 @@ def test_plot_rays(ray_data, tmp_path):
     down_up_ref = {'take_off_61.37544904657465': {'refract_angles': [61.37544904657465, 41.63971879245696, 36.552246534262366], 'distances': [714.5818866492999, 1879.2792745925904, 2101.69123218957], 'travel_times': [0.20609636211644605, 0.5862505168560538, 0.13934810219236024]}}
     epicentral_dist = 4332.29
     output_path = tmp_path/"ray_path_event.png"
-    plot_rays(hypo_depth_m, sta_elev_m, velocity, raw_model, up_model, down_model, last_ray, critical_ref, down_ref, down_up_ref, epicentral_dist, tmp_path)
+    plot_rays(hypo_depth_m, sta_elev_m, epicentral_dist, velocity, raw_model, up_model, down_model, last_ray, critical_ref, down_ref, down_up_ref, tmp_path)
     assert output_path.exists()
     plt.close()
