@@ -111,8 +111,9 @@ def build_catalog(
             epicentral_distance, _, _ = gps2dist_azimuth(source_lat, source_lon, station_lat, station_lon)
             epicentral_distance = epicentral_distance/1e3
             earthquake_type = "very_local_earthquake" if epicentral_distance < 30 else \
-                                "local_earthquake" if  30 <= epicentral_distance <300 else \
-                                "regional_earthquake" if 300 <= epicentral_distance < 1000 else \
+                                "local_earthquake" if  30 <= epicentral_distance <100 else \
+                                "regional_earthquake" if 100 <= epicentral_distance < 1100 else \
+                                "far_regional_earthquake" if 1100<= epicentral_distance < 2200 else \
                                 "teleseismic_earthquake"
 
             pick_data_subset= pick_data[pick_data.station_code == station]
