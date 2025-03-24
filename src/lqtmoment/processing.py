@@ -294,7 +294,7 @@ def calculate_moment_magnitude(
             if source_type == 'very_local_earthquake' and not lqt_mode:
                 stream_zrt = stream_displacement.copy()
                 stream_zrt.rotate(method="NE->RT", back_azimuth=azimuth)
-                p, sv, sh = stream_zrt.traces # Z, R, T components
+                p_trace, sv_trace, sh_trace = stream_zrt.traces # Z, R, T components
             elif source_type =='teleseismic_earthquake':
                 model = TauPyModel(model=CONFIG.magnitude.TAUP_MODEL)
                 arrivals = model.get_travel_times(
@@ -314,9 +314,18 @@ def calculate_moment_magnitude(
                 p, _, _ = stream_lqt_p.traces # L, Q, T components
                 _, sv, sh = stream_lqt_s.traces
             else:
-                _, _, incidence_angle_p = calculate_inc_angle(source_coordinate, station_coordinate,
+                trace_Z = stream_displacement.select(component='Z')
+                incidence_angle_p, incidence_angle_s = calculate_inc_angle(
+                                                                source_coordinate,
+                                                                station_coordinate,
                                                                 CONFIG.magnitude.LAYER_BOUNDARIES,
-                                                                CONFIG.magnitude.VELOCITY_VP)
+                                                                CONFIG.magnitude.VELOCITY_VP,
+                                                                CONFIG.magnitude.VELOCITY_VS,
+                                                                source_type,                                                                
+                                                                trace_Z
+                                                                )
+            
+
                 _, _, incidence_angle_s = calculate_inc_angle(source_coordinate, station_coordinate,
                                                                 CONFIG.magnitude.LAYER_BOUNDARIES,
                                                                 CONFIG.magnitude.VELOCITY_VS)

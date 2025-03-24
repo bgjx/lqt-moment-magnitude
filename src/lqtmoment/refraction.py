@@ -275,10 +275,13 @@ def down_refract(epi_dist_m: float,
 def calculate_inc_angle(hypo: List[float],
                         station: List[float],
                         model: List[List],
-                        velocity: List, 
+                        velocities_p: List,
+                        velocities_s: Optional[List] = None,
+                        source_type: Optional[str] = None,
+                        trace_z: Optional[np.ndarray] = None,
                         figure_statement: bool = False,
                         figure_path: Optional[Path] = None
-                        ) -> Tuple [float, float, float]:
+                        ) -> Tuple [float, float]:
     """
     Calculate the take-off angle, total travel-time and the incidence angle at the station for 
     refracted angle using Snell's shooting method.
@@ -287,9 +290,13 @@ def calculate_inc_angle(hypo: List[float],
         hypo (List[float]): A list containing the latitude, longitude, and depth of the hypocenter (depth in negative notation).
         sta (List[float]): A list containing the latitude, longitude, and elevation of the station.
         model (List[List[float]]): List of list where each sublist contains top and bottom depths for a layer.
-        velocity (List[float]): List of layer velocities.
-        figure_statement (bool): Whether to generate and save figures (default is False).
-        figure_path (Optional[Path]): A directory to save plot figures.
+        velocities_p (List[float]): List of P-wave velocities.
+        velocities_s (Optional[List]): List of S-wave velocities, optional only used fos S incidence angle calculation
+                                        default to None.
+        source_type (Optional[str]): Earthquake type to determine the calculation method, optional, default to None.
+        trace_z (Optional[np.ndarray]): Vertical trace data, optional for energy comparison, default to None.  
+        figure_statement (bool): Whether to generate and save figures, default to False
+        figure_path (Optional[Path]): A directory to save plot figures, optional, default to None
         
     Returns:
         Tuple[float, float, float]: take-off angle, total travel time and incidence angle.
