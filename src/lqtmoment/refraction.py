@@ -161,10 +161,11 @@ def downward_model(hypo_depth_m: float, raw_model: List[List[float]]) -> List[Li
     return modified_model
    
    
-def up_refract(epi_dist_m: float, 
-                up_model: List[List[float]],
-                take_off: Optional[float] = None
-                ) -> Tuple[Dict[str, List], float]:
+def up_refract(
+    epi_dist_m: float, 
+    up_model: List[List[float]],
+    take_off: Optional[float] = None
+    ) -> Tuple[Dict[str, List], float]:
     """
     Calculate refracted angles, distances, and travel times for upward refracted waves.
     If take_off is provided, use it; otherwise, compute it using root-finding.
@@ -226,10 +227,11 @@ def up_refract(epi_dist_m: float,
     return {f"take_off_{take_off}": result}, take_off
       
          
-def down_refract(epi_dist_m: float,
-                    up_model: List[List[float]],
-                    down_model: List[List[float]]
-                    ) -> Tuple[Dict[str, List], Dict[str, List]] :
+def down_refract(
+    epi_dist_m: float,
+    up_model: List[List[float]],
+    down_model: List[List[float]]
+    ) -> Tuple[Dict[str, List], Dict[str, List]] :
     """
     Calculate the refracted angle (relative to the normal line), the cumulative distance traveled, 
     and the total travel time for all layers based on the downward critically refracted wave.
@@ -317,19 +319,20 @@ def down_refract(epi_dist_m: float,
     return  down_seg_result, up_seg_result
 
 
-def calculate_inc_angle(hypo: List[float],
-                        station: List[float],
-                        model: List[List],
-                        velocities_p: List,
-                        velocities_s: Optional[List] = None,
-                        source_type: Optional[str] = None,
-                        trace_z: Optional[np.ndarray] = None,
-                        s_p_lag_time: Optional[float] = None,
-                        p_arr_time: Optional[UTCDateTime] = None,
-                        s_arr_time: Optional[UTCDateTime] = None,
-                        figure_statement: bool = False,
-                        figure_path: Optional[Path] = None
-                        ) -> Tuple [float, float]:
+def calculate_inc_angle(
+    hypo: List[float],
+    station: List[float],
+    model: List[List],
+    velocities_p: List,
+    velocities_s: Optional[List] = None,
+    source_type: Optional[str] = None,
+    trace_z: Optional[np.ndarray] = None,
+    s_p_lag_time: Optional[float] = None,
+    p_arr_time: Optional[UTCDateTime] = None,
+    s_arr_time: Optional[UTCDateTime] = None,
+    figure_statement: bool = False,
+    figure_path: Optional[Path] = None
+    ) -> Tuple [float, float]:
     """
     Calculate the take-off angle, total travel-time and the incidence angle at the station for 
     refracted angle using Snell's shooting method.
@@ -482,7 +485,7 @@ def calculate_inc_angle(hypo: List[float],
         dominant_period_psd = compute_dominant_period(trace_z, p_arr_time, window_length, CONFIG.spectral.F_MIN, CONFIG.spectral.F_MAX)
         dominant_period_sp = 0.2 * s_p_lag_time if s_p_lag_time is not None else 2.0
         dominant_period = max(dominant_period_psd, dominant_period_sp)
-        dominant_period = max(0.2 min(10.0, dominant_period))
+        dominant_period = max(0.2, min(10.0, dominant_period))
     
     if source_type == "local_earthquake" and trace_z is not None and critical_ref and up_ref:
         gap = abs(critical_refract_tt - upward_refract_tt)
@@ -551,7 +554,7 @@ def calculate_inc_angle(hypo: List[float],
                     inc_angle_p = upward_incidence_angle_p
                     inc_angle_s = upward_incidence_angle_s
                 if figure_statement:
-                    plot_rays(hypo_depth_m, sta_elev_m, epicentral_distance, velocities_p, raw_model up_model, down_model, last_ray, critical_ref, down_ref, down_up_ref, figure_path)
+                    plot_rays(hypo_depth_m, sta_elev_m, epicentral_distance, velocities_p, raw_model, up_model, down_model, last_ray, critical_ref, down_ref, down_up_ref, figure_path)
                 return take_off, total_tt, inc_angle_p, inc_angle_s
             
             snr_pg = compute_snr(trace_z, arrival_time_pg, window_length, 0.75*window_length)
@@ -565,7 +568,7 @@ def calculate_inc_angle(hypo: List[float],
                     inc_angle_s = critical_incidence_angle_s
                 else:
                     take_off = take_off_upward_refract
-                    total_tt_ upward_refract_tt
+                    total_tt = upward_refract_tt
                     inc_angle_p = upward_incidence_angle_p
                     inc_angle_s = upward_incidence_angle_s
             else:
