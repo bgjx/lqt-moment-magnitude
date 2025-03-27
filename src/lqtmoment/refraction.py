@@ -13,6 +13,7 @@ References:
 
 """
 
+import logging
 from typing import Dict, List, Tuple, Optional
 from pathlib import Path
 import numpy as np
@@ -24,7 +25,8 @@ from scipy.signal import welch
 from .plotting import plot_rays
 from .config import CONFIG
 
-
+# Set logging logger
+logger = logging.getLogger("lqtmoment")
 # Global parameters
 ANGLE_BOUNDS = (0.01, 89.99)
 
@@ -332,7 +334,7 @@ def calculate_inc_angle(
     s_arr_time: Optional[UTCDateTime] = None,
     figure_statement: bool = False,
     figure_path: Optional[Path] = None
-    ) -> Tuple [float, float]:
+    ) -> Tuple [float, float, float, float, float, float]:
     """
     Calculate the take-off angle, total travel-time and the incidence angle at the station for 
     refracted angle using Snell's shooting method.
@@ -354,7 +356,8 @@ def calculate_inc_angle(
         figure_path (Optional[Path]): A directory to save plot figures, optional, default to None
         
     Returns:
-        Tuple[float, float, float]: take-off angle, total travel time and incidence angle.
+        Tuple[float, float, ...]: take-off angle P-wave, total travel time P-wave, incidence angle P-wave, 
+                                    take-off angle S-wave, total travel time S-wave, incidence angle S-wave.
     
     Notes:
         The function compares direct upward-refracted and critically refracted ray paths,
@@ -367,56 +370,57 @@ def calculate_inc_angle(
     epicentral_distance, azimuth, back_azimuth = gps2dist_azimuth(hypo_lat, hypo_lon, sta_lat, sta_lon)
     
     # build raw model and modified models for P-wave
-    raw_model = build_raw_model(model, velocities_p)
-    up_model = upward_model (hypo_depth_m, sta_elev_m, raw_model.copy())
-    down_model = downward_model(hypo_depth_m, raw_model.copy())
+    raw_model_p = build_raw_model(model, velocities_p)
+    up_model_p = upward_model (hypo_depth_m, sta_elev_m, raw_model_p.copy())
+    down_model_p = downward_model(hypo_depth_m, raw_model_p.copy())
     
     #  start calculating all refracted waves for all layers they may propagate through
     try:
-        up_ref, final_take_off = up_refract(epicentral_distance, up_model)
+        up_ref_p, final_take_off_p = up_refract(epicentral_distance, up_model_p)
     except (RuntimeError, ValueError) as e:
-        up_ref, final_take_off = None, None
+        up_ref_p, final_take_off_p = None, None
 
     try:
-        down_ref, down_up_ref = down_refract(epicentral_distance, up_model, down_model)
+        down_ref_p, down_up_ref_p = down_refract(epicentral_distance, up_model_p, down_model_p)
     except (RuntimeError, ValueError) as e:
-        down_ref, down_up_ref = None, None
+        down_ref_p, down_up_ref_p = None, None
     
     # Result from direct upward-refracted P-wave (Pg)
-    if up_ref is not None:
-        last_ray = up_ref[f"take_off_{final_take_off}"]
-        take_off_upward_refract = 180 - last_ray['refract_angles'][0]
-        upward_refract_tt = np.sum(last_ray['travel_times'])
-        upward_incidence_angle_p = last_ray['refract_angles'][-1]
+    if up_ref_p is not None:
+        last_ray_p = up_ref_p[f"take_off_{final_take_off_p}"]
+        take_off_upward_refract_p = 180 - last_ray_p['refract_angles'][0]
+        upward_refract_tt_p = np.sum(last_ray_p['travel_times'])
+        upward_incidence_angle_p = last_ray_p['refract_angles'][-1]
     else:
-        upward_refract_tt = np.inf
-        take_off_upward_refract = None
+        take_off_upward_refract_p = None
+        upward_refract_tt_p = np.inf
         upward_incidence_angle_p = None
 
     # Result from critically refracted P-wave (Pn)
-    critical_ref = {} # list of downward critically refracted ray (take_off_angle, total_tt, incidence_angle)
-    if down_ref is not None:
-        for take_off_key in down_ref:
-            if down_ref[take_off_key]["refract_angles"][-1] == 90:
-                tt_down = sum(down_ref[take_off_key]['travel_times'])
-                tt_up_seg = sum(down_up_ref[take_off_key]['travel_times'])
+    critical_ref_p = {} # list of downward critically refracted ray (take_off_angle, total_tt, incidence_angle)
+    if down_ref_p is not None:
+        for take_off_key in down_ref_p:
+            if down_ref_p[take_off_key]["refract_angles"][-1] == 90:
+                tt_down = sum(down_ref_p[take_off_key]['travel_times'])
+                tt_up_seg = sum(down_up_ref_p[take_off_key]['travel_times'])
                 total_tt = tt_down + tt_up_seg
-                inc_angle = down_up_ref[take_off_key]["refract_angles"][-1]
-                critical_ref[take_off_key] = {"total_tt": [total_tt], "incidence_angle": [inc_angle]}
-    if critical_ref:
-        fastest_tt = min(data["total_tt"][0] for data in critical_ref.values())
-        fastest_key = next(k for k, v in critical_ref.items() if v['total_tt'][0] == fastest_tt)
-        critical_refract_tt = fastest_tt
-        critical_incidence_angle_p = critical_ref[fastest_key]["incidence_angle"][0]
-        take_off_critical_refract = float(fastest_key.split("_")[-1])
+                inc_angle = down_up_ref_p[take_off_key]["refract_angles"][-1]
+                critical_ref_p[take_off_key] = {"total_tt": [total_tt], "incidence_angle": [inc_angle]}
+    if critical_ref_p:
+        fastest_tt = min(data["total_tt"][0] for data in critical_ref_p.values())
+        fastest_key = next(k for k, v in critical_ref_p.items() if v['total_tt'][0] == fastest_tt)
+        take_off_critical_refract_p = float(fastest_key.split("_")[-1])
+        critical_refract_tt_p = fastest_tt
+        critical_incidence_angle_p = critical_ref_p[fastest_key]["incidence_angle"][0]
     else:
-        critical_refract_tt = np.inf
+        take_off_critical_refract_p = None
+        critical_refract_tt_p = np.inf
         critical_incidence_angle_p = None
-        take_off_critical_refract = None
+        
 
     # Determine the fastest P-wave (Pg or Pn) for S-P lag time
-    t_p = min(upward_refract_tt, critical_refract_tt)
-    p_phase = "Pg" if upward_refract_tt <= critical_refract_tt else "Pn"
+    t_p = min(upward_refract_tt_p, critical_refract_tt_p)
+    p_phase = "Pg" if upward_refract_tt_p <= critical_refract_tt_p else "Pn"
 
     # Compute S-wave travel time and incidence angles (needed for S-wave incidence angle)
     if velocities_s is None:
@@ -434,9 +438,11 @@ def calculate_inc_angle(
     
     if up_ref_s is not None:
         last_ray_s = up_ref_s[f"take_off_{final_take_off_s}"]
+        take_off_upward_refract_s = 180 - last_ray_s['refract_angles'][0]
         upward_refract_tt_s = np.sum(last_ray_s['travel_times'])
         upward_incidence_angle_s = last_ray_s['refract_angles'][-1]
     else:
+        take_off_upward_refract_s= None
         upward_refract_tt_s = np.inf
         upward_incidence_angle_s = None
     
@@ -459,9 +465,11 @@ def calculate_inc_angle(
     if critical_ref_s:
         fastest_tt_s = min(data["total_tt"][0] for data in critical_ref_s.values())
         fastest_key_s = next(k for k, v in critical_ref_s.items() if v["total_tt"][0] == fastest_tt_s)
+        take_off_critical_refract_s = float(fastest_key.split("_")[-1])
         critical_refract_tt_s = fastest_tt_s
         critical_incidence_angle_s = critical_ref_s[fastest_key_s]["incidence_angle"][0]
     else:
+        take_off_critical_refract_s = None
         critical_refract_tt_s = np.inf
         critical_incidence_angle_s = None
     
@@ -486,22 +494,21 @@ def calculate_inc_angle(
         dominant_period_sp = 0.2 * s_p_lag_time if s_p_lag_time is not None else 2.0
         dominant_period = max(dominant_period_psd, dominant_period_sp)
         dominant_period = max(1/CONFIG.spectral.F_MAX, min(CONFIG.spectral.F_MIN, dominant_period))
-    
-    if source_type == "local_earthquake" and trace_z is not None and critical_ref and up_ref:
-        gap = abs(critical_refract_tt - upward_refract_tt)
-        threshold = 1.5 * dominant_period if hypo_depth_m > -20000 else 2 * dominant_period
 
+    # Check tha Gap between Pg and Pn to determine whether energy comparison need to be done
+    if source_type == "local_earthquake" and trace_z is not None and critical_ref_p and up_ref_p:
+        gap = abs(critical_refract_tt_p - upward_refract_tt_p)
+        threshold = 1.5 * dominant_period if hypo_depth_m > -20000 else 2 * dominant_period
         if gap < threshold:
-            if critical_refract_tt < upward_refract_tt:
-                take_off = take_off_critical_refract
-                total_tt = critical_refract_tt
-                inc_angle_p = critical_incidence_angle_p
-                inc_angle_s = critical_incidence_angle_s
-            else:
-                take_off = take_off_upward_refract
-                total_tt = upward_refract_tt
-                inc_angle_p = upward_incidence_angle_p
-                inc_angle_s = upward_incidence_angle_s
+            # Default to Pg when the gap is too small
+            take_off_p = take_off_upward_refract_p
+            total_tt_p = upward_refract_tt_p
+            inc_angle_p = upward_incidence_angle_p
+            take_off_s = take_off_upward_refract_s
+            total_tt_s = upward_refract_tt_s
+            inc_angle_s = upward_incidence_angle_s
+            logger.info(f"Local earthquake: Gap ({gap:.2f}) < {threshold}s at distance {epicentral_distance}Km, defaulting to Pg."
+                        f"P-Incidence Angle: {inc_angle_p:.2f}°, S-Incidence Angle: {inc_angle_s:.2f}°")
         else:
             def compute_snr(
                 trace: np.ndarray, 
@@ -522,7 +529,16 @@ def calculate_inc_angle(
                 
                 Returns:
                     float: Signal to Noise ratio of given trace.
+                
+                Raises:
+                    ValueError: If the trace or arrival time is invalid.
                 """
+                if trace is None or len(trace.data) == 0:
+                    raise ValueError("Trace data is empty or None")
+                if arrival_time < trace.stats.starttime or arrival_time > trace.stats.endtime:
+                    raise ValueError(f"Arrival time {arrival_time} is outside trace time range"
+                                     f"({trace.stats.starttime} to {trace.stats.endtime})")
+                
                 sampling_rate = trace.stats.sampling_rate
                 noise_start = arrival_time - noise_window
                 noise_end = arrival_time
@@ -539,38 +555,51 @@ def calculate_inc_angle(
             # Use p_arrival_time if provided, otherwise estimate it using t_p and the trace start time
             if p_arr_time is not None and p_arr_time >= 0:
                 arrival_time_pg = p_arr_time
-                arrival_time_pn = p_arr_time + (critical_refract_tt - upward_refract_tt)
+                arrival_time_pn = p_arr_time + (critical_refract_tt_p - upward_refract_tt_p)
             else:
-                # Estimate arrival time using t_p (travel_time) and assuming the event origin time is known.
-                # This requires the event origin time, which we don't have here, so we'll skip energy comparison if p_arrival_time is not provided
-                if critical_refract_tt < upward_refract_tt:
-                    take_off = take_off_critical_refract
-                    total_tt = critical_refract_tt
-                    inc_angle_p = critical_incidence_angle_p
-                    inc_angle_s = critical_incidence_angle_s
-                else:
-                    take_off = take_off_upward_refract
-                    total_tt = upward_refract_tt
-                    inc_angle_p = upward_incidence_angle_p
-                    inc_angle_s = upward_incidence_angle_s
+                # If p_arrival_time is not provided, default to Pg and skip energy comparison
+                take_off_p = take_off_upward_refract_p
+                total_tt_p = upward_refract_tt_p
+                inc_angle_p = upward_incidence_angle_p
+                take_off_s = take_off_upward_refract_s
+                total_tt_s = upward_refract_tt_s
+                inc_angle_s = upward_incidence_angle_s
+                logger.info(f"Local earthquake: P arrival time not provided at distance {epicentral_distance/1000:.1f} km, "
+                            f"defaulting to Pg, P-incidence Angle: {inc_angle_p:.2f}°, S-Incidence Angle: {inc_angle_s:.2f}°")
                 if figure_statement:
-                    plot_rays(hypo_depth_m, sta_elev_m, epicentral_distance, velocities_p, raw_model, up_model, down_model, last_ray, critical_ref, down_ref, down_up_ref, figure_path)
-                return take_off, total_tt, inc_angle_p, inc_angle_s
+                    plot_rays(hypo_depth_m, sta_elev_m, epicentral_distance, velocities_p, raw_model_p,
+                              up_model_p, down_model_p, last_ray_p, critical_ref_p, down_ref_p, down_up_ref_p,
+                              figure_path)
+                return take_off_p, total_tt_p, inc_angle_p, take_off_s, total_tt_s, inc_angle_s
             
-            snr_pg = compute_snr(trace_z, arrival_time_pg, window_length, 0.75*window_length)
-            snr_pn = compute_snr(trace_z, arrival_time_pn, window_length, 0.75*window_length)
+            try:
+                snr_pg = compute_snr(trace_z, arrival_time_pg, window_length, 0.75*window_length)
+                snr_pn = compute_snr(trace_z, arrival_time_pn, window_length, 0.75*window_length)
+            except (ValueError, RuntimeError) as e:
+                logger.info(f"Local earthquake: SNR computation failed at distance {epicentral_distance/1000:.1f} km ({str(e)}),"
+                            f"defaulting to Pg, P-Incidence Angle: {upward_incidence_angle_p:.2f}°, S-Incidence Angle: {upward_incidence_angle_s:.2f}°")
+                take_off_p = take_off_upward_refract_p
+                total_tt_p = upward_refract_tt_p
+                inc_angle_p = upward_incidence_angle_p
+                take_off_s = take_off_upward_refract_s
+                total_tt_s = upward_refract_tt_s
+                inc_angle_s = upward_incidence_angle_s
+                if figure_statement:
+                    plot_rays(hypo_depth_m, sta_elev_m, epicentral_distance, velocities_p, raw_model_p,
+                              up_model_p, down_model_p, last_ray_p, critical_ref_p, down_ref_p, down_up_ref_p,
+                              figure_path)
+                return take_off_p, total_tt_p, inc_angle_p, take_off_s, total_tt_s, inc_angle_s
 
-            if snr_pg < 3 or snr_pn < 3:
-                if critical_refract_tt < upward_refract_tt:
-                    take_off = take_off_critical_refract
-                    total_tt = critical_refract_tt
-                    inc_angle_p = critical_incidence_angle_p
-                    inc_angle_s = critical_incidence_angle_s
-                else:
-                    take_off = take_off_upward_refract
-                    total_tt = upward_refract_tt
-                    inc_angle_p = upward_incidence_angle_p
-                    inc_angle_s = upward_incidence_angle_s
+            if snr_pg < 1.75 or snr_pn < 1.75:
+                # Default to Pg when SNR is too low
+                take_off_p = take_off_upward_refract_p
+                total_tt_p = upward_refract_tt_p
+                inc_angle_p = upward_incidence_angle_p
+                take_off_s = take_off_upward_refract_s
+                total_tt_s = upward_refract_tt_s
+                inc_angle_s = upward_incidence_angle_s
+                logger.info(f"Local earthquake: SNR too low (Pn: {snr_pn:.2f}, Pg: {snr_pg:.2f}) at distance {epicentral_distance/1000:.1f} km, "
+                      f"defaulting to Pg, P-Incidence Angle: {inc_angle_p:.2f}°, S-Incidence Angle: {inc_angle_s:.2f}°")
             else:
                 def compute_phase_energy(
                     trace: np.ndarray,
@@ -594,7 +623,15 @@ def calculate_inc_angle(
                     
                     Return:
                         float: Energy of the trace.
+                    
+                    Raises:
+                        ValueError: If the trace or arrival time is invalid.
                     """
+                    if trace is None or len(trace.data) == 0:
+                        raise ValueError("Trace data is empty or None")
+                    if arrival_time < trace.stats.starttime or arrival_time > trace.stats.endtime:
+                        raise ValueError(f"Arrival time {arrival_time} is outside trace time range "
+                                         f"({trace.stats.starttime} to {trace.stats.endtime})")
                     trace_filt = trace.copy()
                     trace_filt.filter("bandpass", freqmin=f_min, freqmax=f_max, zerophase=True)
                     sampling_rate = trace.stats.sampling_rate
@@ -607,42 +644,64 @@ def calculate_inc_angle(
                 window_before = window_length / 3
                 window_after = window_length / 3
 
-                pg_energy = compute_phase_energy(
-                            trace_z, arrival_time_pg, window_before,
-                            window_after, CONFIG.spectral.F_MIN,
-                            CONFIG.spectral.F_MAX
-                            )
-                pn_energy = compute_phase_energy(
-                            trace_z, arrival_time_pn, window_before,
-                            window_after, CONFIG.spectral.F_MIN,
-                            CONFIG.spectral.F_MAX
-                            )
+                try:
+                    pg_energy = compute_phase_energy(
+                        trace_z, arrival_time_pg, window_before,
+                        window_after, CONFIG.spectral.F_MIN,
+                        CONFIG.spectral.F_MAX
+                    )
+                    pn_energy = compute_phase_energy(
+                        trace_z, arrival_time_pn, window_before,
+                        window_after, CONFIG.spectral.F_MIN,
+                        CONFIG.spectral.F_MAX
+                    )
+                except ValueError as e:
+                    logger.info(f"Local earthquake: Energy computation failed at distance {epicentral_distance/1000:.1f} km ({str(e)}), "
+                          f"defaulting to Pg, P-Incidence Angle: {upward_incidence_angle_p:.2f}°, S-Incidence Angle: {upward_incidence_angle_s:.2f}°")
+                    take_off_p = take_off_upward_refract_p
+                    total_tt_p = upward_refract_tt_p
+                    inc_angle_p = upward_incidence_angle_p
+                    take_off_s = take_off_upward_refract_s
+                    total_tt_s = upward_refract_tt_s
+                    inc_angle_s = upward_incidence_angle_s
+                    if figure_statement:
+                        plot_rays(hypo_depth_m, sta_elev_m, epicentral_distance, velocities_p, raw_model_p, up_model_p, down_model_p,
+                                  last_ray_p, critical_ref_p, down_ref_p, down_up_ref_p, figure_path)
+                    return take_off_p, total_tt_p, inc_angle_p, take_off_s, total_tt_s, inc_angle_s
                 
                 if pn_energy > pg_energy:
-                    take_off = take_off_critical_refract
-                    total_tt = critical_refract_tt
+                    take_off_p = take_off_critical_refract_p
+                    total_tt_p = critical_refract_tt_p
                     inc_angle_p = critical_incidence_angle_p
+                    take_off_s = take_off_critical_refract_s
+                    total_tt_s = critical_refract_tt_s
                     inc_angle_s = critical_incidence_angle_s
                 else:
-                    take_off = take_off_upward_refract
-                    total_tt = upward_refract_tt
+                    take_off_p = take_off_upward_refract_p
+                    total_tt_p = upward_refract_tt_p
                     inc_angle_p = upward_incidence_angle_p
+                    take_off_s = take_off_upward_refract_s
+                    total_tt_s = upward_refract_tt_s
                     inc_angle_s = upward_incidence_angle_s
     else:
-        if critical_ref and fastest_tt < upward_refract_tt:
-            take_off = take_off_critical_refract
-            total_tt = critical_refract_tt
+        if critical_ref_p and fastest_tt < upward_refract_tt_p:
+            take_off_p = take_off_critical_refract_p
+            total_tt_p = critical_refract_tt_p
             inc_angle_p = critical_incidence_angle_p
+            take_off_s = take_off_critical_refract_s
+            total_tt_s = critical_refract_tt_s
             inc_angle_s = critical_incidence_angle_s
         else:
-            take_off = take_off_upward_refract
-            total_tt = upward_refract_tt
+            take_off_p = take_off_upward_refract_p
+            total_tt_p = upward_refract_tt_p
             inc_angle_p = upward_incidence_angle_p
+            take_off_s = take_off_upward_refract_s
+            total_tt_s = upward_refract_tt_s
             inc_angle_s = upward_incidence_angle_s
     
     if figure_statement:
         plot_rays(hypo_depth_m, sta_elev_m, epicentral_distance,
-                  velocities_p, raw_model, up_model, down_model,
-                  last_ray, critical_ref, down_ref, down_up_ref,
+                  velocities_p, raw_model_p, up_model_p, down_model_p,
+                  last_ray_p, critical_ref_p, down_ref_p, down_up_ref_p,
                   figure_path)
-    return take_off, total_tt, inc_angle_p, inc_angle_s
+    return take_off_p, total_tt_p, inc_angle_p, take_off_s, total_tt_s, inc_angle_s
