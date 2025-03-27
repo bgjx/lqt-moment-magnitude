@@ -485,7 +485,7 @@ def calculate_inc_angle(
         dominant_period_psd = compute_dominant_period(trace_z, p_arr_time, window_length, CONFIG.spectral.F_MIN, CONFIG.spectral.F_MAX)
         dominant_period_sp = 0.2 * s_p_lag_time if s_p_lag_time is not None else 2.0
         dominant_period = max(dominant_period_psd, dominant_period_sp)
-        dominant_period = max(0.2, min(10.0, dominant_period))
+        dominant_period = max(1/CONFIG.spectral.F_MAX, min(CONFIG.spectral.F_MIN, dominant_period))
     
     if source_type == "local_earthquake" and trace_z is not None and critical_ref and up_ref:
         gap = abs(critical_refract_tt - upward_refract_tt)
