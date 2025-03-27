@@ -86,8 +86,8 @@ def calculate_seismic_spectra(
 
 def window_trace(
     streams: Stream,
-    p_arr_time: float,
-    s_arr_time: float,
+    p_arr_time: UTCDateTime,
+    s_arr_time: UTCDateTime,
     lqt_mode: Optional[bool] = True
     ) -> Tuple[np.ndarray, ...]:
     """
@@ -96,8 +96,8 @@ def window_trace(
     Args:
     
         streams (Stream): A stream object containing the seismic data.
-        p_arr_time (float): Arrival time of the P phase (in seconds from the trace start).
-        s_arr_time (float): Arrival time of the S phase (in seconds from the trace start).
+        p_arr_time (UTCDateTime): Arrival time in UTCDateTime of the P phase.
+        s_arr_time (UTCDateTime): Arrival time in UTCDateTime of the S phase.
         lqt_mode (Optional[bool]): Use LQT components if True, ZRT if false. Default to True. 
 
     Returns:
