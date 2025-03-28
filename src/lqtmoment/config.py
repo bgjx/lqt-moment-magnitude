@@ -31,6 +31,19 @@ Usage:
 
     [Performance]
     use_parallel = true
+    logging_level = "DEBUG"
+    ```
+
+    For custom velocity model, the "velocity_mddel.json" file should have the 
+    following structure:
+
+    ```json
+    {
+        "layer_boundaries": [[-3.00, -1.90], [-1.90, -0.59], [-0.59, 0.22], [0.22, 2.50]],
+        "velocity_vp": [2.68, 2.99, 3.95, 4.50],
+        "velocity_vs": [1.60, 1.79, 2.37, 2.69],
+        "density": [2700, 2700, 2700, 2700]
+    }
     ```
 
     You can also reload the configuration from a custom file:
@@ -44,11 +57,11 @@ from dataclasses import dataclass
 from configparser import ConfigParser
 from typing import List, Tuple
 from pathlib import Path
+import json
 
 @dataclass
 class MagnitudeConfig:
     """
-    
     Configuration for magnitude calculation parameters.
 
     Attributes:
@@ -70,6 +83,7 @@ class MagnitudeConfig:
         VELOCITY_VS (List[float]): S-wave velocities in km/s (default: placeholder).
         DENSITY (List[float]): Densities in kg/m³ (default: placeholder).
         TAUP_MODEL (str): ObsPy 1-D Velocity model.
+        VELOCITY_MODEL_FILE (str): Path to a JSON file defining the velocity model (default: "", uses built-in model).
     """
     SNR_THRESHOLD: float = 1.5
     WATER_LEVEL: int = 30
@@ -89,22 +103,33 @@ class MagnitudeConfig:
     VELOCITY_VS: List[float] = None
     DENSITY: List[float] = None
     TAUP_MODEL: str = 'iasp91'
-
+    VELOCITY_MODEL_FILE: str = ""
 
     def __post_init__(self):
-        if self.PRE_FILTER is None:
-            self.PRE_FILTER = [0.01, 0.02, 55, 60]
-        if self.LAYER_BOUNDARIES is None:
-            self.LAYER_BOUNDARIES = [
+        self.PRE_FILTER = self.PRE_FILTER or [0.01, 0.02, 55, 60]
+        self.LAYER_BOUNDARIES = self.LAYER_BOUNDARIES or [
                 [-3.00, -1.90], [-1.90, -0.59], [-0.59, 0.22], [0.22, 2.50],
                 [2.50, 7.00], [7.00, 9.00], [9.00, 15.00], [15.00, 33.00], [33.00, 9999]
             ]
-        if self.VELOCITY_VP is None:
-            self.VELOCITY_VP = [2.68, 2.99, 3.95, 4.50, 4.99, 5.60, 5.80, 6.40, 8.00]
-        if self.VELOCITY_VS is None:
-            self.VELOCITY_VS = [1.60, 1.79, 2.37, 2.69, 2.99, 3.35, 3.47, 3.83, 4.79]
-        if self.DENSITY is None:
-            self.DENSITY = [2700] * 9
+        self.VELOCITY_VP = self.VELOCITY_VP or [2.68, 2.99, 3.95, 4.50, 4.99, 5.60, 5.80, 6.40, 8.00]
+        self.VELOCITY_VS = self.VELOCITY_VS or [1.60, 1.79, 2.37, 2.69, 2.99, 3.35, 3.47, 3.83, 4.79]
+        self.DENSITY = self.DENSITY or [2700] * 9
+
+        # Load velocity model from a JSON file if specified
+        if self.VELOCITY_MODEL_FILE:
+            try:
+                with open(self.VELOCITY_MODEL_FILE, "r") as f:
+                    model = json.load(f)
+                self.LAYER_BOUNDARIES = model["layer_boundaries"]
+                self.VELOCITY_VP = model["velocity_vp"]
+                self.VELOCITY_VS = model["velocity_vs"]
+                self.DENSITY = model["density"]
+            except (FileNotFoundError, json.JSONDecodeError, KeyError) as e:
+                raise ValueError(f"Invalid velocity model file '{self.VELOCITY_MODEL_FILE}': {e} ")
+       
+        # Validation
+        if not(len(self.LAYER_BOUNDARIES) == len(self.VELOCITY_VP) == len(self.VELOCITY_VS) == len(self.DENSITY)):
+            raise ValueError("LAYER_BOUNDARIES, VELOCITY_VP, VELOCITY_VS, and DENSITY must have the same length")
 
 @dataclass
 class SpectralConfig:
@@ -158,10 +183,7 @@ class Config:
         [Magnitude]
         snr_threshold = 2.0
         pre_filter = 0.01,0.02,55,60
-        layer_boundaries = -3.00,-1.90; -1.90,-0.59; -0.59,0.22; 0.22,2.50; 2.50,7.00; 7.00,9.00; 9.00,15.00; 15.00,33.00; 33.00,9999
-        velocity_vp = 2.68,2.99,3.95,4.50,4.99,5.60,5.80,6.40,8.00
-        velocity_vs = 1.60,1.79,2.37,2.69,2.99,3.35,3.47,3.83,4.79
-        density = 2700,2700,2700,2700,2700,2700,2700,2700,2700
+        velocity_model_file = "data/config/velocity_model.json"
 
         [Spectral]
         f_min = 0.5
@@ -170,13 +192,47 @@ class Config:
 
         [Performance]
         use_parallel = true
+        logging_level = "DEBUG"
         ```
+    
+    The `velocity_model.json` file should have the following structure:
+    ```json
+    {
+        "layer_boundaries": [[-3.00, -1.90], [-1.90, -0.59], [-0.59, 0.22], [0.22, 2.50]],
+        "velocity_vp": [2.68, 2.99, 3.95, 4.50],
+        "velocity_vs": [1.60, 1.79, 2.37, 2.69],
+        "density": [2700, 2700, 2700, 2700]
+    }
+    ```    
     """
 
     def __init__(self):
         self.magnitude = MagnitudeConfig()
         self.spectral = SpectralConfig()
         self.performance = PerformanceConfig()
+    
+    def _parse_float(self, config_section, key, fallback):
+        """ Parsing method for float values from config with validation."""
+        try:
+            value = config_section.getfloat(key, fallback=fallback)
+            return value
+        except ValueError as e:
+            raise ValueError(f"Invalid float for {key} in config.ini: {e}")
+    
+    def _parse_int(self, config_section, key, fallback):
+        """ Parsing method for int values from config with validation."""
+        try:
+            value = config_section.getint(key, fallback=fallback)
+            return value
+        except ValueError as e:
+            raise ValueError(f"Invalid int for {key} in config.ini: {e}")
+    
+    def _parse_list(self, config_section, key, fallback, delimiter=","):
+        """ Parsing method for list values from config with validation."""
+        try:
+            return [float(x) for x in config_section.get(key, fallback=fallback).split(delimiter)]
+        except ValueError as e:
+            raise ValueError(f"Invalid format for {key} in config.ini: {e}")
 
     def load_from_file(self, config_file: str = None) -> None:
         """
@@ -193,62 +249,111 @@ class Config:
 
         config  = ConfigParser()
         if config_file is None:
-            config_file = Path(__file__).parent.parent.parent/ "config.ini"
+            config_file = Path(__file__).parent.parent.parent.joinpath("config.ini")
         if not config.read(config_file):
             raise FileNotFoundError(f"Configuration file {config_file} not found or unreadable")
         
         # Load magnitude config section
         if "Magnitude" in config:
             mag_section = config["Magnitude"]
-            self.magnitude.SNR_THRESHOLD = mag_section.getfloat("snr_threshold", fallback=self.magnitude.SNR_THRESHOLD)
-            self.magnitude.WATER_LEVEL = mag_section.getint("water_level", fallback=self.magnitude.WATER_LEVEL)
-            try:
-                self.magnitude.PRE_FILTER = [float(x) for x in mag_section.get("pre_filter", fallback="2,5,55,60").split(",")]
-            except ValueError as e:
-                raise ValueError(f"Invalid format for pre_filter in config.ini: {e}")
-            self.magnitude.POST_FILTER_F_MIN = mag_section.getfloat("post_filter_f_min", fallback=self.magnitude.POST_FILTER_F_MIN)
-            self.magnitude.POST_FILTER_F_MAX = mag_section.getfloat("post_filter_f_max", fallback=self.magnitude.POST_FILTER_F_MAX)
-            self.magnitude.PADDING_BEFORE_ARRIVAL = mag_section.getfloat("padding_before_arrival", fallback=self.magnitude.PADDING_BEFORE_ARRIVAL)
-            self.magnitude.NOISE_DURATION = mag_section.getfloat("noise_duration", fallback=self.magnitude.NOISE_DURATION)
-            self.magnitude.NOISE_PADDING = mag_section.getfloat("noise_padding", fallback=self.magnitude.NOISE_PADDING)
-            self.magnitude.R_PATTERN_P = mag_section.getfloat("r_pattern_p", fallback=self.magnitude.R_PATTERN_P )
-            self.magnitude.R_PATTERN_S = mag_section.getfloat("r_pattern_s", fallback=self.magnitude.R_PATTERN_S)
-            self.magnitude.FREE_SURFACE_FACTOR = mag_section.getfloat("free_surface_factor", fallback=self.magnitude.FREE_SURFACE_FACTOR)
-            self.magnitude.K_P = mag_section.getfloat("k_p", fallback=self.magnitude.K_P)
-            self.magnitude.K_S = mag_section.getfloat("k_s", fallback=self.magnitude.K_S)
-            boundaries_str = mag_section.get("layer_boundaries", fallback= "-3.00,-1.90; -1.90,-0.59; -0.59, 0.22; 0.22, 2.50; 2.50, 7.00; 7.00,9.00;  9.00,15.00 ; 15.00,33.00; 33.00,9999")
-            try:
-                self.magnitude.LAYER_BOUNDARIES = [[float(x) for x in layer.split(",")] for layer in boundaries_str.split(";")]
-            except ValueError as e:
-                raise ValueError(f"Invalid format for layer_boundaries i config.ini: {e}")
-            try:
-                self.magnitude.VELOCITY_VP = [float(x) for x in mag_section.get("velocity_vp", fallback="2.68, 2.99, 3.95, 4.50, 4.99, 5.60, 5.80, 6.40, 8.00").split(",")]
-                self.magnitude.VELOCITY_VS = [float(x) for x in mag_section.get("velocity_vs", fallback="1.60, 1.79, 2.37, 2.69, 2.99, 3.35, 3.47, 3.83, 4.79").split(",")]
-                self.magnitude.DENSITY = [float(x) for x in mag_section.get("density", fallback="2700, 2700, 2700, 2700, 2700, 2700, 2700, 2700, 2700").split(",")]
-            except ValueError as e:
-                raise ValueError(f"Invalid format for velocity or density in config.ini: {e}")
-            self.magnitude.TAUP_MODEL = mag_section.get("taup_model", fallback=self.magnitude.TAUP_MODEL)
+            snr_threshold = self._parse_float(mag_section, "snr_threshold", self.magnitude.SNR_THRESHOLD)
+            if snr_threshold <= 0:
+                raise ValueError("snr_threshold must be positive")
+            water_level = self._parse_int(mag_section, "water_leve", self.magnitude.WATER_LEVEL)
+            if water_level <=0:
+                raise ValueError("water_level must be positive, otherwise mathematically meaningless")
+            pre_filter = self._parse_list(mag_section, "pre_filter", "0.01,0.02,55,60")
+            if len(pre_filter) != 4 or any(f <=0 for f in pre_filter):
+                raise ValueError("pre_filter must be four positive frequencies (f1, f2, f3, f4)")
+            post_filter_f_min = self._parse_float(mag_section, "post_filter_f_min", self.magnitude.POST_FILTER_F_MIN)
+            if post_filter_f_min <= 0:
+                raise ValueError("post_filter_f_min must be positive")
+            post_filter_f_max = self._parse_float(mag_section, "post_filter_f_max", self.magnitude.POST_FILTER_F_MAX)
+            if post_filter_f_max <= post_filter_f_min:
+                raise ValueError("post_filter_f_max must be greater than post_filter_f_min")
+            padding_before_arrival = self._parse_float(mag_section, "padding_before_arrival", self.magnitude.PADDING_BEFORE_ARRIVAL)
+            if padding_before_arrival < 0:
+                raise ValueError("padding_before_arrival must be non-negative")
+            noise_duration = self._parse_float(mag_section, "noise_duration", self.magnitude.NOISE_DURATION)
+            if noise_duration <= 0:
+                raise ValueError("noise_duration must be positive")
+            noise_padding = self._parse_float(mag_section, "noise_padding", self.magnitude.NOISE_PADDING)
+            if noise_padding < 0:
+                raise ValueError("noise_padding must be positive")
+            r_pattern_p = self._parse_float(mag_section, "r_pattern_p", self.magnitude.R_PATTERN_P)
+            r_pattern_s = self._parse_float(mag_section, "r_pattern_s", self.magnitude.R_PATTERN_S)
+            free_surface_factor = self._parse_float(mag_section, "free_surface_factor", self.magnitude.FREE_SURFACE_FACTOR)
+            if free_surface_factor <= 0:
+                raise ValueError("free_surface_factor must be positive")
+            k_p = self._parse_float(mag_section, "k_p", self.magnitude.K_P)
+            k_s = self._parse_float(mag_section, "k_s", self.magnitude.K_S)
+            taup_model = mag_section.get("taup_model", fallback=self.magnitude.TAUP_MODEL)
+            velocity_model_file = mag_section.get("velocity_model_file", fallback=self.magnitude.VELOCITY_MODEL_FILE)
 
+            # Reconstruct MagnitudeConfig to trigger __post_init__
+            self.magnitude = MagnitudeConfig(
+                SNR_THRESHOLD=snr_threshold,
+                WATER_LEVEL=water_level,
+                PRE_FILTER=pre_filter,
+                POST_FILTER_F_MIN=post_filter_f_min,
+                POST_FILTER_F_MAX=post_filter_f_max,
+                PADDING_BEFORE_ARRIVAL=padding_before_arrival,
+                NOISE_DURATION=noise_duration,
+                NOISE_PADDING=noise_padding,
+                R_PATTERN_P=r_pattern_p,
+                R_PATTERN_S=r_pattern_s,
+                FREE_SURFACE_FACTOR=free_surface_factor,
+                K_P=k_p,
+                K_S=k_s,
+                TAUP_MODEL=taup_model,
+                VELOCITY_MODEL_FILE=velocity_model_file
+            )
+
+            # Validate TAUP_MODEL
+            from obspy.taup import TauPyModel
+            try:
+                TauPyModel(model=self.magnitude.TAUP_MODEL)
+            except Exception as e:
+                raise ValueError(f"Invalid taup_model '{self.magnitude.TAUP_MODEL}': {e}")
 
         # Load spectral config section
         if "Spectral" in config:
             spec_section = config["Spectral"]
-            self.spectral.F_MIN = spec_section.getfloat("f_min", fallback=self.spectral.F_MIN)
-            self.spectral.F_MAX = spec_section.getfloat("f_max", fallback=self.spectral.F_MAX)
-            self.spectral.OMEGA_0_RANGE_MIN = spec_section.getfloat("omega_0_range_min", fallback=self.spectral.OMEGA_0_RANGE_MIN)
-            self.spectral.OMEGA_0_RANGE_MAX = spec_section.getfloat("omega_0_range_max", fallback=self.spectral.OMEGA_0_RANGE_MAX)
-            self.spectral.Q_RANGE_MIN =  spec_section.getfloat("q_range_min", fallback=self.spectral.Q_RANGE_MIN)
-            self.spectral.Q_RANGE_MAX =  spec_section.getfloat("q_range_max", fallback=self.spectral.Q_RANGE_MAX)
-            self.spectral.FC_RANGE_BUFFER = spec_section.getfloat("fc_range_buffer", fallback=self.spectral.FC_RANGE_BUFFER)
-            self.spectral.DEFAULT_N_SAMPLES = spec_section.getint("default_n_samples", fallback=self.spectral.DEFAULT_N_SAMPLES)
-            self.spectral.N_FACTOR = spec_section.getint("n_factor", fallback=self.spectral.N_FACTOR)
-            self.spectral.Y_FACTOR = spec_section.getint("y_factor", fallback=self.spectral.Y_FACTOR)
+            self.spectral.F_MIN = self._parse_float(spec_section, "f_min", self.spectral.F_MIN)
+            if self.spectral.F_MIN <= 0:
+                raise ValueError("f_min must be positive")
+            self.spectral.F_MAX = self._parse_float(spec_section, "f_max", self.spectral.F_MAX)
+            if self.spectral.F_MAX < self.spectral.F_MIN:
+                raise ValueError("f_max must be greater than f_min")
+            self.spectral.OMEGA_0_RANGE_MIN = self._parse_float(spec_section, "omega_0_range_min", self.spectral.OMEGA_0_RANGE_MIN)
+            if self.spectral.OMEGA_0_RANGE_MIN <= 0:
+                raise ValueError("omega_0_range_min must be positive")
+            self.spectral.OMEGA_0_RANGE_MAX = self._parse_float(spec_section, "omega_0_range_max", self.spectral.OMEGA_0_RANGE_MAX)
+            if self.spectral.OMEGA_0_RANGE_MAX <= self.spectral.OMEGA_0_RANGE_MAX:
+                raise ValueError("omega_0_range_max must be greater than omega_0_range_min")
+            self.spectral.Q_RANGE_MIN = self._parse_float(spec_section, "q_range_min", self.spectral.Q_RANGE_MIN)
+            if self.spectral.Q_RANGE_MIN <= 0:
+                raise ValueError("q_range_min must be positive")
+            self.spectral.Q_RANGE_MAX = self._parse_float(spec_section, "q_range_max", self.spectral.Q_RANGE_MAX)
+            if self.spectral.Q_RANGE_MAX <= self.spectral.Q_RANGE_MIN:
+                raise ValueError("q_range_max must be greater than q_range_min")
+            self.spectral.FC_RANGE_BUFFER = self._parse_float(spec_section, "fc_range_buffer", self.spectral.FC_RANGE_BUFFER)
+            if self.spectral.FC_RANGE_BUFFER <= 0:
+                raise ValueError("fc_range_buffer must be positive")
+            self.spectral.DEFAULT_N_SAMPLES = self._parse_float(spec_section, "default_n_samples", self.spectral.DEFAULT_N_SAMPLES)
+            if self.spectral.DEFAULT_N_SAMPLES <= 0:
+                raise ValueError("default_n_samples must be positive")
+            self.spectral.N_FACTOR = self._parse_int(spec_section, "n_factor", self.spectral.N_FACTOR)
+            self.spectral.Y_FACTOR = self._parse_int(spec_section, "y_factor", self.spectral.Y_FACTOR)
         
         # Load performance config section
         if "Performance" in config:
             perf_section = config["Performance"]
             self.performance.USE_PARALLEL = perf_section.getboolean("use_parallel", fallback=self.performance.USE_PARALLEL)
             self.performance.LOGGING_LEVEL = perf_section.get("logging_level", fallback=self.performance.LOGGING_LEVEL)
+            valid_levels = ["DEBUG", "INFO", "WARNING", "ERROR"]
+            if self.performance.LOGGING_LEVEL not in valid_levels:
+                raise ValueError(f"logging_level must be one of: {valid_levels}")
     
     def reload(self, config_file: str = None) -> None:
         """
