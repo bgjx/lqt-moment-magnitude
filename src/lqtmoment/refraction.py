@@ -587,7 +587,7 @@ def calculate_inc_angle(
                               figure_path)
                 return take_off_p, total_tt_p, inc_angle_p, take_off_s, total_tt_s, inc_angle_s
 
-            if snr_pg < 1.75 or snr_pn < 1.75:
+            if snr_pg < CONFIG.magnitude.SNR_THRESHOLD or snr_pn < CONFIG.magnitude.SNR_THRESHOLD:
                 # Default to Pg when SNR is too low
                 take_off_p = take_off_upward_refract_p
                 total_tt_p = upward_refract_tt_p
