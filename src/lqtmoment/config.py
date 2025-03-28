@@ -21,20 +21,22 @@ Usage:
     following structure:
 
     ```ini
-    [Magnitude]
-    snr_threshold = 2.0
-    pre_filter = 0.01,0.02,55,60
+        [Magnitude]
+        snr_threshold = 2.0
+        pre_filter = 0.01,0.02,55,60
+        velocity_model_file = "data/config/velocity_model.json"
 
-    [Spectral]
-    f_min = 0.5
-    f_max = 40.0
+        [Spectral]
+        f_min = 0.5
+        f_max = 40.0
+        default_n_samples = 2000
 
-    [Performance]
-    use_parallel = true
-    logging_level = "DEBUG"
+        [Performance]
+        use_parallel = true
+        logging_level = "DEBUG"
     ```
 
-    For custom velocity model, the "velocity_mddel.json" file should have the 
+    For custom velocity model, the "velocity_model.json" file should have the 
     following structure:
 
     ```json
@@ -58,6 +60,7 @@ from configparser import ConfigParser
 from typing import List, Tuple
 from pathlib import Path
 import json
+
 
 @dataclass
 class MagnitudeConfig:
@@ -130,6 +133,15 @@ class MagnitudeConfig:
         # Validation
         if not(len(self.LAYER_BOUNDARIES) == len(self.VELOCITY_VP) == len(self.VELOCITY_VS) == len(self.DENSITY)):
             raise ValueError("LAYER_BOUNDARIES, VELOCITY_VP, VELOCITY_VS, and DENSITY must have the same length")
+        if any(vp <= 0 for vp in self.VELOCITY_VP) or any(vs <= 0 for vs in self.VELOCITY_VS):
+            raise ValueError("Velocities must be positive")
+        if any(d <= 0 for d in self.DENSITY):
+            raise ValueError("Densities must be positive")
+        if self.R_PATTERN_P <= 0 or self.R_PATTERN_S <= 0:
+            raise ValueError("R_PATTERN_P and R_PATTERN_S must be positive")
+        if self.K_P <= 0 or self.K_S <= 0:
+            raise ValueError("K_P and K_S must be positive")
+
 
 @dataclass
 class SpectralConfig:
@@ -139,8 +151,8 @@ class SpectralConfig:
     Attributes:
         F_MIN (float): Minimum frequency for fitting in Hz (default: 1.0).
         F_MAX (float): Maximum frequency for fitting in Hz (default: 45.0).
-        OMEGA_0_RANGE_MIN (float): Minimum Omega_0 in meters (default: 0.01).
-        OMEGA_0_RANGE_MAX (float): Maximum Omega_0 in meters (default: 2000.0).
+        OMEGA_0_RANGE_MIN (float): Minimum Omega_0 in nm/Hz (default: 0.01).
+        OMEGA_0_RANGE_MAX (float): Maximum Omega_0 in nm/Hz (default: 2000.0).
         Q_RANGE_MIN (float): Minimum quality factor Q (default: 50.0).
         Q_RANGE_MAX (float): Maximum quality factor Q (default: 250.0).
         FC_RANGE_BUFFER (float): Buffer factor for corner frequency range (default: 2.0).
@@ -159,6 +171,7 @@ class SpectralConfig:
     N_FACTOR: int = 2
     Y_FACTOR: int = 1
 
+
 @dataclass
 class PerformanceConfig:
     """
@@ -166,10 +179,12 @@ class PerformanceConfig:
 
     Attributes:
         USE_PARALLEL (bool): Enable parallel processing (default: False)
+        LOGGING_LEVEL (str): Logging verbosity (DEBUG, INFO, WARNING, ERROR, default: INFO)
 
     """
     USE_PARALLEL: bool = False
     LOGGING_LEVEL: str = "INFO"
+
 
 class Config:
     """
@@ -180,19 +195,19 @@ class Config:
 
     Example:
         ```ini
-        [Magnitude]
-        snr_threshold = 2.0
-        pre_filter = 0.01,0.02,55,60
-        velocity_model_file = "data/config/velocity_model.json"
+            [Magnitude]
+            snr_threshold = 2.0
+            pre_filter = 0.01,0.02,55,60
+            velocity_model_file = "data/config/velocity_model.json"
 
-        [Spectral]
-        f_min = 0.5
-        f_max = 40.0
-        default_n_samples = 2000
+            [Spectral]
+            f_min = 0.5
+            f_max = 40.0
+            default_n_samples = 2000
 
-        [Performance]
-        use_parallel = true
-        logging_level = "DEBUG"
+            [Performance]
+            use_parallel = true
+            logging_level = "DEBUG"
         ```
     
     The `velocity_model.json` file should have the following structure:
@@ -205,34 +220,77 @@ class Config:
     }
     ```    
     """
-
     def __init__(self):
         self.magnitude = MagnitudeConfig()
         self.spectral = SpectralConfig()
         self.performance = PerformanceConfig()
     
+
     def _parse_float(self, config_section, key, fallback):
-        """ Parsing method for float values from config with validation."""
+        """
+        Parsing method for float values from config with validation.
+        
+        Args:
+            config_section: ConfigParser section object to parse from.
+            key (str): Key to parse.
+            fallback: Fallback value if key is not found.
+        
+        Returns: 
+            float: Parsed float value.
+        
+        Raises:
+            ValueError: If the value cannot be parsed as a float.     
+        """
         try:
             value = config_section.getfloat(key, fallback=fallback)
             return value
         except ValueError as e:
             raise ValueError(f"Invalid float for {key} in config.ini: {e}")
     
+
     def _parse_int(self, config_section, key, fallback):
-        """ Parsing method for int values from config with validation."""
+        """
+        Parsing method for int values from config with validation.
+        
+        Args:
+            config_section: ConfigParser section object to parse from.
+            key (str): key to parse.
+            fallback: Fallback value if key is not found.
+        
+        Returns:
+            int: Parsed integer value.
+        
+        Raises:
+            ValueError: If the value cannot be parsed as an integer.
+        """
         try:
             value = config_section.getint(key, fallback=fallback)
             return value
         except ValueError as e:
             raise ValueError(f"Invalid int for {key} in config.ini: {e}")
     
+
     def _parse_list(self, config_section, key, fallback, delimiter=","):
-        """ Parsing method for list values from config with validation."""
+        """
+        Parsing method for list values from config with validation.
+        
+        Args:
+            config_section: ConfigParser section object to parse from.
+            key (str): Key to Parse.
+            fallback: Fallback value if key is not found.
+            delimiter (str): Delimiter to split the string (default: ",").
+        
+        Returns:
+            List[float]: List of parsed float values.
+        
+        Raises:
+            ValueError: If the value cannot be parsed as a list of floats.
+        """
         try:
             return [float(x) for x in config_section.get(key, fallback=fallback).split(delimiter)]
         except ValueError as e:
             raise ValueError(f"Invalid format for {key} in config.ini: {e}")
+
 
     def load_from_file(self, config_file: str = None) -> None:
         """
@@ -246,7 +304,6 @@ class Config:
             FileNotFoundError: If the configuration file is not found or unreadable.
             ValueError: If configuration parameters are invalid.       
         """
-
         config  = ConfigParser()
         if config_file is None:
             config_file = Path(__file__).parent.parent.parent.joinpath("config.ini")
@@ -259,7 +316,7 @@ class Config:
             snr_threshold = self._parse_float(mag_section, "snr_threshold", self.magnitude.SNR_THRESHOLD)
             if snr_threshold <= 0:
                 raise ValueError("snr_threshold must be positive")
-            water_level = self._parse_int(mag_section, "water_leve", self.magnitude.WATER_LEVEL)
+            water_level = self._parse_int(mag_section, "water_level", self.magnitude.WATER_LEVEL)
             if water_level <=0:
                 raise ValueError("water_level must be positive, otherwise mathematically meaningless")
             pre_filter = self._parse_list(mag_section, "pre_filter", "0.01,0.02,55,60")
@@ -279,7 +336,7 @@ class Config:
                 raise ValueError("noise_duration must be positive")
             noise_padding = self._parse_float(mag_section, "noise_padding", self.magnitude.NOISE_PADDING)
             if noise_padding < 0:
-                raise ValueError("noise_padding must be positive")
+                raise ValueError("noise_padding must be non-negative")
             r_pattern_p = self._parse_float(mag_section, "r_pattern_p", self.magnitude.R_PATTERN_P)
             r_pattern_s = self._parse_float(mag_section, "r_pattern_s", self.magnitude.R_PATTERN_S)
             free_surface_factor = self._parse_float(mag_section, "free_surface_factor", self.magnitude.FREE_SURFACE_FACTOR)
@@ -329,7 +386,7 @@ class Config:
             if self.spectral.OMEGA_0_RANGE_MIN <= 0:
                 raise ValueError("omega_0_range_min must be positive")
             self.spectral.OMEGA_0_RANGE_MAX = self._parse_float(spec_section, "omega_0_range_max", self.spectral.OMEGA_0_RANGE_MAX)
-            if self.spectral.OMEGA_0_RANGE_MAX <= self.spectral.OMEGA_0_RANGE_MAX:
+            if self.spectral.OMEGA_0_RANGE_MAX <= self.spectral.OMEGA_0_RANGE_MIN:
                 raise ValueError("omega_0_range_max must be greater than omega_0_range_min")
             self.spectral.Q_RANGE_MIN = self._parse_float(spec_section, "q_range_min", self.spectral.Q_RANGE_MIN)
             if self.spectral.Q_RANGE_MIN <= 0:
@@ -340,7 +397,7 @@ class Config:
             self.spectral.FC_RANGE_BUFFER = self._parse_float(spec_section, "fc_range_buffer", self.spectral.FC_RANGE_BUFFER)
             if self.spectral.FC_RANGE_BUFFER <= 0:
                 raise ValueError("fc_range_buffer must be positive")
-            self.spectral.DEFAULT_N_SAMPLES = self._parse_float(spec_section, "default_n_samples", self.spectral.DEFAULT_N_SAMPLES)
+            self.spectral.DEFAULT_N_SAMPLES = self._parse_int(spec_section, "default_n_samples", self.spectral.DEFAULT_N_SAMPLES)
             if self.spectral.DEFAULT_N_SAMPLES <= 0:
                 raise ValueError("default_n_samples must be positive")
             self.spectral.N_FACTOR = self._parse_int(spec_section, "n_factor", self.spectral.N_FACTOR)
@@ -362,7 +419,6 @@ class Config:
         Args:
             config_file (str, optional): Path to the configuration file.
         """
-
         self.__init__()
         self.load_from_file(config_file)
 
