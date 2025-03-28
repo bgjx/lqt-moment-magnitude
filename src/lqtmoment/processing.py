@@ -267,6 +267,7 @@ def calculate_moment_magnitude(
         station_lat, station_lon, station_elev_m = station_info.station_lat, station_info.station_lon, station_info.station_elev_m
         p_arr_time = UTCDateTime(station_info.p_arr_time)
         s_arr_time = UTCDateTime(station_info.s_arr_time)
+        s_p_lag_time_sec = station_info.s_p_lag_time_sec
         
         # Calculate the source distance and the azimuth (hypo to station azimuth)
         epicentral_distance, azimuth, _ = gps2dist_azimuth(source_lat, source_lon, station_lat, station_lon)
@@ -295,7 +296,49 @@ def calculate_moment_magnitude(
                 stream_zrt = stream_displacement.copy()
                 stream_zrt.rotate(method="NE->RT", back_azimuth=azimuth)
                 p_trace, sv_trace, sh_trace = stream_zrt.traces # Z, R, T components
-            elif source_type =='teleseismic_earthquake':
+            elif source_type == 'very_local_earthquake' and lqt_mode:
+                trace_Z = stream_displacement.select(component='Z')
+                _, _, incidence_angle_p, _, _, incidence_angle_s = calculate_inc_angle(
+                                                                    source_coordinate,
+                                                                    station_coordinate,
+                                                                    CONFIG.magnitude.LAYER_BOUNDARIES,
+                                                                    CONFIG.magnitude.VELOCITY_VP,
+                                                                    CONFIG.magnitude.VELOCITY_VS,
+                                                                    source_type,
+                                                                    trace_Z,
+                                                                    s_p_lag_time_sec,
+                                                                    p_arr_time,
+                                                                    s_arr_time                                                                    
+                                                                    )
+                stream_lqt_p = stream_displacement.copy()
+                stream_lqt_s = stream_displacement.copy()
+                stream_lqt_p.rotate(method="ZNE->LQT", back_azimuth=azimuth, inclination=incidence_angle_p)
+                stream_lqt_s.rotate(method="ZNE->LQT", back_azimuth=azimuth, inclination=incidence_angle_s)
+                p_trace, _, _ = stream_lqt_p.traces # L, Q, T components
+                _, sv_trace, sh_trace = stream_lqt_s.traces
+                
+            elif source_type == 'local_earthquake':
+                trace_Z = stream_displacement.select(component='Z')
+                _, _, incidence_angle_p, _, _, incidence_angle_s = calculate_inc_angle(
+                                                                    source_coordinate,
+                                                                    station_coordinate,
+                                                                    CONFIG.magnitude.LAYER_BOUNDARIES,
+                                                                    CONFIG.magnitude.VELOCITY_VP,
+                                                                    CONFIG.magnitude.VELOCITY_VS,
+                                                                    source_type,
+                                                                    trace_Z,
+                                                                    s_p_lag_time_sec,
+                                                                    p_arr_time,
+                                                                    s_arr_time                                                                    
+                                                                    )
+                stream_lqt_p = stream_displacement.copy()
+                stream_lqt_s = stream_displacement.copy()
+                stream_lqt_p.rotate(method="ZNE->LQT", back_azimuth=azimuth, inclination=incidence_angle_p)
+                stream_lqt_s.rotate(method="ZNE->LQT", back_azimuth=azimuth, inclination=incidence_angle_s)
+                p_trace, _, _ = stream_lqt_p.traces # L, Q, T components
+                _, sv_trace, sh_trace = stream_lqt_s.traces
+
+            else:
                 model = TauPyModel(model=CONFIG.magnitude.TAUP_MODEL)
                 arrivals = model.get_travel_times(
                     source_depth_in_km=(source_depth_m/1e3),
@@ -311,31 +354,9 @@ def calculate_moment_magnitude(
                 stream_lqt_s = stream_displacement.copy()
                 stream_lqt_p.rotate(method="ZNE->LQT", back_azimuth=azimuth, inclination=incidence_angle_p)
                 stream_lqt_s.rotate(method="ZNE->LQT", back_azimuth=azimuth, inclination=incidence_angle_s)
-                p, _, _ = stream_lqt_p.traces # L, Q, T components
-                _, sv, sh = stream_lqt_s.traces
-            else:
-                trace_Z = stream_displacement.select(component='Z')
-                incidence_angle_p, incidence_angle_s = calculate_inc_angle(
-                                                                source_coordinate,
-                                                                station_coordinate,
-                                                                CONFIG.magnitude.LAYER_BOUNDARIES,
-                                                                CONFIG.magnitude.VELOCITY_VP,
-                                                                CONFIG.magnitude.VELOCITY_VS,
-                                                                source_type,                                                                
-                                                                trace_Z
-                                                                )
-            
-
-                _, _, incidence_angle_s = calculate_inc_angle(source_coordinate, station_coordinate,
-                                                                CONFIG.magnitude.LAYER_BOUNDARIES,
-                                                                CONFIG.magnitude.VELOCITY_VS)
-                stream_lqt_p = stream_displacement.copy()
-                stream_lqt_s = stream_displacement.copy()
-                stream_lqt_p.rotate(method="ZNE->LQT", back_azimuth=azimuth, inclination=incidence_angle_p)
-                stream_lqt_s.rotate(method="ZNE->LQT", back_azimuth=azimuth, inclination=incidence_angle_s)
-                p, _, _ = stream_lqt_p.traces # L, Q, T components
-                _, sv, sh = stream_lqt_s.traces
-            rotated_stream = Stream(traces=[p, sv, sh])
+                p_trace, _, _ = stream_lqt_p.traces # L, Q, T components
+                _, sv_trace, sh_trace = stream_lqt_s.traces
+            rotated_stream = Stream(traces=[p_trace, sv_trace, sh_trace])
         except (ValueError, RuntimeError) as e:
             logger.warning(f"Earthquake_{source_id}: An error occurred when rotating component for station {station}.", exc_info=True)
             continue
