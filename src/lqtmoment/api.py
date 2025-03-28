@@ -36,7 +36,7 @@ except ImportError as e:
 warnings.filterwarnings("ignore", category=DeprecationWarning, module="pandas")
 logging.basicConfig(
     filename = 'lqt_runtime.log',
-    level = logging.INFO,
+    level = CONFIG.performance.LOGGING_LEVEL.upper(),
     format = "%(asctime)s - %(levelname)s - %(message)s",
     datefmt = "%Y-%m-%d %H:%M:%S"
 )
