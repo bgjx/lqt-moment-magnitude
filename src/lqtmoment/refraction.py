@@ -378,7 +378,7 @@ def calculate_inc_angle(
     try:
         up_ref_p, final_take_off_p = up_refract(epicentral_distance, up_model_p)
     except (RuntimeError, ValueError) as e:
-        up_ref_p, final_take_off_p = None, None
+        raise ValueError(f"Failed to compute upward-refracted ray (Pg): {str(e)}")
 
     try:
         down_ref_p, down_up_ref_p = down_refract(epicentral_distance, up_model_p, down_model_p)
@@ -427,7 +427,7 @@ def calculate_inc_angle(
     try:
         up_ref_s, final_take_off_s = up_refract(epicentral_distance, up_model_s)
     except (RuntimeError, ValueError) as e:
-        up_ref_s, final_take_off_s = None, None
+        raise ValueError(f"Failed to compute upward-refracted S-wave (Sg): {str(e)}")
     
     if up_ref_s is not None:
         last_ray_s = up_ref_s[f"take_off_{final_take_off_s}"]
