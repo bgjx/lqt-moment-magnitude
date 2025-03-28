@@ -45,8 +45,8 @@ Documentation = "https://bgjx.io/"
 BugTracker = "https://github.com/bgjx/lqt-moment-magnitude/issues"
 
 [project.scripts]
-lqt-moment = "lqtmoment.main:main"
-lqt-catalog = "lqtmoment.catalog_builder:main"
+lqtmoment = "lqtmoment.main:main"
+lqtcatalog = "lqtmoment.catalog_builder:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
