@@ -9,7 +9,7 @@ description = "Seismic moment magnitude calculation using advanced spectral fitt
 readme = "README.md"
 authors = [{name = "Arham Zakki Edelo", email = "edelo.arham@gmail.com"}]
 license = { file = "LICENSE" }
-keywords = ["Seismology", "Moment Magnitude", "Spectral Fitting", "LQT Component"]
+keywords = ["Seismology", "Moment Magnitude", "Spectral Fitting", "LQT Component", "Earthquake", "Geophysics"]
 dependencies = [
     "numpy>=1.21.0",
     "pandas>=1.5.0",
