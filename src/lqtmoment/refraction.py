@@ -510,7 +510,7 @@ def calculate_inc_angle(
             raise ValueError("Both Pg and Pn ray paths are required for local earthquake comparison.")
         
         gap = abs(critical_refract_tt_p - upward_refract_tt_p)
-        threshold = 1.5 * dominant_period if hypo_depth_m > -20000 else 2 * dominant_period
+        threshold = 1.5 * dominant_period if hypo_depth_m > -10000 else 2 * dominant_period
         if gap < threshold:
             # Default to Pg when the gap is too small
             take_off_p = take_off_upward_refract_p
