@@ -392,9 +392,7 @@ def calculate_inc_angle(
         upward_refract_tt_p = np.sum(last_ray_p['travel_times'])
         upward_incidence_angle_p = last_ray_p['refract_angles'][-1]
     else:
-        take_off_upward_refract_p = None
-        upward_refract_tt_p = np.inf
-        upward_incidence_angle_p = None
+        raise ValueError("Upward-refracted ray (Pg) computation failed.")
 
     # Result from critically refracted P-wave (Pn)
     critical_ref_p = {} # list of downward critically refracted ray (take_off_angle, total_tt, incidence_angle)
@@ -417,11 +415,6 @@ def calculate_inc_angle(
         critical_refract_tt_p = np.inf
         critical_incidence_angle_p = None
         
-
-    # Determine the fastest P-wave (Pg or Pn) for S-P lag time
-    t_p = min(upward_refract_tt_p, critical_refract_tt_p)
-    p_phase = "Pg" if upward_refract_tt_p <= critical_refract_tt_p else "Pn"
-
     # Compute S-wave travel time and incidence angles (needed for S-wave incidence angle)
     if velocities_s is None:
         velocities_s = [v / np.sqrt(3) for v in velocities_p]
@@ -442,9 +435,7 @@ def calculate_inc_angle(
         upward_refract_tt_s = np.sum(last_ray_s['travel_times'])
         upward_incidence_angle_s = last_ray_s['refract_angles'][-1]
     else:
-        take_off_upward_refract_s= None
-        upward_refract_tt_s = np.inf
-        upward_incidence_angle_s = None
+        raise ValueError("Upward-refracted S-wave (sg) computation failed.")
     
     # Compute Sn (critically refracted S-wave)
     try:
@@ -473,18 +464,21 @@ def calculate_inc_angle(
         critical_refract_tt_s = np.inf
         critical_incidence_angle_s = None
     
-    # Compute S-P lag time (only if not provided)
-    if s_p_lag_time is None:
-        # Pair the S-wave with the fastest P-wave for calculating S-P lag time
-        if p_phase == "Pg":
-            t_s = upward_refract_tt_s
-            s_phase = "Sg"
-        else:
-            t_s = critical_refract_tt_s
-            s_phase = "Sn"
+    # Determine the P and S phases for S-P lag time calculation
+    t_p = min(upward_refract_tt_p, critical_refract_tt_p)
+    p_phase = "Pg" if upward_refract_tt_p <= critical_refract_tt_p else "Pn"
+    if p_phase == "Pg":
+        t_s = upward_refract_tt_s
+        s_phase = "Sg"
+    else:
+        t_s = critical_refract_tt_s
+        s_phase = "Sn"
     
-        # Compute S-P lag time dynamically
+    # Compute S-P lag time dynamically (only if not provided)
+    if s_p_lag_time is None:
         s_p_lag_time = t_s - t_p if t_s != np.inf and t_p != np.inf else None
+        if s_p_lag_time is None:
+            raise ValueError("Failed to compute S-P lag time dynamically.")
 
     # Compute dominant period
     dominant_period = 2.0 # default fallback
@@ -495,8 +489,26 @@ def calculate_inc_angle(
         dominant_period = max(dominant_period_psd, dominant_period_sp)
         dominant_period = max(1/CONFIG.spectral.F_MAX, min(CONFIG.spectral.F_MIN, dominant_period))
 
-    # Check tha Gap between Pg and Pn to determine whether energy comparison need to be done
-    if source_type == "local_earthquake" and trace_z is not None and critical_ref_p and up_ref_p:
+    # For very local earthquake we directly use Pg
+    if source_type == "very_local_earthquake":
+        take_off_p = take_off_upward_refract_p
+        total_tt_p = upward_refract_tt_p
+        inc_angle_p = upward_incidence_angle_p
+        take_off_s = take_off_upward_refract_s
+        total_tt_s = upward_refract_tt_s
+        inc_angle_s = upward_incidence_angle_s
+        logger.info(f"Very local earthquake at distance {epicentral_distance/1000:.1f} km, using Pg, "
+              f"P-Incidence Angle: {inc_angle_p:.2f}°, S-Incidence Angle: {inc_angle_s:.2f}°")
+    
+    # For local earthquake, we perform the energy comparison with Pg as fallback if requirements unsatisfied
+    else:
+        if trace_z is None:
+            raise ValueError("Vertical trace is required for local earthquake energy comparison.")
+        if p_arr_time is None or p_arr_time < 0:
+            raise ValueError("Valid P arrival time is required for local earthquake energy comparison.")
+        if not critical_ref_p or not up_ref_p:
+            raise ValueError("Both Pg and Pn ray paths are required for local earthquake comparison.")
+        
         gap = abs(critical_refract_tt_p - upward_refract_tt_p)
         threshold = 1.5 * dominant_period if hypo_depth_m > -20000 else 2 * dominant_period
         if gap < threshold:
@@ -552,26 +564,11 @@ def calculate_inc_angle(
                 signal = np.mean(np.abs(trace.data[idx3:idx4]))
                 return signal/noise
 
-            # Use p_arrival_time if provided, otherwise estimate it using t_p and the trace start time
-            if p_arr_time is not None and p_arr_time >= 0:
-                arrival_time_pg = p_arr_time
-                arrival_time_pn = p_arr_time + (critical_refract_tt_p - upward_refract_tt_p)
-            else:
-                # If p_arrival_time is not provided, default to Pg and skip energy comparison
-                take_off_p = take_off_upward_refract_p
-                total_tt_p = upward_refract_tt_p
-                inc_angle_p = upward_incidence_angle_p
-                take_off_s = take_off_upward_refract_s
-                total_tt_s = upward_refract_tt_s
-                inc_angle_s = upward_incidence_angle_s
-                logger.info(f"Local earthquake: P arrival time not provided at distance {epicentral_distance/1000:.1f} km, "
-                            f"defaulting to Pg, P-incidence Angle: {inc_angle_p:.2f}°, S-Incidence Angle: {inc_angle_s:.2f}°")
-                if figure_statement:
-                    plot_rays(hypo_depth_m, sta_elev_m, epicentral_distance, velocities_p, raw_model_p,
-                              up_model_p, down_model_p, last_ray_p, critical_ref_p, down_ref_p, down_up_ref_p,
-                              figure_path)
-                return take_off_p, total_tt_p, inc_angle_p, take_off_s, total_tt_s, inc_angle_s
+            # Compute arrival times for Pg and Pn(based on ray path simulation)
+            arrival_time_pg = p_arr_time
+            arrival_time_pn = p_arr_time + (critical_refract_tt_p - upward_refract_tt_p) 
             
+            # Compute SNR for Pg and Pn (SNR need to be good enough for energy comparison)
             try:
                 snr_pg = compute_snr(trace_z, arrival_time_pg, window_length, 0.75*window_length)
                 snr_pn = compute_snr(trace_z, arrival_time_pn, window_length, 0.75*window_length)
@@ -682,23 +679,7 @@ def calculate_inc_angle(
                     inc_angle_p = upward_incidence_angle_p
                     take_off_s = take_off_upward_refract_s
                     total_tt_s = upward_refract_tt_s
-                    inc_angle_s = upward_incidence_angle_s
-    else:
-        if critical_ref_p and fastest_tt < upward_refract_tt_p:
-            take_off_p = take_off_critical_refract_p
-            total_tt_p = critical_refract_tt_p
-            inc_angle_p = critical_incidence_angle_p
-            take_off_s = take_off_critical_refract_s
-            total_tt_s = critical_refract_tt_s
-            inc_angle_s = critical_incidence_angle_s
-        else:
-            take_off_p = take_off_upward_refract_p
-            total_tt_p = upward_refract_tt_p
-            inc_angle_p = upward_incidence_angle_p
-            take_off_s = take_off_upward_refract_s
-            total_tt_s = upward_refract_tt_s
-            inc_angle_s = upward_incidence_angle_s
-    
+                    inc_angle_s = upward_incidence_angle_s    
     if figure_statement:
         plot_rays(hypo_depth_m, sta_elev_m, epicentral_distance,
                   velocities_p, raw_model_p, up_model_p, down_model_p,
