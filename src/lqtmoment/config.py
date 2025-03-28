@@ -144,6 +144,7 @@ class PerformanceConfig:
 
     """
     USE_PARALLEL: bool = False
+    LOGGING_LEVEL: str = "INFO"
 
 class Config:
     """
@@ -247,6 +248,7 @@ class Config:
         if "Performance" in config:
             perf_section = config["Performance"]
             self.performance.USE_PARALLEL = perf_section.getboolean("use_parallel", fallback=self.performance.USE_PARALLEL)
+            self.performance.LOGGING_LEVEL = perf_section.get("logging_level", fallback=self.performance.LOGGING_LEVEL)
     
     def reload(self, config_file: str = None) -> None:
         """
