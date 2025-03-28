@@ -1,11 +1,11 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=61.0", "wheel", "build>=1.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "lqtmoment"
 version = "0.1.0"
-description = "Rapid seismic moment magnitude calculation using advanced stochastic spectral fitting method in LQT components for very-local to teleseismic earthquakes"
+description = "Seismic moment magnitude calculation using advanced spectral fitting method in LQT components"
 readme = "README.md"
 authors = [{name = "Arham Zakki Edelo", email = "edelo.arham@gmail.com"}]
 license = { file = "LICENSE" }
@@ -18,8 +18,7 @@ dependencies = [
     "scikit-optimize>=0.10.0",
     "obspy>=1.3.0",
     "tqdm>=4.60.0",
-    "pathlib>=1.0.0",
-    "configparser>=5.0.0", 
+    "configparser>=5.0.0"
 ]
 optional-dependencies.tests = ["pytest>=8.0.0"]
 requires-python = ">=3.8"
@@ -36,15 +35,18 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Geophysics",
     "Intended Audience :: Science/Research",
     "Development Status :: 4 - Beta",
+    "Natural Language :: English"
 ]
 
 [project.urls]
 Homepage = "https://github.com/bgjx/lqt-moment-magnitude"
 Repository = "https://github.com/bgjx/lqt-moment-magnitude"
+Documentation = "https://bgjx.io/"
+BugTracker = "https://github.com/bgjx/lqt-moment-magnitude/issues"
 
 [project.scripts]
-LQTMagnitude = "lqtmoment.main:main"
-LQTCatBuild = "lqtmoment.catalog_builder:main"
+lqt-moment = "lqtmoment.main:main"
+lqt-catalog = "lqtmoment.catalog_builder:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
