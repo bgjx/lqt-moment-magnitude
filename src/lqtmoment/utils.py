@@ -30,6 +30,32 @@ REQUIRED_CATALOG_COLUMNS = [
         ]
 
 
+def load_data(data_dir: str) -> pd.DataFrame:
+    """
+    Load tabular data from given data dir, this function will handle
+    data suffix/format (.xlsx / .csv) for more dynamic inputs.
+
+    Args:
+        data_dir (str): Directory of the data file.
+
+    Returns:
+        pd.DataFrame: DataFrame of tabular data.
+    
+    Raises:
+        FileNotFoundError: If data files do not exist.
+        ValueError: If data files fail to load or unsupported format.
+    """
+    data_path = Path(data_dir)
+    if not data_path.is_file():
+        raise FileNotFoundError(f"Given data path is not a file: {data_path}")
+    if data_path.suffix == ".xlsx":
+        return pd.read_excel(data_path, index_col=None)
+    elif data_path.suffix == ".csv":
+        return pd.read_csv(data_path, index_col=None)
+    else:
+        raise ValueError(f"Unsupported data file format: {data_path.suffix}. Supported formats: .csv, .xlsx")
+    
+
 def setup_logging(log_file: str = "lqt_runtime.log") -> logging.logger:
     """
     Set up logging for lqtmoment package.
