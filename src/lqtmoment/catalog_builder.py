@@ -18,7 +18,7 @@ from datetime import datetime
 
 from obspy.geodetics import gps2dist_azimuth
 
-from .utils import load_data
+from .utils import load_data, REQUIRED_HYPO_COLUMNS, REQUIRED_PICKING_COLUMNS, REQUIRED_STATION_COLUMNS
 
 
 def build_catalog(
@@ -34,7 +34,7 @@ def build_catalog(
         hypo_dir (str): Path to the hypocenter catalog file.
         picks_dir (str): Path to the picking catalog file.
         station_dir (str): Path to the station file.
-        network (str): Network code to assign to the combine catalog (default: "project_0").
+        network (str): Network code to assign to the combine catalog (default: "LQTID").
 
     Returns:
         pd.DataFrame : Dataframe object of combined catalog.
@@ -51,23 +51,22 @@ def build_catalog(
     station_df = load_data(station_dir)
 
     # Validate the required columns
-    required_hypo_columns = ['id', 'lat', 'lon', 'depth_m', 'year', 'month', 'day', 'hour', 'minute', 
-                             't_0', 'remarks'
-                            ]
-    required_picking_columns = ['id', 'station_code', 'year', 'month', 'day', 'hour', 'minute_p',
-                                'p_arr_sec', 'p_polarity', 'p_onset', 'minute_s', 's_arr_sec'
-                                ]
-    required_station_columns = ['station_code', 'lat', 'lon', 'elev_m']
     for (df, name, required_cols) in [
-        (hypo_df, 'hypo_df', required_hypo_columns),
-        (picking_df, 'picking_df', required_picking_columns),
-        (station_df, 'station_df', required_station_columns)
+        (hypo_df, 'hypo_df', REQUIRED_HYPO_COLUMNS),
+        (picking_df, 'picking_df', REQUIRED_PICKING_COLUMNS),
+        (station_df, 'station_df', REQUIRED_STATION_COLUMNS)
         ] :
         missing_columns = [col for col in required_cols if col not in df.columns]
         if missing_columns:
             raise ValueError(f"Missing required columns in {name}: {missing_columns}")
         if df.empty:
             raise ValueError(f"{name} is empty")
+    
+    # Check for duplicates
+    if hypo_df['id'].duplicated().any():
+        raise ValueError("Duplicate 'id' found in hypocenter catalog")
+    if station_df['station_code'].duplicated.any():
+        raise ValueError("Duplicate 'station_code' found in station file")
         
     rows = []
     for id in hypo_df.get("id"):
@@ -159,21 +158,37 @@ def main(args=None):
         "--hypo-file",
         type=Path,
         default="data/catalog/hypo_catalog.xlsx",
-        help="Hypocenter data file")
+        help="Hypocenter data file"
+        )
     parser.add_argument(
         "--pick-file",
         type=Path, default="data/catalog/picking_catalog.xlsx",
-        help="Arrival picking data file")
+        help="Arrival picking data file"
+        )
     parser.add_argument(
         "--station-file",
         type=Path,
         default="data/station/station.xlsx",
-        help="Station data file")
+        help="Station data file"
+        )
     parser.add_argument(
         "--output-dir",
         type=Path,
         default="results/lqt_catalog",
-        help="Output directory for results")
+        help="Output directory for results"
+        )
+    parser.add_argument(
+        "--output-format",
+        type=str,
+        default="excel",
+        help = "Set output format for saving results ('excel' or 'csv'). Defaults to 'excel'."
+    )
+    parser.add_argument(
+        "--output-file",
+        type=str,
+        default="combined_catalog",
+        help="Set base name for the output file. Defaults to 'combined_catalog'."
+    )
     parser.add_argument(
         "--network",
         type=str,
@@ -184,9 +199,20 @@ def main(args=None):
     for path in [args.hypo_file, args.pick_file, args.station_file]:
         if not path.exists():
             raise FileNotFoundError(f"Path not found: {path}")
-    args.output_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        args.output_dir.mkdir(parents=True, exist_ok=True)
+    except PermissionError as e:
+        raise PermissionError(f"Permission denied creating directory: {e}")
+    
     combined_dataframe = build_catalog(args.hypo_file, args.pick_file, args.station_file, args.network)
-    combined_dataframe.to_excel(args.output_dir/"combined_catalog.xlsx", index=False)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    output_file = f"{args.output_file}_{timestamp}"
+    if args.output_format.lower() == 'excel':
+        combined_dataframe.to_excel(args.output_dir/f"{output_file}.xlsx", index=False)
+    elif args.output_format.lower() == 'csv':
+        combined_dataframe.to_csv(args.output_dir/f"{output_file}.csv", index=False)
+    else:
+        raise ValueError(f"Unsupported output format: {args.output_format}. Use 'excel' or 'csv'.")
     return None
 
 if __name__ == "__main__":
