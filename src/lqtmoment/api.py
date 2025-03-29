@@ -1,6 +1,8 @@
 """
 A public API for the lqt-moment-magnitude package.
 
+Version: 0.1.0
+
 This module provides functions to calculate seismic moment magnitude in the LQT
 component system. Users can import and use these functions in their own Python scripts.
 
@@ -19,12 +21,12 @@ Notes:
     - See https://github.com/bgjx/lqt-moment-magnitude for detailed usage and configuration options.
 """
 
-import logging
-import warnings
 import pandas as pd
 from pathlib import Path
 from typing import Optional, Tuple
 from datetime import datetime
+
+from .utils import setup_logging, REQUIRED_CATALOG_COLUMNS
 from .config import CONFIG
 
 try:
@@ -34,21 +36,7 @@ except ImportError as e:
 
 
 # Set up logging handler
-warnings.filterwarnings("ignore", category=DeprecationWarning, module="pandas")
-
-log_level_map = {
-    "DEBUG": logging.DEBUG,
-    "INFO": logging.INFO,
-    "WARNING": logging.WARNING,
-    "ERROR": logging.ERROR
-}
-logging.basicConfig(
-    filename = 'lqt_runtime.log',
-    level = log_level_map[CONFIG.performance.LOGGING_LEVEL.upper()],
-    format = "%(asctime)s - %(levelname)s - %(message)s",
-    datefmt = "%Y-%m-%d %H:%M:%S"
-)
-logger = logging.getLogger("lqtmoment")
+logger = setup_logging()
 
 
 def load_data(data_dir: str) -> pd.DataFrame:
@@ -66,7 +54,6 @@ def load_data(data_dir: str) -> pd.DataFrame:
         FileNotFoundError: If data files do not exist.
         ValueError: If data files fail to load or unsupported format.
     """
-
     data_path = Path(data_dir)
     if not data_path.is_file():
         raise FileNotFoundError(f"Given data path is not a file: {data_path}")
@@ -93,7 +80,6 @@ def magnitude_estimator(
     output_format: str = "excel",
     result_file_prefix: str = "lqt_magnitude"  
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
-
     """
     Calculate seismic moment magnitude in the LQT component system.
 
@@ -111,6 +97,8 @@ def magnitude_estimator(
         id_end (Optional[int]): Ending earthquake ID. Defaults to max ID or interactive input.
         figure_statement (Optional[bool]): Generate and save figures if True. Defaults to False or interactive input.
         lqt_mode (Optional[bool]): Use LQT rotation if True, ZRT otherwise. Defaults to True or interactive input.
+        output_format (str): Format for saving results ("excel" or "csv"). Default to "excel".
+        result_file_prefix (str): Prefix for result file names. Defaults to "lqt_magnitude"
         
     Returns:
         Tuple[pd.DataFrame, pd.DataFrame]: A tuple containing the result DataFrame and fitting DataFrame
@@ -120,7 +108,6 @@ def magnitude_estimator(
         ValueError: If the catalog is empty or calculation fails.
         PermissionError: If output directories cannot be created.
     """
-
     # Convert string paths to Path objects
     wave_dir = Path(wave_dir)
     cal_dir = Path(cal_dir)
@@ -154,24 +141,19 @@ def magnitude_estimator(
     
     # Load and validate catalog
     catalog_df = load_data(catalog_file)
-    required_columns = [
-        "network", "source_id", "source_lat", "source_lon", "source_depth_m",
-        "source_origin_time", "station_code", "station_lat", "station_lon",
-        "station_elev_m", "p_arr_time", "p_travel_time_sec", "s_arr_time",
-        "s_travel_time_sec", "s_p_lag_time_sec", "earthquake_type"
-    ]
-    missing_columns = [col for col in required_columns if col not in catalog_df.columns]
+    missing_columns = [col for col in REQUIRED_CATALOG_COLUMNS if col not in catalog_df.columns]
     if missing_columns:
         raise ValueError(f"Catalog missing required columns: {missing_columns}")
 
     # Call the processing function
     logger.info(f"Starting magnitude calculation for catalog: {catalog_file}")
     try:
-        mw_result_df, mw_fitting_df = start_calculate(wave_dir, cal_dir, fig_dir, catalog_df,
-                                                                id_start=id_start, id_end=id_end,
-                                                                lqt_mode=lqt_mode,
-                                                                figure_statement=figure_statement,
-                                                                )
+        mw_result_df, mw_fitting_df = start_calculate(
+                                        wave_dir, cal_dir, fig_dir,
+                                        catalog_df, id_start=id_start,
+                                        id_end=id_end, lqt_mode=lqt_mode,
+                                        figure_statement=figure_statement,
+                                        )
     except Exception as e:
         logger.error(f"Calculation failed: {e}")
         raise ValueError(f"Failed to calculate moment magnitude: {e}") from e
