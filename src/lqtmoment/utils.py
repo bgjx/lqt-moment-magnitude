@@ -1,6 +1,8 @@
 """
 Functionality module for lqt-moment-magnitude package.
 
+Version: 0.1.0
+
 This module calculates provides useful functionalities such as user input validation,
 waveform reader, instrument response removal and Signal-to-Noise ratio calculator.
 
