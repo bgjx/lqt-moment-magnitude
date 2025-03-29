@@ -266,6 +266,7 @@ def calculate_moment_magnitude(
     for station in pick_df.get("station_code").unique():
         # Get the station coordinate
         station_info = pick_df[pick_df.station_code == station].iloc[0]
+        network_code = station_info.network_code
         station_lat, station_lon, station_elev_m = station_info.station_lat, station_info.station_lon, station_info.station_elev_m
         p_arr_time = UTCDateTime(station_info.p_arr_time)
         s_arr_time = UTCDateTime(station_info.s_arr_time)
@@ -285,7 +286,7 @@ def calculate_moment_magnitude(
         
         # Perform the instrument removal
         try:
-            stream_displacement = instrument_remove(stream_copy, calibration_path, figure_path, generate_figure=False)
+            stream_displacement = instrument_remove(stream_copy, calibration_path, figure_path, network_code, generate_figure=False)
         except (ValueError, IOError) as e:
             logger.warning(f"Earthquake_{source_id}: An error occurred when correcting instrument for station {station}: {e}", exc_info=True)
             continue
@@ -615,9 +616,9 @@ def start_calculate(
             source_data_handler = catalog_data_handler[["source_lat", "source_lon", 
                                                     "source_depth_m", "source_origin_time", 
                                                     "earthquake_type"]].drop_duplicates()
-            pick_data_handler = catalog_data_handler[["station_code", "station_lat",
-                                                      "station_lon", "station_elev_m",
-                                                      "p_arr_time", "s_arr_time"]].drop_duplicates()
+            pick_data_handler = catalog_data_handler[["network_code", "station_code", "station_lat",
+                                                    "station_lon", "station_elev_m",
+                                                    "p_arr_time", "s_arr_time"]].drop_duplicates()
             
             # Check for  empty data frame
             if source_data_handler.empty or pick_data_handler.empty:

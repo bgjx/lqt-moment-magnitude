@@ -26,8 +26,8 @@ from .config import CONFIG
 
 
 REQUIRED_CATALOG_COLUMNS = [
-        "network", "source_id", "source_lat", "source_lon", "source_depth_m",
-        "source_origin_time", "station_code", "station_lat", "station_lon",
+        "source_id", "source_lat", "source_lon", "source_depth_m",
+        "source_origin_time", "network_code", "station_code", "station_lat", "station_lon",
         "station_elev_m", "p_arr_time", "p_travel_time_sec", "s_arr_time",
         "s_travel_time_sec", "s_p_lag_time_sec", "earthquake_type"
         ]
@@ -38,7 +38,7 @@ REQUIRED_HYPO_COLUMNS = [
         ]
 
 REQUIRED_PICKING_COLUMNS = [
-        "id", "station_code", "year", "month", "day", "hour", "minute_p",
+        "id", "network_code", "station_code", "year", "month", "day", "hour", "minute_p",
         "p_arr_sec", "p_polarity", "p_onset", "minute_s", "s_arr_sec"
         ]
 
@@ -205,8 +205,8 @@ def instrument_remove (
     stream: Stream, 
     calibration_path: Path, 
     figure_path: Optional[str] = None, 
+    network_code: Optional[str] = None,
     generate_figure : bool = False,
-    network: Optional[str] = None
     ) -> Stream:
     """
     Removes instrument response from a Stream of seismic traces using calibration files.
@@ -215,8 +215,9 @@ def instrument_remove (
         stream (Stream): A Stream object containing seismic traces with instrument responses to be removed.
         calibration_path (str): Path to the directory containing the calibration files in RESP format.
         figure_path (Optional[str]): Directory path where response removal plots will be saved. If None, plots are not saved.
+        network_code (Optional[str]): Network code to use in the calibration file name. If None, attempts to use trace.stats.network.
         generate_figure (bool): If True, saves plots of the response removal process. Defaults to False.
-        network (Optional[str]): Network code to use in the calibration file name. If None, attempts to use trace.stats.network.
+        
     Returns:
         Stream: A Stream object containing traces with instrument responses removed.
     Note:
@@ -229,7 +230,7 @@ def instrument_remove (
             # Construct the calibration file
             station = trace.stats.station
             channel = trace.stats.channel
-            trace_network = trace.stats.network if trace.stats.network else network
+            trace_network = trace.stats.network if trace.stats.network else network_code
             if not trace_network:
                 raise ValueError(f"Network code not found in trace {trace.id} and not provided as parameter.")
             location = trace.stats.location if trace.stats.location else ""

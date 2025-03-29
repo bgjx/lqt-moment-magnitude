@@ -15,6 +15,7 @@ import argparse
 import pandas as pd
 from pathlib import Path
 from datetime import datetime
+from typing import Optional
 
 from obspy.geodetics import gps2dist_azimuth
 
@@ -25,7 +26,7 @@ def build_catalog(
         hypo_dir: str,
         picks_dir: str,
         station_dir: str,
-        network:str = "LQTID", 
+        assign_network:Optional[str] = None, 
         ) -> pd.DataFrame:
     """
     Build a combined catalog from separate hypocenter, pick, and station file.
@@ -34,7 +35,8 @@ def build_catalog(
         hypo_dir (str): Path to the hypocenter catalog file.
         picks_dir (str): Path to the picking catalog file.
         station_dir (str): Path to the station file.
-        network (str): Network code to assign to the combine catalog (default: "LQTID").
+        assign_network (str): Network code to re-assign to the combined catalog. Defaults to None,
+                        and the network will be copied from the picking data.
 
     Returns:
         pd.DataFrame : Dataframe object of combined catalog.
@@ -83,6 +85,13 @@ def build_catalog(
             if station_data.empty:
                 continue
             station_info = station_data.iloc[0]
+            if assign_network:
+                network_code = assign_network
+            else:
+                if station_info.network:
+                    network_code = station_info.network
+                else:
+                    raise ValueError("If not re-assign, station network cannot be left empty at picking catalog")
             station_code, station_lat, station_lon, station_elev = station_info.station_code, station_info.lat, station_info.lon, station_info.elev_m
             
             # cek earthquake distance to determine earthquake type
@@ -112,12 +121,12 @@ def build_catalog(
             s_p_lag_time = s_arr_time - p_arr_time
             s_p_lag_time = s_p_lag_time.seconds + (s_p_lag_time.microseconds * 1e-6)
             row = {
-                "network": network,
                 "source_id": id,
                 "source_lat": source_lat, 
                 "source_lon": source_lon,
                 "source_depth_m": source_depth_m,
                 "source_origin_time": source_origin_time,
+                "network_code": network_code,
                 "station_code": station_code,
                 "station_lat": station_lat,
                 "station_lon": station_lon, 
@@ -190,10 +199,10 @@ def main(args=None):
         help="Set base name for the output file. Defaults to 'combined_catalog'."
     )
     parser.add_argument(
-        "--network",
+        "--assign-network",
         type=str,
-        default="LQTID",
-        help="Network code (default: LQTID)")
+        default=None,
+        help="Network code (default: None)")
     args = parser.parse_args(args if args is not None else sys.argv[1:])
 
     for path in [args.hypo_file, args.pick_file, args.station_file]:
@@ -204,7 +213,7 @@ def main(args=None):
     except PermissionError as e:
         raise PermissionError(f"Permission denied creating directory: {e}")
     
-    combined_dataframe = build_catalog(args.hypo_file, args.pick_file, args.station_file, args.network)
+    combined_dataframe = build_catalog(args.hypo_file, args.pick_file, args.station_file, args.assign_network)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     output_file = f"{args.output_file}_{timestamp}"
     if args.output_format.lower() == 'excel':
