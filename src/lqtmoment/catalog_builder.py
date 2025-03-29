@@ -1,6 +1,8 @@
 """
 Functionality module for lqt-moment-magnitude package.
 
+Version: 0.1.0
+
 This module helps user to build the LQT catalog format. The special excel format
 required by lqt-moment-magnitude to be able to calculate the moment magnitude.
 
@@ -16,32 +18,9 @@ from datetime import datetime
 
 from obspy.geodetics import gps2dist_azimuth
 
-def load_data(data_dir: str) -> pd.DataFrame:
-    """"
-    Load tabular data from given data dir, this function will handle
-    data suffix/format (.xlsx / .csv) for more dynamic inputs.
+from .utils import load_data
 
-    Args:
-        data_dir (str): Directory of the data file.
 
-    Returns:
-        pd.DataFrame: DataFrame of tabular data.
-    
-    Raises:
-        FileNotFoundError: If data files do not exist.
-        ValueError: If data files fail to load or unsupported format.
-    """
-
-    data_path = Path(data_dir)
-    if not data_path.is_file():
-        raise FileNotFoundError(f"Given data path is not a file: {data_path}")
-    if data_path.suffix == ".xlsx":
-        return pd.read_excel(data_path, index_col=None)
-    elif data_path.suffix == ".csv":
-        return pd.read_csv(data_path, index_col=None)
-    else:
-        raise ValueError(f"Unsupported data file format: {data_path.suffix}. Supported formats: .csv, .xlsx")
-    
 def build_catalog(
         hypo_dir: str,
         picks_dir: str,
@@ -172,7 +151,7 @@ def main(args=None):
         FileNotFoundError: If required input paths do not exists.
     
     Example:
-        $ LQTCat-Build --hypo-file data/hypo_catalog.xlsx --pick-file data/catalog/picking_catalog.xlsx
+        $ lqtcatalog --hypo-file data/hypo_catalog.xlsx --pick-file data/catalog/picking_catalog.xlsx
     
     """
     parser = argparse.ArgumentParser(description="Build lqt-moment-magnitude acceptable catalog format automatically.")

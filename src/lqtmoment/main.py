@@ -27,9 +27,8 @@ import pandas as pd
 from datetime import datetime
 from typing import Optional, List
 
-from .utils import setup_logging, REQUIRED_CATALOG_COLUMNS
+from .utils import load_data, setup_logging, REQUIRED_CATALOG_COLUMNS
 from .config import CONFIG
-from .api import load_data
 
 try:
     from .processing import start_calculate
