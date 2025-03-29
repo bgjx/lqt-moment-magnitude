@@ -30,6 +30,18 @@ REQUIRED_CATALOG_COLUMNS = [
         "s_travel_time_sec", "s_p_lag_time_sec", "earthquake_type"
         ]
 
+REQUIRED_HYPO_COLUMNS = [
+        "id", "lat", "lon", "depth_m", "year", "month", "day", "hour",
+        "minute","t_0", "remarks"
+        ]
+
+REQUIRED_PICKING_COLUMNS = [
+        "id", "station_code", "year", "month", "day", "hour", "minute_p",
+        "p_arr_sec", "p_polarity", "p_onset", "minute_s", "s_arr_sec"
+        ]
+
+REQUIRED_STATION_COLUMNS = ["station_code", "lat", "lon", "elev_m"]
+
 
 def load_data(data_dir: str) -> pd.DataFrame:
     """
