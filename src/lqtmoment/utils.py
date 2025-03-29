@@ -152,7 +152,6 @@ def read_waveforms(path: Path, source_id: int, station:str) -> Stream:
             stread = read(w)
             stream += stread
         except Exception as e:
-            logger.warning(f"Skip reading waveform {w} for earthquake {source_id}: {e}.", exc_info=True)
             continue
             
     return stream
@@ -213,7 +212,6 @@ def instrument_remove (
             displacement_stream+=displacement_trace
             
         except Exception as e:
-            logger.warning(f"Error process instrument removal in trace {trace}: {e}.", exc_info=True)
             continue
             
     return displacement_stream
