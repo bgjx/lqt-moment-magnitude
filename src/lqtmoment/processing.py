@@ -10,7 +10,7 @@ parameters from `config.ini`. The module processes waveforms, calibrates data, a
 spectral fitting figures, aggregating results into DataFrames.
 
 Dependencies:
-    - See `requirements.txt` or `pip install lqt-moment-magnitude` for required packages.
+    - See `pip install lqt-moment-magnitude` for required packages.
 
 Note:
     This module is intended for internal use by the `lqt-moment-magnitude` API and CLI.
@@ -79,7 +79,7 @@ def calculate_seismic_spectra(
     amplitudes = amplitudes[positive_mask]
 
     if apply_window: 
-        amplitudes *= 2.0      # Correct for Hann window gain (since average reduction gain is 0.5)
+        amplitudes *= 2.0      # Correct for Hann window gain (average reduction gain is 0.5)
     
     amplitudes *= 1e9           # Convert to nm (nanometers)
 
@@ -104,12 +104,12 @@ def window_trace(
 
     Returns:
         Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]: 
-            - P_data: The data windowed around the P phase in the L/Z component.
-            - SV_data: The data windowed around the S phase in the Q/R component.
-            - SH_data: The data windowed around the S phase in the T component.
-            - P_noise: The data windowed around the noise period before the P phase in the L/Z component.
-            - SV_noise: The data windowed around the noise period before the P phase in the Q/R component.
-            - SH_noise: The data windowed around the noise period before the P phase in the T component.
+            - P_data: The data windowed around the P phase in the L/Z component (displacement in meters).
+            - SV_data: The data windowed around the S phase in the Q/R component (displacement in meters).
+            - SH_data: The data windowed around the S phase in the T component (displacement in meters).
+            - P_noise: The noise data before the P phase in the L/Z component (displacement in meters).
+            - SV_noise: The noise data before the P phase in the Q/R component (displacement in meters).
+            - SH_noise: The noise data before the P phase in the T component (displacement in meters).
 
     Raises:
         ValueError: If component traces are missing.
@@ -117,10 +117,9 @@ def window_trace(
     Notes:
         Window size are dynamically calculated based on S-P time with configurable padding.
     """
-    
     components = ['L', 'Q', 'T'] if lqt_mode else ['Z', 'R', 'T']
     try:
-        [trace_P, trace_SV, trace_SH] = [streams.select(component = comp)[0] for comp in components]
+        trace_P, trace_SV, trace_SH = [streams.select(component = comp)[0] for comp in components]
     except IndexError as e:
         raise ValueError(f"Missing {components} components in stream")
     
@@ -475,7 +474,7 @@ def calculate_moment_magnitude(
     
     # Calculate average and std of moment magnitude
     moment_average, moment_std  = np.mean(moments), np.std(moments)
-    mw = ((2.0 / 3.0) * np.log10(moment_average)) - 6.07
+    mw = ((2.0 / 3.0) * np.log10(moment_average)) - CONFIG.magnitude.MW_CONSTANT
     mw_std = (2.0 /3.0) * moment_std/(moment_average * np.log(10))
  
     results = {"source_id":[f"{source_id}"], 
