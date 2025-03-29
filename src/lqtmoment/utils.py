@@ -8,7 +8,9 @@ Dependencies:
     - See `requirements.txt` or `pip install lqt-moment-magnitude` for required packages.
 """
 
-import os, glob, sys, logging
+import logging
+import warnings
+import os, glob, sys
 from typing import Tuple, Callable, Optional
 from pathlib import Path
 
@@ -17,7 +19,41 @@ from obspy import Stream, read, read_inventory
 
 from .config import CONFIG
 
-logger = logging.getLogger("lqtmoment")
+
+REQUIRED_CATALOG_COLUMNS = [
+        "network", "source_id", "source_lat", "source_lon", "source_depth_m",
+        "source_origin_time", "station_code", "station_lat", "station_lon",
+        "station_elev_m", "p_arr_time", "p_travel_time_sec", "s_arr_time",
+        "s_travel_time_sec", "s_p_lag_time_sec", "earthquake_type"
+        ]
+
+
+def setup_logging(log_file: str = "lqt_runtime.log") -> logging.logger:
+    """
+    Set up logging for lqtmoment package.
+
+    Args:
+        log_file (str): The name of the log file. Defaults to 'lqt_runtime.log'
+    
+    Returns:
+        logging.logger: A logger to be used in intire package.
+    
+    """
+    warnings.filterwarnings("ignore", category=DeprecationWarning, module='pandas')
+    log_level_map = {
+        "DEBUG": logging.DEBUG,
+        "INFO": logging.INFO,
+        "WARNING": logging.WARNING,
+        "ERROR": logging.ERROR
+    }
+    logging.basicConfig(
+        filename=log_file,
+        level = log_level_map[CONFIG.performance.LOGGING_LEVEL.upper()],
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S"
+    )
+    
+    return logging.getLogger("lqtmoment")
 
 
 def get_valid_input(prompt: str, validate_func: Callable, error_msg: str) -> int:

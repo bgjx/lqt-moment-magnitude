@@ -1,6 +1,8 @@
 """
 Main entry point for the lqt-moment-magnitude package.
 
+Version: 0.1.0
+
 This module provides complete automatic calculation for seismic moment magnitude
 in the LQT component system.
 
@@ -13,20 +15,21 @@ Dependencies:
     - tqdm: For progress feedback
 
 Usage:
-    $ LQTMagnitude --help
-    $ LQTMagnitude --wave-dir data/waveforms --catalog-file data/catalog/lqt_catalog.xlsx
-    $ LQTMagnitude --wave-dir data/waveforms --catalog-file data/catalog/lqt_catalog.xlsx --config data/new_config.ini
+    $ lqtmoment --help
+    $ lqtmoment --wave-dir data/waveforms --catalog-file data/catalog/lqt_catalog.xlsx
+    $ lqtmoment --wave-dir data/waveforms --catalog-file data/catalog/lqt_catalog.xlsx --config data/new_config.ini
 """
 
 import sys
 import argparse
-import logging
-import warnings
 from pathlib import Path
 import pandas as pd 
+from datetime import datetime
 from typing import Optional, List
 
+from .utils import setup_logging, REQUIRED_CATALOG_COLUMNS
 from .config import CONFIG
+from .api import load_data
 
 try:
     from .processing import start_calculate
@@ -35,42 +38,8 @@ except ImportError as e:
 
 
 # Set up logging handler
-warnings.filterwarnings("ignore", category=DeprecationWarning, module="pandas")
-logging.basicConfig(
-    filename = 'lqt_runtime.log',
-    level = CONFIG.performance.LOGGING_LEVEL.upper(),
-    format = "%(asctime)s - %(levelname)s - %(message)s",
-    datefmt = "%Y-%m-%d %H:%M:%S"
-)
-logger = logging.getLogger("lqtmoment")
+logger = setup_logging()
 
-
-def load_catalog(catalog_dir: str) -> pd.DataFrame:
-    """"
-    Load catalog from given catalog dir, this function will handle
-    catalog suffix/format (.xlsx / .csv) for more dynamic inputs.
-
-    Args:
-        catalog_dir (str): Directory of the catalog file.
-
-    Returns:
-        pd.DataFrame: DataFrame of earthquake catalog.
-    
-    Raises:
-        FileNotFoundError: If catalog files do not exist.
-        ValueError: If catalog files fail to load or unsupported format.
-    """
-
-    catalog_path = Path(catalog_dir)
-    if not catalog_path.is_file():
-        raise FileNotFoundError(f"Catalog path is not a file: {catalog_path}")
-    if catalog_path.suffix == ".xlsx":
-        return pd.read_excel(catalog_path, index_col=None)
-    elif catalog_path.suffix == ".csv":
-        return pd.read_csv(catalog_path, index_col=None)
-    else:
-        raise ValueError(f"Unsupported catalog file format: {catalog_path.suffix}. Supported formats: .csv, .xlsx")
-    
 
 def main(args: Optional[List[str]] = None) -> None:
     """ 
@@ -92,8 +61,8 @@ def main(args: Optional[List[str]] = None) -> None:
         ValueError: If calculation output is invalid.
     
     Example:
-        $ LQTMagnitude --wave-dir data/waveforms --catalog-file data/catalog/lqt_catalog.xlsx
-        $ LQTMagnitude --wave-dir data/waveforms --catalog-file data/catalog/lqt_catalog.xlsx --config data/new_config.ini
+        $ lqtmoment --wave-dir data/waveforms --catalog-file data/catalog/lqt_catalog.xlsx
+        $ lqtmoment --wave-dir data/waveforms --catalog-file data/catalog/lqt_catalog.xlsx --config data/new_config.ini
 
     """
 
@@ -144,11 +113,23 @@ def main(args: Optional[List[str]] = None) -> None:
         help="Generate and save spectral fitting figures (overrides interactive input)"
     )
     parser.add_argument(
-        "--zrt-mode",
+        "--non-lqt",
         action="store_false",
         dest="lqt_mode",
         help="Use ZRT rotation instead of LQT for very local earthquake (overrides interactive input, default is LQT)"
     )
+    parser.add_argument(
+        "--output-format",
+        type = str,
+        default='excel',
+        help = "Set output format for saving results ('Excel' or 'csv'). Defaults to excel."
+    )
+    parser.add_argument(
+        "--result-file-prefix",
+        type = str,
+        default="lqt_magnitude",
+        help = "Set prefix for result file names. Defaults to 'lqt_magnitude'"
+    ),
     parser.add_argument(
         "--version",
         action='version',
@@ -165,8 +146,6 @@ def main(args: Optional[List[str]] = None) -> None:
             raise RuntimeError (f"Failed to reload configuration: {e}")
     elif args.config and not args.config.exists():
         raise FileNotFoundError(f"Config file {args.config} not found, using default configuration")
-    else:
-        pass
 
     # Validate input paths
     for path in [args.wave_dir, args.cal_dir]:
@@ -188,32 +167,44 @@ def main(args: Optional[List[str]] = None) -> None:
         raise PermissionError(f"Permission denied creating directories: {e}")
             
     # Load and validate catalog
-    catalog_df = load_catalog(args.catalog_file)
-    required_columns = [
-        "network", "source_id", "source_lat", "source_lon", "source_depth_m",
-        "source_origin_time", "station_code", "station_lat", "station_lon",
-        "station_elev_m", "p_arr_time", "p_travel_time_sec", "s_arr_time",
-        "s_travel_time_sec", "s_p_lag_time_sec", "earthquake_type"
-    ]
-    missing_columns = [col for col in required_columns if col not in catalog_df.columns]
+    catalog_df = load_data(args.catalog_file)
+    missing_columns = [col for col in REQUIRED_CATALOG_COLUMNS if col not in catalog_df.columns]
     if missing_columns:
         raise ValueError(f"Catalog missing required columns: {missing_columns}")
 
     # Call the function to start calculating moment magnitude
-    mw_result_df, mw_fitting_df = start_calculate(args.wave_dir, args.cal_dir, args.fig_dir,
-                                                catalog_df, id_start=args.id_start, id_end=args.id_end,
-                                                lqt_mode=args.lqt_mode,
-                                                figure_statement=args.create_figure,
-                                                )
+    logger.info(f"Starting magnitude calculation for catalog: {args.catalog_file}")
+    try:
+        mw_result_df, mw_fitting_df = start_calculate(
+                                        args.wave_dir, args.cal_dir,
+                                        args.fig_dir, catalog_df,
+                                        id_start=args.id_start,
+                                        id_end=args.id_end,
+                                        lqt_mode=args.lqt_mode,
+                                        figure_statement=args.create_figure,
+                                        )
+    except Exception as e:
+        logger.error(f"Calculation failed: {e}")
+        raise ValueError(f"Failed to calculate moment magnitude: {e}") from e
     
     # Validate calculation output
     if mw_result_df is None or mw_fitting_df is None:
         raise ValueError("Calculation return invalid results (None).")
 
-    # save and set dataframe index
+    # Saving the results
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    result_file  = f"{args.result_file_prefix}_result_{timestamp}"
+    fitting_file = f"{args.result_file_prefix}_fitting_result_{timestamp}"
+    logger.info(f"Saving results to {args.output_dir}")
     try:
-        mw_result_df.to_excel(args.output_dir / "lqt_magnitude_result.xlsx", index = False)
-        mw_fitting_df.to_excel(args.output_dir/ "lqt_magnitude_fitting_result.xlsx", index = False)
+        if args.output_format.lower() == 'excel':
+            mw_result_df.to_excel(args.output_dir / f"{result_file}.xlsx", index = False)
+            mw_fitting_df.to_excel(args.output_dir/ f"{fitting_file}.xlsx", index = False)
+        elif args.output_format.lower() == 'csv':
+            mw_result_df.to_csv(args.output_dir / f"{result_file}.csv", index = False)
+            mw_fitting_df.to_csv(args.output_dir/ f"{fitting_file}.csv", index = False)
+        else:
+            raise ValueError(f"Unsupported output format: {args.output_format}. Use 'excel' or 'csv'. ")
     except Exception as e:
         raise RuntimeError(f"Failed to save results: {e}")
 
