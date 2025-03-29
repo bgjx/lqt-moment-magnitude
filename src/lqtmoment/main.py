@@ -64,7 +64,6 @@ def main(args: Optional[List[str]] = None) -> None:
         $ lqtmoment --wave-dir data/waveforms --catalog-file data/catalog/lqt_catalog.xlsx --config data/new_config.ini
 
     """
-
     parser = argparse.ArgumentParser(description="Calculate moment magnitude in full LQT component.")
     parser.add_argument(
         "--wave-dir",
