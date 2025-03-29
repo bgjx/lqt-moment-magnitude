@@ -24,6 +24,7 @@ import warnings
 import pandas as pd
 from pathlib import Path
 from typing import Optional, Tuple
+from datetime import datetime
 from .config import CONFIG
 
 try:
@@ -34,9 +35,16 @@ except ImportError as e:
 
 # Set up logging handler
 warnings.filterwarnings("ignore", category=DeprecationWarning, module="pandas")
+
+log_level_map = {
+    "DEBUG": logging.DEBUG,
+    "INFO": logging.INFO,
+    "WARNING": logging.WARNING,
+    "ERROR": logging.ERROR
+}
 logging.basicConfig(
     filename = 'lqt_runtime.log',
-    level = CONFIG.performance.LOGGING_LEVEL.upper(),
+    level = log_level_map[CONFIG.performance.LOGGING_LEVEL.upper()],
     format = "%(asctime)s - %(levelname)s - %(message)s",
     datefmt = "%Y-%m-%d %H:%M:%S"
 )
@@ -44,7 +52,7 @@ logger = logging.getLogger("lqtmoment")
 
 
 def load_data(data_dir: str) -> pd.DataFrame:
-    """"
+    """
     Load tabular data from given data dir, this function will handle
     data suffix/format (.xlsx / .csv) for more dynamic inputs.
 
@@ -74,14 +82,16 @@ def load_data(data_dir: str) -> pd.DataFrame:
 def magnitude_estimator(
     wave_dir: str,
     cal_dir: str,
-    catalog_dir: str,
+    catalog_file: str,
     config_file: Optional[str] = None,
     fig_dir: str = "figures",
     output_dir: str = "results/calculation",
     id_start: Optional[int] = None,
     id_end: Optional[int] = None,
     figure_statement : bool = None,
-    lqt_mode: Optional[bool] = None    
+    lqt_mode: Optional[bool] = None,
+    output_format: str = "excel",
+    result_file_prefix: str = "lqt_magnitude"  
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
 
     """
@@ -94,7 +104,7 @@ def magnitude_estimator(
         wave_dir (str): Path to the waveform directory.
         cal_dir (str): Path to the calibration directory.
         config_file (str, optional): Path to a custom config.ini file to reload. Defaults to None.
-        catalog_dir (str): Path to the seismic catalog.
+        catalog_file (str): Path to the seismic catalog.
         fig_dir (str): path to save figures.
         output_dir (str, optional): Output directory for results. Defaults to "results".
         id_start (Optional[int]): Starting earthquake ID. Defaults to min ID or interactive input.
@@ -143,7 +153,7 @@ def magnitude_estimator(
         raise PermissionError(f"Permission denied creating directories: {e}")
     
     # Load and validate catalog
-    catalog_df = load_data(catalog_dir)
+    catalog_df = load_data(catalog_file)
     required_columns = [
         "network", "source_id", "source_lat", "source_lon", "source_depth_m",
         "source_origin_time", "station_code", "station_lat", "station_lon",
@@ -155,20 +165,35 @@ def magnitude_estimator(
         raise ValueError(f"Catalog missing required columns: {missing_columns}")
 
     # Call the processing function
-    mw_result_df, mw_fitting_df = start_calculate(wave_dir, cal_dir, fig_dir, catalog_df,
-                                                               id_start=id_start, id_end=id_end,
-                                                               lqt_mode=lqt_mode,
-                                                               figure_statement=figure_statement,
-                                                               )
+    logger.info(f"Starting magnitude calculation for catalog: {catalog_file}")
+    try:
+        mw_result_df, mw_fitting_df = start_calculate(wave_dir, cal_dir, fig_dir, catalog_df,
+                                                                id_start=id_start, id_end=id_end,
+                                                                lqt_mode=lqt_mode,
+                                                                figure_statement=figure_statement,
+                                                                )
+    except Exception as e:
+        logger.error(f"Calculation failed: {e}")
+        raise ValueError(f"Failed to calculate moment magnitude: {e}") from e
 
     # Validate calculation output:
     if mw_result_df is None or mw_fitting_df is None:
         raise ValueError("Calculation returned invalid results (None).")
     
     # Saving the results
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    result_file = f"{result_file_prefix}_result_{timestamp}"
+    fitting_file = f"{result_file_prefix}_fitting_result_{timestamp}"
+    logger.info(f"Saving results to {output_dir}")
     try:
-        mw_result_df.to_excel(output_dir/"lqt_magnitude_result.xlsx", index=False)
-        mw_fitting_df.to_excel(output_dir/"lqt_magnitude_fitting_result.xlsx", index=False)
+        if output_format.lower() == "excel":
+            mw_result_df.to_excel(output_dir/f"{result_file}.xlsx", index=False)
+            mw_fitting_df.to_excel(output_dir/f"{fitting_file}.xlsx", index=False)
+        elif output_format.lower() == "csv":
+            mw_result_df.to_csv(output_dir/f"{result_file}.csv", index=False)
+            mw_fitting_df.to_csv(output_dir/f"{fitting_file}.csv", index=False)
+        else:
+            raise ValueError(f"Unsupported output format: {output_format}. Use 'excel' or 'csv'. ")
     except Exception as e:
         raise RuntimeError(f"Failed to save results: {e}")
     
