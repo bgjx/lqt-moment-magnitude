@@ -3,16 +3,18 @@ Functionality module for lqt-moment-magnitude package.
 
 Version: 0.1.0
 
-This module calculates provides useful functionalities such as user input validation,
-waveform reader, instrument response removal and Signal-to-Noise ratio calculator.
+This module provides useful functionalities such as user input validation,
+waveform reader, instrument response removal and Signal-to-Noise ratio calculation.
 
 Dependencies:
-    - See `requirements.txt` or `pip install lqt-moment-magnitude` for required packages.
+    - See `pip install lqt-moment-magnitude` for required packages.
 """
 
 import logging
 import warnings
-import os, glob, sys
+import os
+import glob
+import sys
 from typing import Tuple, Callable, Optional
 from pathlib import Path
 
@@ -77,7 +79,10 @@ def setup_logging(log_file: str = "lqt_runtime.log") -> logging.logger:
         log_file (str): The name of the log file. Defaults to 'lqt_runtime.log'
     
     Returns:
-        logging.logger: A logger to be used in intire package.
+        logging.logger: A logger to be used in entire package.
+    
+    Raises:
+        PermissionError: If the log file cannot be written.
     
     """
     warnings.filterwarnings("ignore", category=DeprecationWarning, module='pandas')
@@ -87,12 +92,15 @@ def setup_logging(log_file: str = "lqt_runtime.log") -> logging.logger:
         "WARNING": logging.WARNING,
         "ERROR": logging.ERROR
     }
-    logging.basicConfig(
-        filename=log_file,
-        level = log_level_map[CONFIG.performance.LOGGING_LEVEL.upper()],
-        format="%(asctime)s - %(levelname)s - %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S"
-    )
+    try:
+        logging.basicConfig(
+            filename=log_file,
+            level = log_level_map[CONFIG.performance.LOGGING_LEVEL.upper()],
+            format="%(asctime)s - %(levelname)s - %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S"
+        )
+    except PermissionError as e:
+        raise PermissionError(f"Cannot write log file {log_file}: {e}")    
     
     return logging.getLogger("lqtmoment")
 
@@ -112,7 +120,6 @@ def get_valid_input(prompt: str, validate_func: Callable, error_msg: str) -> int
     Raises:
         KeyboardInterrupt: If the user interrupts the input(Ctrl+C).
     """
-    
     while True:
         value = input(prompt).strip()
         try:
@@ -132,9 +139,8 @@ def get_user_input() -> Tuple[int, int, bool, bool]:
     
     Returns:
         Tuple[int, int, bool, bool]: Start ID, End ID, LQT mode statement 
-                                     and crate figure statement.
+                                     and generate figure flag.
     """
-    
     id_start = get_valid_input("Earthquake ID to start: ", lambda x: int(x) >= 0, "Please input non-negative integer")
     id_end   = get_valid_input("Earthquake ID to end: ", lambda x: int(x) >= id_start, f"Please input an integer >= {id_start}")
     
@@ -183,7 +189,6 @@ def read_waveforms(path: Path, source_id: int, station:str) -> Stream:
         (e.g., path/earthquake_id/*{station}*.mseed). For current version the program
         only accept .mseed format. 
     """
-    
     stream = Stream()
     pattern = os.path.join(path/f"{source_id}", f"*{station}*.mseed")
     for w in glob.glob(pattern, recursive = True):
@@ -200,7 +205,8 @@ def instrument_remove (
     stream: Stream, 
     calibration_path: Path, 
     figure_path: Optional[str] = None, 
-    generate_figure : bool = False
+    generate_figure : bool = False,
+    network: Optional[str] = None
     ) -> Stream:
     """
     Removes instrument response from a Stream of seismic traces using calibration files.
@@ -210,20 +216,26 @@ def instrument_remove (
         calibration_path (str): Path to the directory containing the calibration files in RESP format.
         figure_path (Optional[str]): Directory path where response removal plots will be saved. If None, plots are not saved.
         generate_figure (bool): If True, saves plots of the response removal process. Defaults to False.
-
+        network (Optional[str]): Network code to use in the calibration file name. If None, attempts to use trace.stats.network.
     Returns:
         Stream: A Stream object containing traces with instrument responses removed.
     Note:
         The naming convention of the calibration or the RESP is RESP.NETWORK.STATIO.LOCATION.COMPONENT
         (e.g., LQID.LQ.LQT1..BHZ) in the calibration directory.
     """
-    
     displacement_stream = Stream()
     for trace in stream:
         try:
             # Construct the calibration file
-            station, component = trace.stats.station, trace.stats.component
-            inventory_path = calibration_path / f"RESP.RD.{station}..BH{component}"
+            station = trace.stats.station
+            channel = trace.stats.channel
+            trace_network = trace.stats.network if trace.stats.network else network
+            if not trace_network:
+                raise ValueError(f"Network code not found in trace {trace.id} and not provided as parameter.")
+            location = trace.stats.location if trace.stats.location else ""
+            inventory_path = calibration_path / f"RESP.{trace_network}.{station}.{location}.{channel}"
+            if not inventory_path.exists():
+                raise FileExistsError(f"Calibration file not found: {inventory_path}")
             
             # Read the calibration file
             inventory = read_inventory(inventory_path, format='RESP')
@@ -231,7 +243,7 @@ def instrument_remove (
             # Prepare plot path if fig_statement is True
             plot_path = None
             if generate_figure and figure_path:
-                plot_path = figure_path.joinpath(f"fig_{station}_BH{component}")
+                plot_path = figure_path.joinpath(f"fig_{station}_{channel}")
             
             # Remove instrument response
             displacement_trace = trace.remove_response(
@@ -267,7 +279,6 @@ def trace_snr(data: np.ndarray, noise: np.ndarray) -> float:
     Returns:
         float: The Signal-to-Noise Ratio (SNR), calculated as the ratio of the RMS of the signal to the RMS of the noise.
     """
-    
     if not data.size or not noise.size:
         raise ValueError("Data and noise arrays must be non-empty.")
     # Compute RMS of the signal
