@@ -107,6 +107,7 @@ class MagnitudeConfig:
     DENSITY: List[float] = None
     TAUP_MODEL: str = 'iasp91'
     VELOCITY_MODEL_FILE: str = ""
+    MW_CONSTANT: float = 6.07
 
     def __post_init__(self):
         self.PRE_FILTER = self.PRE_FILTER or [0.01, 0.02, 55, 60]
@@ -346,6 +347,7 @@ class Config:
             k_s = self._parse_float(mag_section, "k_s", self.magnitude.K_S)
             taup_model = mag_section.get("taup_model", fallback=self.magnitude.TAUP_MODEL)
             velocity_model_file = mag_section.get("velocity_model_file", fallback=self.magnitude.VELOCITY_MODEL_FILE)
+            mw_constant = mag_section.get("mw_constant", fallback=self.magnitude.MW_CONSTANT)
 
             # Reconstruct MagnitudeConfig to trigger __post_init__
             self.magnitude = MagnitudeConfig(
@@ -363,7 +365,8 @@ class Config:
                 K_P=k_p,
                 K_S=k_s,
                 TAUP_MODEL=taup_model,
-                VELOCITY_MODEL_FILE=velocity_model_file
+                VELOCITY_MODEL_FILE=velocity_model_file,
+                MW_CONSTANT=mw_constant
             )
 
             # Validate TAUP_MODEL
