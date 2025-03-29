@@ -26,21 +26,21 @@ from .config import CONFIG
 
 
 REQUIRED_CATALOG_COLUMNS = [
-        "source_id", "source_lat", "source_lon", "source_depth_m",
-        "source_origin_time", "network_code", "station_code", "station_lat", "station_lon",
-        "station_elev_m", "p_arr_time", "p_travel_time_sec", "s_arr_time",
-        "s_travel_time_sec", "s_p_lag_time_sec", "earthquake_type"
-        ]
+    "source_id", "source_lat", "source_lon", "source_depth_m", "source_origin_time",
+    "network_code", "station_code", "station_lat", "station_lon", "station_elev_m",
+    "p_arr_time", "p_travel_time_sec", "s_arr_time", "s_travel_time_sec", "s_p_lag_time_sec",
+    "earthquake_type"
+    ]
 
 REQUIRED_HYPO_COLUMNS = [
-        "id", "lat", "lon", "depth_m", "year", "month", "day", "hour",
-        "minute","t_0", "remarks"
-        ]
+    "id", "lat", "lon", "depth_m", "year", "month", "day", "hour",
+    "minute","t_0", "remarks"
+    ]
 
 REQUIRED_PICKING_COLUMNS = [
-        "id", "network_code", "station_code", "year", "month", "day", "hour", "minute_p",
-        "p_arr_sec", "p_polarity", "p_onset", "minute_s", "s_arr_sec"
-        ]
+    "id", "network_code", "station_code", "year", "month", "day", "hour", "minute_p",
+    "p_arr_sec", "p_polarity", "p_onset", "minute_s", "s_arr_sec"
+    ]
 
 REQUIRED_STATION_COLUMNS = ["station_code", "lat", "lon", "elev_m"]
 
@@ -138,8 +138,7 @@ def get_user_input() -> Tuple[int, int, bool, bool]:
     Get user inputs for processing parameters interactively.
     
     Returns:
-        Tuple[int, int, bool, bool]: Start ID, End ID, LQT mode statement 
-                                     and generate figure flag.
+        Tuple[int, int, bool, bool]: Start ID, End ID, LQT mode, and generate figure flag.
     """
     id_start = get_valid_input("Earthquake ID to start: ", lambda x: int(x) >= 0, "Please input non-negative integer")
     id_end   = get_valid_input("Earthquake ID to end: ", lambda x: int(x) >= id_start, f"Please input an integer >= {id_start}")
@@ -186,7 +185,7 @@ def read_waveforms(path: Path, source_id: int, station:str) -> Stream:
     
     Notes:
         Expects waveform file to be in a subdirectory named after the earthquake id
-        (e.g., path/earthquake_id/*{station}*.mseed). For current version the program
+        (e.g., path/earthquake_id/*{station}*.mseed). Currently, the program
         only accept .mseed format. 
     """
     stream = Stream()
@@ -204,7 +203,7 @@ def read_waveforms(path: Path, source_id: int, station:str) -> Stream:
 def instrument_remove (
     stream: Stream, 
     calibration_path: Path, 
-    figure_path: Optional[str] = None, 
+    figure_path: Path, 
     network_code: Optional[str] = None,
     generate_figure : bool = False,
     ) -> Stream:
@@ -213,16 +212,16 @@ def instrument_remove (
 
     Args:
         stream (Stream): A Stream object containing seismic traces with instrument responses to be removed.
-        calibration_path (str): Path to the directory containing the calibration files in RESP format.
-        figure_path (Optional[str]): Directory path where response removal plots will be saved. If None, plots are not saved.
+        calibration_path (Path): Path to the directory containing the calibration files in RESP format.
+        figure_path (Path): Directory path where response removal plots will be saved. If None, plots are not saved.
         network_code (Optional[str]): Network code to use in the calibration file name. If None, attempts to use trace.stats.network.
         generate_figure (bool): If True, saves plots of the response removal process. Defaults to False.
         
     Returns:
         Stream: A Stream object containing traces with instrument responses removed.
     Note:
-        The naming convention of the calibration or the RESP is RESP.NETWORK.STATIO.LOCATION.COMPONENT
-        (e.g., LQID.LQ.LQT1..BHZ) in the calibration directory.
+        The naming convention of the calibration or the RESP is RESP.{NETWORK}.{STATION}.{LOCATION}.{CHANNEL}
+        (e.g., LQID.LQ.LQT01.00.BHZ) in the calibration directory.
     """
     displacement_stream = Stream()
     for trace in stream:
@@ -236,7 +235,7 @@ def instrument_remove (
             location = trace.stats.location if trace.stats.location else ""
             inventory_path = calibration_path / f"RESP.{trace_network}.{station}.{location}.{channel}"
             if not inventory_path.exists():
-                raise FileExistsError(f"Calibration file not found: {inventory_path}")
+                raise FileNotFoundError(f"Calibration file not found: {inventory_path}")
             
             # Read the calibration file
             inventory = read_inventory(inventory_path, format='RESP')
@@ -271,7 +270,7 @@ def instrument_remove (
 
 def trace_snr(data: np.ndarray, noise: np.ndarray) -> float:
     """
-    Computes the Signal-to-Noise Ratio (SNR) based on the RMS (Root Mean Square) of the signal and noise.
+    Computes the Signal-to-Noise Ratio (SNR) using the RMS (Root Mean Square) of the signal and noise.
 
     Args:
         data (np.ndarray): Array of signal data.
