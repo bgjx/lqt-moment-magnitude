@@ -17,6 +17,7 @@ from typing import Tuple, Callable, Optional
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 from obspy import Stream, read, read_inventory
 
 from .config import CONFIG
