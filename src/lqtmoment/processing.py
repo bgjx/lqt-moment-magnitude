@@ -156,7 +156,7 @@ def calculate_moment_magnitude(
     source_id: int, 
     figure_path: Path, 
     lqt_mode: bool = True,
-    figure_statement: bool = False
+    generate_figure: bool = False
     ) -> Tuple[Dict[str, str], Dict[str,List]]:
     
     """
@@ -174,7 +174,7 @@ def calculate_moment_magnitude(
         figure_path (Path): Path to save the generated figures.
         lqt_mode (bool): If True, perform LQT rotation; otherwise, use ZRT for very local earthquakes
                             default to True.
-        figure_statement (bool): Boolean statement to generate and save figures (default is False).
+        generate_figure (bool): Boolean statement to generate and save figures (default is False).
 
     Returns:
         Tuple[Dict[str, str], Dict[str, List]]:
@@ -232,7 +232,7 @@ def calculate_moment_magnitude(
     }
 
     # Create object collector for plotting
-    if figure_statement:
+    if generate_figure:
         all_streams, all_p_times, all_s_times = [], [], []
         all_freqs = {
             "P": [],  "SV":[], "SH":[], "N_P":[], "N_SV":[], "N_SH":[] 
@@ -285,7 +285,7 @@ def calculate_moment_magnitude(
         
         # Perform the instrument removal
         try:
-            stream_displacement = instrument_remove(stream_copy, calibration_path, figure_path, figure_statement=False)
+            stream_displacement = instrument_remove(stream_copy, calibration_path, figure_path, generate_figure=False)
         except (ValueError, IOError) as e:
             logger.warning(f"Earthquake_{source_id}: An error occurred when correcting instrument for station {station}: {e}", exc_info=True)
             continue
@@ -448,7 +448,7 @@ def calculate_moment_magnitude(
             continue
         
         # Update fitting spectral object collector for plotting
-        if figure_statement:
+        if generate_figure:
             all_streams.append(rotated_stream)
             all_p_times.append(p_arr_time)
             all_s_times.append(s_arr_time)
@@ -488,7 +488,7 @@ def calculate_moment_magnitude(
                 }
     
     # Create fitting spectral plot
-    if figure_statement and all_streams:
+    if generate_figure and all_streams:
         try:
             plot_spectral_fitting(source_id, all_streams, all_p_times, all_s_times, all_freqs, all_specs, all_fits, station_names, figure_path)
         except (ValueError, IOError) as e:
@@ -505,7 +505,7 @@ def start_calculate(
     id_start:Optional[int] = None,
     id_end: Optional[int] = None,
     lqt_mode: Optional[bool] = None,
-    figure_statement: Optional[bool] = None,
+    generate_figure : Optional[bool] = None,
     ) -> Tuple [pd.DataFrame, pd.DataFrame, str]:
     """
     This function processes moment magnitude calculation by iterating over a user-specified range
@@ -521,7 +521,7 @@ def start_calculate(
         id_start (Optional[int]): Starting earthquake ID. If not provided, prompts user or uses min ID.
         id_end (Optional[int]): Ending earthquake ID. If not provided, prompts user or uses max ID.
         lqt_mode (Optional[bool]): Use LQT rotation if True, ZRT otherwise. If not provided, prompts user.
-        figure_statement (Optional[bool]): Generate and save figures if True. If not provided, prompts user.
+        generate_figure (Optional[bool]): Generate and save figures if True. If not provided, prompts user.
 
     Returns:
         Tuple [pd.Dataframe, pd.DataFrame]:
@@ -542,16 +542,16 @@ def start_calculate(
     default_id_start = int(catalog_data["source_id"].min())
     default_id_end = int(catalog_data["source_id"].max())
     default_lqt_mode = True
-    default_figure_statement = False
+    default_generate_figure = False
     # Use user arguments if provided, otherwise fall back to interactive input.
-    if id_start is None or id_end is None or figure_statement is None or lqt_mode is None:
+    if id_start is None or id_end is None or generate_figure is None or lqt_mode is None:
         from .utils import get_user_input
         try:
-            id_start_input, id_end_input, lqt_mode_input, figure_statement_input = get_user_input()
+            id_start_input, id_end_input, lqt_mode_input, generate_figure_input = get_user_input()
             id_start = id_start if id_start is not None else id_start_input
             id_end = id_end if id_end is not None else id_end_input
             lqt_mode = lqt_mode if lqt_mode is not None else lqt_mode_input
-            figure_statement = figure_statement if figure_statement is not None else figure_statement_input
+            generate_figure = generate_figure if generate_figure is not None else generate_figure_input
         except ValueError as e:
             logger.error(f"Invalid interactive input: {e}")
             raise ValueError(f"Invalid interactive input: {e}")
@@ -560,7 +560,7 @@ def start_calculate(
     id_start = id_start if id_start is not None else default_id_start
     id_end = id_end if id_end is not None else default_id_end
     lqt_mode = lqt_mode if lqt_mode is not None else default_lqt_mode
-    figure_statement = figure_statement if figure_statement is not None else default_figure_statement
+    generate_figure = generate_figure if generate_figure is not None else default_generate_figure
 
     # Validate ID range
     if not (isinstance(id_start, int) and isinstance(id_end, int) and id_start <= id_end):
@@ -633,7 +633,7 @@ def start_calculate(
                                             wave_path, source_data_handler,
                                             pick_data_handler, calibration_path,
                                             source_id, figure_path,
-                                            lqt_mode, figure_statement 
+                                            lqt_mode, generate_figure
                                             )
                 result_list.append(pd.DataFrame.from_dict(mw_results))
                 fitting_list.append(pd.DataFrame.from_dict(fitting_result))
