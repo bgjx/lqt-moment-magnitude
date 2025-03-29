@@ -153,18 +153,18 @@ def get_user_input() -> Tuple[int, int, bool, bool]:
 
     while True:
         try:
-            figure_statement = input("Do you want to produce the spectral fitting figures [yes/no, default: no]?: ").strip().lower()
-            if figure_statement == "":
-                figure_statement = False
+            generate_figure = input("Do you want to produce the spectral fitting figures [yes/no, default: no]?: ").strip().lower()
+            if generate_figure == "":
+                generate_figure = False
                 break
-            if figure_statement in ['yes', 'no']:
-                figure_statement = (figure_statement == 'yes')
+            if generate_figure in ['yes', 'no']:
+                generate_figure = (generate_figure == 'yes')
                 break
             print("Please enter 'yes' or 'no'")
         except KeyboardInterrupt:
             sys.exit("\nOperation cancelled by user")
         
-    return id_start, id_end, lqt_mode, figure_statement 
+    return id_start, id_end, lqt_mode, generate_figure 
 
 
 def read_waveforms(path: Path, source_id: int, station:str) -> Stream:
@@ -200,7 +200,7 @@ def instrument_remove (
     stream: Stream, 
     calibration_path: Path, 
     figure_path: Optional[str] = None, 
-    figure_statement: bool = False
+    generate_figure : bool = False
     ) -> Stream:
     """
     Removes instrument response from a Stream of seismic traces using calibration files.
@@ -209,7 +209,7 @@ def instrument_remove (
         stream (Stream): A Stream object containing seismic traces with instrument responses to be removed.
         calibration_path (str): Path to the directory containing the calibration files in RESP format.
         figure_path (Optional[str]): Directory path where response removal plots will be saved. If None, plots are not saved.
-        figure_statement (bool): If True, saves plots of the response removal process. Defaults to False.
+        generate_figure (bool): If True, saves plots of the response removal process. Defaults to False.
 
     Returns:
         Stream: A Stream object containing traces with instrument responses removed.
@@ -230,7 +230,7 @@ def instrument_remove (
   
             # Prepare plot path if fig_statement is True
             plot_path = None
-            if figure_statement and figure_path:
+            if generate_figure and figure_path:
                 plot_path = figure_path.joinpath(f"fig_{station}_BH{component}")
             
             # Remove instrument response

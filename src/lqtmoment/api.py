@@ -48,7 +48,7 @@ def magnitude_estimator(
     output_dir: str = "results/calculation",
     id_start: Optional[int] = None,
     id_end: Optional[int] = None,
-    figure_statement : bool = None,
+    generate_figure : bool = None,
     lqt_mode: Optional[bool] = None,
     output_format: str = "excel",
     result_file_prefix: str = "lqt_magnitude"  
@@ -68,7 +68,7 @@ def magnitude_estimator(
         output_dir (str, optional): Output directory for results. Defaults to "results".
         id_start (Optional[int]): Starting earthquake ID. Defaults to min ID or interactive input.
         id_end (Optional[int]): Ending earthquake ID. Defaults to max ID or interactive input.
-        figure_statement (Optional[bool]): Generate and save figures if True. Defaults to False or interactive input.
+        generate_figure (Optional[bool]): Generate and save figures if True. Defaults to False or interactive input.
         lqt_mode (Optional[bool]): Use LQT rotation if True, ZRT otherwise. Defaults to True or interactive input.
         output_format (str): Format for saving results ("excel" or "csv"). Default to "excel".
         result_file_prefix (str): Prefix for result file names. Defaults to "lqt_magnitude"
@@ -125,7 +125,7 @@ def magnitude_estimator(
                                         wave_dir, cal_dir, fig_dir,
                                         catalog_df, id_start=id_start,
                                         id_end=id_end, lqt_mode=lqt_mode,
-                                        figure_statement=figure_statement,
+                                        generate_figure=generate_figure,
                                         )
     except Exception as e:
         logger.error(f"Calculation failed: {e}")

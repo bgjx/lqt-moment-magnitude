@@ -180,7 +180,7 @@ def main(args: Optional[List[str]] = None) -> None:
                                         id_start=args.id_start,
                                         id_end=args.id_end,
                                         lqt_mode=args.lqt_mode,
-                                        figure_statement=args.create_figure,
+                                        generate_figure=args.create_figure,
                                         )
     except Exception as e:
         logger.error(f"Calculation failed: {e}")
