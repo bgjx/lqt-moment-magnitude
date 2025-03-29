@@ -332,7 +332,7 @@ def calculate_inc_angle(
     s_p_lag_time: Optional[float] = None,
     p_arr_time: Optional[UTCDateTime] = None,
     s_arr_time: Optional[UTCDateTime] = None,
-    figure_statement: bool = False,
+    generate_figure: bool = False,
     figure_path: Optional[Path] = None
     ) -> Tuple [float, float, float, float, float, float]:
     """
@@ -352,7 +352,7 @@ def calculate_inc_angle(
                                         skips s-wave travel time calculation.
         p_arr_time (Optional[UTCDateTime]): Arrival time in UTCDateTime of the P phase, optional, default to None.
         s_arr_time (Optional[UTCDateTime]): Arrival time in UTCDateTime of the S phase, optional, default to None.
-        figure_statement (bool): Whether to generate and save figures, default to False
+        generate_figure (bool): Whether to generate and save figures, default to False
         figure_path (Optional[Path]): A directory to save plot figures, optional, default to None
         
     Returns:
@@ -581,7 +581,7 @@ def calculate_inc_angle(
                 take_off_s = take_off_upward_refract_s
                 total_tt_s = upward_refract_tt_s
                 inc_angle_s = upward_incidence_angle_s
-                if figure_statement:
+                if generate_figure:
                     plot_rays(hypo_depth_m, sta_elev_m, epicentral_distance, velocities_p, raw_model_p,
                               up_model_p, down_model_p, last_ray_p, critical_ref_p, down_ref_p, down_up_ref_p,
                               figure_path)
@@ -661,7 +661,7 @@ def calculate_inc_angle(
                     take_off_s = take_off_upward_refract_s
                     total_tt_s = upward_refract_tt_s
                     inc_angle_s = upward_incidence_angle_s
-                    if figure_statement:
+                    if generate_figure:
                         plot_rays(hypo_depth_m, sta_elev_m, epicentral_distance, velocities_p, raw_model_p, up_model_p, down_model_p,
                                   last_ray_p, critical_ref_p, down_ref_p, down_up_ref_p, figure_path)
                     return take_off_p, total_tt_p, inc_angle_p, take_off_s, total_tt_s, inc_angle_s
@@ -680,7 +680,7 @@ def calculate_inc_angle(
                     take_off_s = take_off_upward_refract_s
                     total_tt_s = upward_refract_tt_s
                     inc_angle_s = upward_incidence_angle_s    
-    if figure_statement:
+    if generate_figure:
         plot_rays(hypo_depth_m, sta_elev_m, epicentral_distance,
                   velocities_p, raw_model_p, up_model_p, down_model_p,
                   last_ray_p, critical_ref_p, down_ref_p, down_up_ref_p,
