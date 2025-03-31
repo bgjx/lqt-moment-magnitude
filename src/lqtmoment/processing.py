@@ -581,7 +581,7 @@ def start_calculate(
     
     Example:
         >>> catalog = pd.read_excel("lqt_catalog.xlsx")
-        >>> result_df, fitting_df, output_name = start_calculate(
+        >>> result_df, fitting_df = start_calculate(
         ...     Path("data/waveforms"), Path("data/calibration"),
         ...     Path("figures"), catalog)
     """
@@ -652,7 +652,7 @@ def start_calculate(
             
             # Extract data for the current event
             try:
-                catalog_data_handler = grouped_data.get_group(source_id)
+                catalog_data = grouped_data.get_group(source_id)
             except KeyError:
                 logger.warning(f"Earthquake_{source_id}: No data for earthquake ID {source_id}")
                 failed_events += 1
@@ -660,15 +660,15 @@ def start_calculate(
                 pbar.update(1)
                 continue
 
-            source_data_handler = catalog_data_handler[["source_lat", "source_lon", 
+            source_data = catalog_data[["source_lat", "source_lon", 
                                                     "source_depth_m", "source_origin_time", 
                                                     "earthquake_type"]].drop_duplicates()
-            pick_data_handler = catalog_data_handler[["network_code", "station_code", "station_lat",
+            pick_data = catalog_data[["network_code", "station_code", "station_lat",
                                                     "station_lon", "station_elev_m",
                                                     "p_arr_time", "s_arr_time"]].drop_duplicates()
             
             # Check for  empty data frame
-            if source_data_handler.empty or pick_data_handler.empty:
+            if source_data.empty or pick_data.empty:
                 logger.warning(f"Earthquake_{source_id}: No data for earthquake {source_id}")
                 failed_events += 1
                 pbar.set_postfix({"Failed": failed_events})
@@ -678,8 +678,8 @@ def start_calculate(
             # Calculate the moment magnitude
             try:
                 mw_results, fitting_result = calculate_moment_magnitude(
-                                            wave_path, source_data_handler,
-                                            pick_data_handler, calibration_path,
+                                            wave_path, source_data,
+                                            pick_data, calibration_path,
                                             source_id, figure_path,
                                             lqt_mode, generate_figure
                                             )
