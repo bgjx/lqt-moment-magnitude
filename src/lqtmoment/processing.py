@@ -10,9 +10,9 @@ parameters from `config.ini`. The module processes waveforms, calibrates data, a
 spectral fitting figures, aggregating results into DataFrames.
 
 Dependencies:
-    - See `pip install lqt-moment-magnitude` for required packages.
+    - See `pyproject.toml` or `pip install lqtmoment` for required packages.
 
-Note:
+Note: 
     This module is intended for internal use by the `lqt-moment-magnitude` API and CLI.
 """
 
@@ -59,7 +59,6 @@ def calculate_seismic_spectra(
     Raises:
         ValueError: If trace_data is empty or invalid sampling rate
     """
-
     if not trace_data.size or sampling_rate <= 0:
         raise ValueError("Trace data cannot be empty and sampling rate must be positive")
     
@@ -79,9 +78,9 @@ def calculate_seismic_spectra(
     amplitudes = amplitudes[positive_mask]
 
     if apply_window: 
-        amplitudes *= 2.0      # Correct for Hann window gain (average reduction gain is 0.5)
+        amplitudes *= 2.0 # Correct for Hann window gain (average reduction gain is 0.5)
     
-    amplitudes *= 1e9           # Convert to nm (nanometers)
+    amplitudes *= 1e9  # Convert to nm (nanometers)
 
     return frequencies, amplitudes
 
@@ -147,6 +146,104 @@ def window_trace(
     return P_data, SV_data, SH_data, P_noise, SV_noise, SH_noise
 
 
+def _rotate_stream(
+    stream: Stream,
+    source_type: str,
+    source_coordinate: List[float],
+    station_coordinate: List[float],
+    azimuth: float,
+    s_p_lag_time_sec: float,
+    p_arr_time: UTCDateTime,
+    s_arr_time: UTCDateTime,
+    lqt_mode: bool
+    ) -> Stream:
+    """
+    Rotate the stream from ZNE to LQT or ZRT based on earthquake type and lqt_mode flag.
+
+    Args:
+        stream (Stream): Input stream in ZNE components.
+        source_type (str): Type of the earthquake (e.g, 'very_local_earthquake').
+        source_coordinate (List[float]): Source coordinate [lat, lon, depth].
+        station_coordinate (List[float]): Station coordinate [lat, lon, elev].
+        azimuth (float): Azimuth from source to station in degrees.
+        s_p_lag_time_sec (float): S-P lag time in seconds.
+        p_arr_time (UTCDateTime): P arrival time.
+        s_arr_time (UTCDateTime): S arrival time.
+        lqt_mode (bool): Use LQT rotation if True, ZRT if False.
+    
+    Returns:
+        Stream: Rotated stream in LQT or ZRT components.
+    
+    Raises:
+        ValueError: If rotation fails.  
+    """
+    if source_type == 'very_local_earthquake' and not lqt_mode:
+        stream_zrt = stream.copy()
+        stream_zrt.rotate(method="NE->RT", back_azimuth=azimuth)
+        p_trace, sv_trace, sh_trace = stream_zrt.traces # Z, R, T components
+    elif source_type == 'very_local_earthquake' and lqt_mode:
+        trace_Z = stream.select(component='Z')
+        _, _, incidence_angle_p, _, _, incidence_angle_s = calculate_inc_angle(
+                                                            source_coordinate,
+                                                            station_coordinate,
+                                                            CONFIG.magnitude.LAYER_BOUNDARIES,
+                                                            CONFIG.magnitude.VELOCITY_VP,
+                                                            CONFIG.magnitude.VELOCITY_VS,
+                                                            source_type,
+                                                            trace_Z,
+                                                            s_p_lag_time_sec,
+                                                            p_arr_time,
+                                                            s_arr_time                                                                    
+                                                            )
+        stream_lqt_p = stream.copy()
+        stream_lqt_s = stream.copy()
+        stream_lqt_p.rotate(method="ZNE->LQT", back_azimuth=azimuth, inclination=incidence_angle_p)
+        stream_lqt_s.rotate(method="ZNE->LQT", back_azimuth=azimuth, inclination=incidence_angle_s)
+        p_trace, _, _ = stream_lqt_p.traces # L, Q, T components
+        _, sv_trace, sh_trace = stream_lqt_s.traces
+    elif source_type == 'local_earthquake':
+        trace_Z = stream.select(component='Z')
+        _, _, incidence_angle_p, _, _, incidence_angle_s = calculate_inc_angle(
+                                                            source_coordinate,
+                                                            station_coordinate,
+                                                            CONFIG.magnitude.LAYER_BOUNDARIES,
+                                                            CONFIG.magnitude.VELOCITY_VP,
+                                                            CONFIG.magnitude.VELOCITY_VS,
+                                                            source_type,
+                                                            trace_Z,
+                                                            s_p_lag_time_sec,
+                                                            p_arr_time,
+                                                            s_arr_time                                                                    
+                                                            )
+        stream_lqt_p = stream.copy()
+        stream_lqt_s = stream.copy()
+        stream_lqt_p.rotate(method="ZNE->LQT", back_azimuth=azimuth, inclination=incidence_angle_p)
+        stream_lqt_s.rotate(method="ZNE->LQT", back_azimuth=azimuth, inclination=incidence_angle_s)
+        p_trace, _, _ = stream_lqt_p.traces # L, Q, T components
+        _, sv_trace, sh_trace = stream_lqt_s.traces
+
+    else:
+        model = TauPyModel(model=CONFIG.magnitude.TAUP_MODEL)
+        arrivals = model.get_travel_times(
+            source_depth_in_km=(source_coordinate[2]*-1e-3),
+            distance_in_degree=locations2degrees(
+                source_coordinate[0], source_coordinate[1],
+                station_coordinate[0], station_coordinate[1]
+            ),
+            phase_list=["P", "S"]
+        )
+        incidence_angle_p = arrivals[0].incident_angle
+        incidence_angle_s = arrivals[1].incident_angle
+        stream_lqt_p = stream.copy()
+        stream_lqt_s = stream.copy()
+        stream_lqt_p.rotate(method="ZNE->LQT", back_azimuth=azimuth, inclination=incidence_angle_p)
+        stream_lqt_s.rotate(method="ZNE->LQT", back_azimuth=azimuth, inclination=incidence_angle_s)
+        p_trace, _, _ = stream_lqt_p.traces # L, Q, T components
+        _, sv_trace, sh_trace = stream_lqt_s.traces
+    
+    return Stream(traces=[p_trace, sv_trace, sh_trace])
+
+
 def calculate_moment_magnitude(
     wave_path: Path, 
     source_df: pd.DataFrame, 
@@ -159,7 +256,7 @@ def calculate_moment_magnitude(
     ) -> Tuple[Dict[str, str], Dict[str,List]]:
     
     """
-    This function processes moment magnitude calculation for an earthquake from given
+    Processes moment magnitude calculation for an earthquake from given
     hypocenter dataframe and picking dataframe. This function handle the waveform instrument 
     response removal, seismogram rotation, spectral fitting, moment magnitude calculation, and
     figure creation. It return two dictionary objects, magnitude and fitting result.      
@@ -198,7 +295,6 @@ def calculate_moment_magnitude(
             5. Compute moment magnitude (Mw) using.
                 Mw = (2/3) * (log10(M_0) - 6.07), where M_0 is in Nm.
     """ 
-
     # Validate all config parameter before doing calculation
     required_config = [
         "LAYER_BOUNDARIES", "VELOCITY_VP", "VELOCITY_VS", "DENSITY", "SNR_THRESHOLD",
@@ -252,17 +348,19 @@ def calculate_moment_magnitude(
 
     # Find the correct velocity and DENSITY value for the specific layer depth
     velocity_P, velocity_S, density_value = None, None, None
-    for (top, bottom, vp, vs, rho) in zip(CONFIG.magnitude.LAYER_BOUNDARIES, CONFIG.magnitude.VELOCITY_VP, CONFIG.magnitude.VELOCITY_VS, CONFIG.magnitude.DENSITY):
+    for layer, (top, bottom) in enumerate(CONFIG.magnitude.LAYER_BOUNDARIES):
         if (top*1000)   <= source_depth_m <= (bottom*1000):
-            velocity_P, velocity_S, density_value = vp*1000, vs*1000, rho
+            velocity_P = CONFIG.magnitude.VELOCITY_VP[layer]*1000
+            velocity_S = CONFIG.magnitude.VELOCITY_VS[layer]*1000
+            density_value = CONFIG.magnitude.DENSITY[layer]
             break
-        else:
-            logger.warning(f"Earthquake_{source_id}: Hypocenter depth not within the defined layers.")
-            return {}, fitting_result
+    if velocity_P is None:
+        logger.warning(f"Earthquake_{source_id}: Hypocenter depth not within the defined layers.")
+        return {}, fitting_result
     
     # Start spectrum fitting and magnitude estimation
     moments, corner_frequencies, source_radius = [],[],[]
-    for station in pick_df.get("station_code").unique():
+    for station in pick_df.get("station_code"):
         # Get the station coordinate
         station_info = pick_df[pick_df.station_code == station].iloc[0]
         network_code = station_info.network_code
@@ -285,7 +383,10 @@ def calculate_moment_magnitude(
         
         # Perform the instrument removal
         try:
-            stream_displacement = instrument_remove(stream_copy, calibration_path, figure_path, network_code, generate_figure=False)
+            stream_displacement = instrument_remove(
+                                    stream_copy, calibration_path,
+                                    figure_path, network_code,
+                                    generate_figure=False)
         except (ValueError, IOError) as e:
             logger.warning(f"Earthquake_{source_id}: An error occurred when correcting instrument for station {station}: {e}", exc_info=True)
             continue
@@ -293,78 +394,22 @@ def calculate_moment_magnitude(
         # Perform station rotation form ZNE to LQT in earthquake type dependent
         source_coordinate = [source_lat, source_lon , -1*source_depth_m]  # depth must be in negative notation
         station_coordinate = [station_lat, station_lon, station_elev_m]
+        
         try:
-            if source_type == 'very_local_earthquake' and not lqt_mode:
-                stream_zrt = stream_displacement.copy()
-                stream_zrt.rotate(method="NE->RT", back_azimuth=azimuth)
-                p_trace, sv_trace, sh_trace = stream_zrt.traces # Z, R, T components
-            elif source_type == 'very_local_earthquake' and lqt_mode:
-                trace_Z = stream_displacement.select(component='Z')
-                _, _, incidence_angle_p, _, _, incidence_angle_s = calculate_inc_angle(
-                                                                    source_coordinate,
-                                                                    station_coordinate,
-                                                                    CONFIG.magnitude.LAYER_BOUNDARIES,
-                                                                    CONFIG.magnitude.VELOCITY_VP,
-                                                                    CONFIG.magnitude.VELOCITY_VS,
-                                                                    source_type,
-                                                                    trace_Z,
-                                                                    s_p_lag_time_sec,
-                                                                    p_arr_time,
-                                                                    s_arr_time                                                                    
-                                                                    )
-                stream_lqt_p = stream_displacement.copy()
-                stream_lqt_s = stream_displacement.copy()
-                stream_lqt_p.rotate(method="ZNE->LQT", back_azimuth=azimuth, inclination=incidence_angle_p)
-                stream_lqt_s.rotate(method="ZNE->LQT", back_azimuth=azimuth, inclination=incidence_angle_s)
-                p_trace, _, _ = stream_lqt_p.traces # L, Q, T components
-                _, sv_trace, sh_trace = stream_lqt_s.traces
-                
-            elif source_type == 'local_earthquake':
-                trace_Z = stream_displacement.select(component='Z')
-                _, _, incidence_angle_p, _, _, incidence_angle_s = calculate_inc_angle(
-                                                                    source_coordinate,
-                                                                    station_coordinate,
-                                                                    CONFIG.magnitude.LAYER_BOUNDARIES,
-                                                                    CONFIG.magnitude.VELOCITY_VP,
-                                                                    CONFIG.magnitude.VELOCITY_VS,
-                                                                    source_type,
-                                                                    trace_Z,
-                                                                    s_p_lag_time_sec,
-                                                                    p_arr_time,
-                                                                    s_arr_time                                                                    
-                                                                    )
-                stream_lqt_p = stream_displacement.copy()
-                stream_lqt_s = stream_displacement.copy()
-                stream_lqt_p.rotate(method="ZNE->LQT", back_azimuth=azimuth, inclination=incidence_angle_p)
-                stream_lqt_s.rotate(method="ZNE->LQT", back_azimuth=azimuth, inclination=incidence_angle_s)
-                p_trace, _, _ = stream_lqt_p.traces # L, Q, T components
-                _, sv_trace, sh_trace = stream_lqt_s.traces
-
-            else:
-                model = TauPyModel(model=CONFIG.magnitude.TAUP_MODEL)
-                arrivals = model.get_travel_times(
-                    source_depth_in_km=(source_depth_m/1e3),
-                    distance_in_degree=epicentral_distance_degrees,
-                    phase_list=["P", "S"]
-                )
-                # Deg to m conversion for teleseismic earthquake
-                deg_to_m = (2*np.pi*6371e3)/360
-                source_distance_m = arrivals[0].distance * deg_to_m
-                incidence_angle_p = arrivals[0].incident_angle
-                incidence_angle_s = arrivals[1].incident_angle
-                stream_lqt_p = stream_displacement.copy()
-                stream_lqt_s = stream_displacement.copy()
-                stream_lqt_p.rotate(method="ZNE->LQT", back_azimuth=azimuth, inclination=incidence_angle_p)
-                stream_lqt_s.rotate(method="ZNE->LQT", back_azimuth=azimuth, inclination=incidence_angle_s)
-                p_trace, _, _ = stream_lqt_p.traces # L, Q, T components
-                _, sv_trace, sh_trace = stream_lqt_s.traces
-            rotated_stream = Stream(traces=[p_trace, sv_trace, sh_trace])
+            rotated_stream = _rotate_stream(
+                            stream_displacement, source_type,
+                            source_coordinate, station_coordinate, azimuth,
+                            s_p_lag_time_sec, p_arr_time,s_arr_time,
+                            lqt_mode)
         except (ValueError, RuntimeError) as e:
-            logger.warning(f"Earthquake_{source_id}: An error occurred when rotating component for station {station}.", exc_info=True)
+            logger.warning(f"Earthquake_{source_id}: Failed to rotate components for station {station}: {e}")
             continue
- 
+
         # Window the trace
-        p_window_data, sv_window_data, sh_window_data, p_noise_data, sv_noise_data, sh_noise_data = window_trace(rotated_stream, p_arr_time, s_arr_time, lqt_mode=lqt_mode)
+        p_window_data, sv_window_data, sh_window_data, p_noise_data, sv_noise_data, sh_noise_data = window_trace(
+                                                                                                    rotated_stream, 
+                                                                                                    p_arr_time, s_arr_time,
+                                                                                                    lqt_mode=lqt_mode)
         
         # Check the data quality (SNR must be above or equal to 1)
         if any(trace_snr(data, noise) <= CONFIG.magnitude.SNR_THRESHOLD for data, noise in zip ([p_window_data, sv_window_data, sh_window_data], [p_noise_data, sv_noise_data, sh_noise_data])):
@@ -477,20 +522,22 @@ def calculate_moment_magnitude(
     mw = ((2.0 / 3.0) * np.log10(moment_average)) - CONFIG.magnitude.MW_CONSTANT
     mw_std = (2.0 /3.0) * moment_std/(moment_average * np.log(10))
  
-    results = {"source_id":[f"{source_id}"], 
-                "fc_avg":[f"{np.mean(corner_frequencies):.3f}"],
-                "fc_std":[f"{np.std(corner_frequencies):.3f}"],
-                "src_rad_avg_m":[f"{np.mean(source_radius):.3f}"],
-                "src_rad_std_m":[f"{np.std(source_radius):.3f}"],
-                "stress_drop_bar":[f"{(7 * moment_average) / (16 * np.mean(source_radius)** 3) *1e-5:.3f}"],
-                "mw_average":[f"{mw:.3f}"],
-                "mw_std":[f"{mw_std:.3f}"]
+    results = {"source_id": source_id, 
+                "fc_avg": np.mean(corner_frequencies),
+                "fc_std": np.std(corner_frequencies),
+                "src_rad_avg_m": np.mean(source_radius),
+                "src_rad_std_m": np.std(source_radius),
+                "stress_drop_bar": (7 * moment_average) / (16 * np.mean(source_radius)** 3) *1e-5,
+                "mw_average": mw,
+                "mw_std": mw_std
                 }
     
     # Create fitting spectral plot
     if generate_figure and all_streams:
         try:
-            plot_spectral_fitting(source_id, all_streams, all_p_times, all_s_times, all_freqs, all_specs, all_fits, station_names, figure_path)
+            plot_spectral_fitting(
+                source_id, all_streams, all_p_times, all_s_times, 
+                all_freqs, all_specs, all_fits, station_names, figure_path)
         except (ValueError, IOError) as e:
             logger.warning(f"Earthquake_{source_id}: Failed to create spectral fitting plot for event {source_id}, {e}.", exc_info=True)
     
