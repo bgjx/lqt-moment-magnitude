@@ -59,7 +59,6 @@ def compute_dominant_period(
         ValueError: If trace is empty or arrival time is invalid.
     
     """
-
     if trace is None or len(trace.data) == 0:
         raise ValueError("Trace data cannot be None or Empty")
     if arrival_time < trace.stats.starttime or arrival_time > trace.stats.endtime:
@@ -107,9 +106,9 @@ def build_raw_model(layer_boundaries: List[List[float]], velocities: List) -> Li
     Notes:
         Assumes layer_boundaries and velocities are ordered top-down (shallow to deep).
     """
-
     if len(layer_boundaries) != len(velocities):
         raise ValueError("Length of layer_boundaries must match velocities")
+    
     model = []
     for (top_km, bottom_km), velocity_km_s in zip(layer_boundaries, velocities):
         top_m = top_km*-1000
@@ -133,7 +132,6 @@ def upward_model(hypo_depth_m: float, sta_elev_m: float, raw_model: List[List[fl
         List[List[float]] : A subset of the raw model, adjusted for station elevation and hypocenter depth,
                              containing layers between the station elevation and hypocenter depth.
     """
-
     if hypo_depth_m >= sta_elev_m:
         raise ValueError(f"Hypocenter depth {hypo_depth_m} must be below station elevation {sta_elev_m}")
     # correct upper model boundary and last layer thickness
@@ -146,6 +144,7 @@ def upward_model(hypo_depth_m: float, sta_elev_m: float, raw_model: List[List[fl
             hypo_idx+=1
         else:
             pass
+
     modified_model = raw_model[sta_idx:hypo_idx+1]
     modified_model[0][0] = sta_elev_m  # adjust top to station elevation
     if len(modified_model) > 1:
@@ -169,7 +168,6 @@ def downward_model(hypo_depth_m: float, raw_model: List[List[float]]) -> List[Li
     Returns:
         List[List[float]] :  A subset of the raw model, containing layers from the hypocenter depth downward.
     """
-    
     hypo_idx = -1
     for layer in raw_model:
         if layer[0] >= hypo_depth_m:
@@ -201,12 +199,11 @@ def up_refract(
             - take_off (float): The computed take-off angle (degrees) of the refracted-wave reaches the station.
         
     """
-
     # Convert upmodel to thickness and velocitites array
     thicknesses = np.array([layer[1] for layer in up_model[::-1]])
     velocities = np.array([layer[2] for layer in up_model[::-1]])
 
-    def distance_error(take_off_angle: float) -> float:
+    def _distance_error(take_off_angle: float) -> float:
         """ Compute the difference between cumulative distance and epi_dist_m."""
         angles = np.zeros(len(thicknesses))
         angles[0] = take_off_angle
@@ -220,7 +217,7 @@ def up_refract(
     # Find the take-off angle where distance_error = 0, between 0 and 90 degrees
     if take_off is None:
         try:
-            take_off = brentq(distance_error, *ANGLE_BOUNDS)
+            take_off = brentq(_distance_error, *ANGLE_BOUNDS)
         except ValueError as e:
             raise ValueError("Failed to find take-off angle: {e}. Check velocity model and epicentral distance")
     else:
@@ -251,7 +248,7 @@ def down_refract(
     epi_dist_m: float,
     up_model: List[List[float]],
     down_model: List[List[float]]
-    ) -> Tuple[Dict[str, List], Dict[str, List]] :
+    ) -> Tuple[Dict[str, Dict[str, List]], Dict[str, Dict[str, List]]] :
     """
     Calculate the refracted angle (relative to the normal line), the cumulative distance traveled, 
     and the total travel time for all layers based on the downward critically refracted wave.
@@ -429,9 +426,9 @@ def calculate_inc_angle(
         critical_refract_tt_p = fastest_tt
         critical_incidence_angle_p = critical_ref_p[fastest_key]["incidence_angle"][0]
     else:
-        take_off_critical_refract_p = None
-        critical_refract_tt_p = np.inf
-        critical_incidence_angle_p = None
+        take_off_critical_refract_p = take_off_upward_refract_p
+        critical_refract_tt_p = upward_refract_tt_p
+        critical_incidence_angle_p = upward_incidence_angle_p
         
     # Compute S-wave travel time and incidence angles (needed for S-wave incidence angle)
     if velocities_s is None:
@@ -478,9 +475,9 @@ def calculate_inc_angle(
         critical_refract_tt_s = fastest_tt_s
         critical_incidence_angle_s = critical_ref_s[fastest_key_s]["incidence_angle"][0]
     else:
-        take_off_critical_refract_s = None
-        critical_refract_tt_s = np.inf
-        critical_incidence_angle_s = None
+        take_off_critical_refract_s = take_off_upward_refract_s
+        critical_refract_tt_s = upward_refract_tt_s
+        critical_incidence_angle_s = upward_incidence_angle_s
     
     # Determine the P and S phases for S-P lag time calculation
     t_p = min(upward_refract_tt_p, critical_refract_tt_p)
@@ -540,11 +537,11 @@ def calculate_inc_angle(
             logger.info(f"Local earthquake: Gap ({gap:.2f}) < {threshold}s at distance {epicentral_distance}Km, defaulting to Pg."
                         f"P-Incidence Angle: {inc_angle_p:.2f}°, S-Incidence Angle: {inc_angle_s:.2f}°")
         else:
-            def compute_snr(
+            def _compute_snr(
                 trace: np.ndarray, 
                 arrival_time: UTCDateTime,
                 signal_window: float = 2.0,
-                noise_window: float = 2
+                noise_window: float = 2.0
                 ) -> float:
                 """
                 Computes signal-to-noise ratio for given trace.
@@ -574,11 +571,16 @@ def calculate_inc_angle(
                 noise_end = arrival_time
                 idx1 = int((noise_start - trace.stats.starttime) * sampling_rate)
                 idx2 = int((noise_end - trace.stats.starttime) * sampling_rate)
+                idx1 = max(0, min(len(trace.data) - 1, idx1))
+                idx2 = max(0, min(len(trace.data), idx2))
                 noise = np.mean(np.abs(trace.data[idx1:idx2])) 
+
                 signal_start = arrival_time - signal_window / 2
                 signal_end = arrival_time + signal_window / 2
                 idx3 = int((signal_start - trace.stats.starttime) * sampling_rate)
                 idx4 = int((signal_end - trace.stats.starttime) * sampling_rate)
+                idx3 = max(0, min(len(trace.data) - 1, idx3))
+                idx4 = max(0, min(len(trace.data), idx4))
                 signal = np.mean(np.abs(trace.data[idx3:idx4]))
                 return signal/noise
 
@@ -588,8 +590,8 @@ def calculate_inc_angle(
             
             # Compute SNR for Pg and Pn (SNR need to be good enough for energy comparison)
             try:
-                snr_pg = compute_snr(trace_z, arrival_time_pg, window_length, 0.75*window_length)
-                snr_pn = compute_snr(trace_z, arrival_time_pn, window_length, 0.75*window_length)
+                snr_pg = _compute_snr(trace_z, arrival_time_pg, window_length, 0.75*window_length)
+                snr_pn = _compute_snr(trace_z, arrival_time_pn, window_length, 0.75*window_length)
             except (ValueError, RuntimeError) as e:
                 logger.info(f"Local earthquake: SNR computation failed at distance {epicentral_distance/1000:.1f} km ({str(e)}),"
                             f"defaulting to Pg, P-Incidence Angle: {upward_incidence_angle_p:.2f}°, S-Incidence Angle: {upward_incidence_angle_s:.2f}°")
@@ -616,7 +618,7 @@ def calculate_inc_angle(
                 logger.info(f"Local earthquake: SNR too low (Pn: {snr_pn:.2f}, Pg: {snr_pg:.2f}) at distance {epicentral_distance/1000:.1f} km, "
                       f"defaulting to Pg, P-Incidence Angle: {inc_angle_p:.2f}°, S-Incidence Angle: {inc_angle_s:.2f}°")
             else:
-                def compute_phase_energy(
+                def _compute_phase_energy(
                     trace: np.ndarray,
                     arrival_time: UTCDateTime,
                     window_before: float,
@@ -652,6 +654,8 @@ def calculate_inc_angle(
                     sampling_rate = trace.stats.sampling_rate
                     idx1 = int((arrival_time - trace.stats.starttime - window_before) * sampling_rate)
                     idx2 = int((arrival_time - trace.stats.starttime + window_after) * sampling_rate)
+                    idx1 = max(0, min(len(trace.data) - 1, idx1))
+                    idx2 = max(0, min(len(trace.data), idx2))
                     window_trace = trace_filt.data[idx1:idx2]
                     return np.sum(window_trace**2)
                 
@@ -660,12 +664,12 @@ def calculate_inc_angle(
                 window_after = window_length / 3
 
                 try:
-                    pg_energy = compute_phase_energy(
+                    pg_energy = _compute_phase_energy(
                         trace_z, arrival_time_pg, window_before,
                         window_after, CONFIG.spectral.F_MIN,
                         CONFIG.spectral.F_MAX
                     )
-                    pn_energy = compute_phase_energy(
+                    pn_energy = _compute_phase_energy(
                         trace_z, arrival_time_pn, window_before,
                         window_after, CONFIG.spectral.F_MIN,
                         CONFIG.spectral.F_MAX
