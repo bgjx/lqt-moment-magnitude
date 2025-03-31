@@ -1,6 +1,8 @@
 """
 Functionality module for lqt-moment-magnitude package.
 
+Version: 0.1.0
+
 This module calculates incidence angles, travel times, and ray paths for seismic waves (P-waves, S-waves)
 using a layered 1-D velocity model and Snell’s Law-based shooting method, suitable for shallow borehole 
 3-C sensor.
@@ -53,18 +55,33 @@ def compute_dominant_period(
     Returns:
         float: Dominant period of a trace segment in second.
     
+    Raises:
+        ValueError: If trace is empty or arrival time is invalid.
+    
     """
 
+    if trace is None or len(trace.data) == 0:
+        raise ValueError("Trace data cannot be None or Empty")
+    if arrival_time < trace.stats.starttime or arrival_time > trace.stats.endtime:
+        raise ValueError(
+            f"Arrival time {arrival_time} is outside trace time range"
+            f"({trace.stats.starttime} to {trace.stats.endtime})"
+        )
+    
     sampling_rate = trace.stats.sampling_rate
     idx_start = int((arrival_time - trace.stats.starttime) * sampling_rate)
     idx_end = int(idx_start + (window_length * sampling_rate))
 
+    idx_start = max(0, min(len(trace.data) - 1, idx_start))
+    idx_end = max(0, min(len(trace.data), idx_end))
     data = trace.data[idx_start:idx_end]
+    if len(data) == 0:
+        return 2.0
+    
     freqs, psd = welch(data, fs=sampling_rate, nperseg=min(256, len(data)), scaling='density')
     mask = (freqs >= f_min) & (freqs<= f_max)
     freqs = freqs[mask]
     psd = psd[mask]
-
     if len(freqs) == 0:
         return 2.0
     
@@ -81,7 +98,8 @@ def build_raw_model(layer_boundaries: List[List[float]], velocities: List) -> Li
         velocities (List): List of layer velocities.
 
     Returns:
-        List[List[float]]: List of [top_depth_m, thickness_m, velocity_m_s]
+        List[List[float]]: List of [top_depth_m, thickness_m, velocity_m_s], where depths and thickness are in meters,
+                            and velocity is in m/s.
     
     Raises:
         ValueError: If lengths of layer boundaries and velocities don't match.
@@ -341,7 +359,7 @@ def calculate_inc_angle(
 
     Args:
         hypo (List[float]): A list containing the latitude, longitude, and depth of the hypocenter (depth in negative notation).
-        sta (List[float]): A list containing the latitude, longitude, and elevation of the station.
+        station (List[float]): A list containing the latitude, longitude, and elevation of the station.
         model (List[List[float]]): List of list where each sublist contains top and bottom depths for a layer.
         velocities_p (List[float]): List of P-wave velocities.
         velocities_s (Optional[List]): List of S-wave velocities, optional only used fos S incidence angle calculation
