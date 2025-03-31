@@ -44,7 +44,6 @@ def window_band(frequencies: np.ndarray, spectrums: np.ndarray, f_min: float, f_
     Raises:
         ValueError: If arrays are mismatched, emtpy, or contain Nan/inf, or if f_min >= fmax.
     """
-    
     if not (frequencies.size and spectrums.size):
         raise ValueError("Frequencies and spectrums must be non-empty")
     if frequencies.shape != spectrums.shape or not np.isfinite(frequencies).all() or not np.isfinite(spectrums).all():
@@ -63,7 +62,6 @@ def calculate_source_spectrum(
     corner_frequency: float,
     traveltime: float
     ) -> np.ndarray:
-    
     """
     Calculate theoretical source spectrum using Abercrombie (1995) and Boatwright (1980) model.
     
@@ -81,7 +79,6 @@ def calculate_source_spectrum(
         Model: A(f) = Ω0 * exp(-π f t / Q) / (1 + (f/f_c)^(2n))^(1/y), where n and y are configurable
         (default n=2, y=1 per Boatwright, 1980).
     """
-    
     n, y  = CONFIG.spectral.N_FACTOR, CONFIG.spectral.Y_FACTOR
     num = omega_0 * np.exp(-np.pi * frequencies * traveltime / q_factor)
     denom = (1 + (frequencies / corner_frequency) ** (y*n))**(1/y)
@@ -96,7 +93,6 @@ def fit_spectrum_grid_search (
     f_min: float,
     f_max: float
     ) -> Tuple[float, float, float, float, np.ndarray, np.ndarray]:
-    
     """
     Fit seismic spectrum systematically using grid search (deprecated for performance, provided for user option).
     
@@ -161,7 +157,6 @@ def fit_spectrum_qmc (
     f_max: float,
     n_samples: int = CONFIG.spectral.DEFAULT_N_SAMPLES
     ) -> Tuple[float, float, float, float, np.ndarray, np.ndarray]:
-    
     """
     Fit seismic spectrum stochastically using Quasi-Monte Carlo (QMC) sampling.
     
@@ -179,7 +174,6 @@ def fit_spectrum_qmc (
     Raises:
         ValueError: if inputs are invalid or fitting fails.
     """
-    
     # windowing frequencies and spectrum within f band    
     freq, spec = window_band(frequencies, spectrums, f_min, f_max)
     if not (freq.size and spec.size):
@@ -257,7 +251,6 @@ def fit_spectrum_bayesian(
     Raises:
         ValueError: if inputs are invalid or fitting fails.
     """
-    
     # windowing frequencies and spectrum within f band    
     freq, spec = window_band(frequencies, spectrums, f_min, f_max)
 
