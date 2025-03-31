@@ -8,7 +8,7 @@ using Quasi-Monte Carlo (QMC) sampling, Bayesian optimization, and grid search, 
 (1995) and Boatwright (1980) models for volcanic geothermal systems.
 
 Dependencies:
-    - See `requirements.txt` or `pip install lqt-moment-magnitude` for required packages.
+    - See `pyproject.toml` or `pip install lqt-moment-magnitude` for required packages.
 
 References:
 - Abercrombie, R. E. (1995). Earthquake locations using single-station deep borehole recordings:
