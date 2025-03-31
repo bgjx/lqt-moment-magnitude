@@ -293,7 +293,7 @@ def calculate_moment_magnitude(
                 where rho is density, v is wave velocity, r is distance, 
                 R is radiation pattern, and F is free surface factor.
             5. Compute moment magnitude (Mw) using.
-                Mw = (2/3) * (log10(M_0) - 6.07), where M_0 is in Nm.
+                Mw = (2/3) * (log10(M_0) - CONFIG.magnitude.MW_CONSTANT), where M_0 is in Nm.
     """ 
     # Validate all config parameter before doing calculation
     required_config = [
@@ -360,7 +360,7 @@ def calculate_moment_magnitude(
     
     # Start spectrum fitting and magnitude estimation
     moments, corner_frequencies, source_radius = [],[],[]
-    for station in pick_df.get("station_code"):
+    for station in pick_df.get("station_code").unique():
         # Get the station coordinate
         station_info = pick_df[pick_df.station_code == station].iloc[0]
         network_code = station_info.network_code
@@ -514,7 +514,7 @@ def calculate_moment_magnitude(
             all_fits["SH"].append(fit_SH)
             station_names.append(station)
 
-    if not moments:
+    if not moments or not corner_frequencies or not source_radius:
         return {}, fitting_result
     
     # Calculate average and std of moment magnitude
@@ -553,7 +553,7 @@ def start_calculate(
     id_end: Optional[int] = None,
     lqt_mode: Optional[bool] = None,
     generate_figure : Optional[bool] = None,
-    ) -> Tuple [pd.DataFrame, pd.DataFrame, str]:
+    ) -> Tuple [pd.DataFrame, pd.DataFrame]:
     """
     This function processes moment magnitude calculation by iterating over a user-specified range
     of earthquake IDs. For each event of earthquake, it extracts source and station data, and 
