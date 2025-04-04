@@ -1,3 +1,3 @@
 [console_scripts]
-LQTCatBuild = lqtmoment.catalog_builder:main
-LQTMagnitude = lqtmoment.main:main
+lqtcatalog = lqtmoment.catalog_builder:main
+lqtmoment = lqtmoment.main:main
