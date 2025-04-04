@@ -71,7 +71,7 @@ def load_data(data_dir: str) -> pd.DataFrame:
         raise ValueError(f"Unsupported data file format: {data_path.suffix}. Supported formats: .csv, .xlsx")
     
 
-def setup_logging(log_file: str = "lqt_runtime.log") -> logging.logger:
+def setup_logging(log_file: str = "lqt_runtime.log") -> logging.Logger:
     """
     Set up logging for lqtmoment package.
 
