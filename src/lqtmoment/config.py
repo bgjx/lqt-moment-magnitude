@@ -106,7 +106,7 @@ class MagnitudeConfig:
     VELOCITY_VS: List[float] = None
     DENSITY: List[float] = None
     TAUP_MODEL: str = 'iasp91'
-    VELOCITY_MODEL_FILE: str = ""
+    VELOCITY_MODEL_FILE: str = None
     MW_CONSTANT: float = 6.07
 
     def __post_init__(self):
@@ -120,16 +120,18 @@ class MagnitudeConfig:
         self.DENSITY = self.DENSITY or [2700] * 9
 
         # Load velocity model from a JSON file if specified
-        if self.VELOCITY_MODEL_FILE:
-            try:
-                with open(self.VELOCITY_MODEL_FILE, "r") as f:
-                    model = json.load(f)
-                self.LAYER_BOUNDARIES = model["layer_boundaries"]
-                self.VELOCITY_VP = model["velocity_vp"]
-                self.VELOCITY_VS = model["velocity_vs"]
-                self.DENSITY = model["density"]
-            except (FileNotFoundError, json.JSONDecodeError, KeyError) as e:
-                raise ValueError(f"Invalid velocity model file '{self.VELOCITY_MODEL_FILE}': {e} ")
+        if self.VELOCITY_MODEL_FILE == 'None' or self.VELOCITY_MODEL_FILE is None:
+            self.VELOCITY_MODEL_FILE = Path(__file__).parent.parent.parent.joinpath("velocity_model.json")
+
+        try:
+            with open(self.VELOCITY_MODEL_FILE, "r") as f:
+                model = json.load(f)
+            self.LAYER_BOUNDARIES = model["layer_boundaries"]
+            self.VELOCITY_VP = model["velocity_vp"]
+            self.VELOCITY_VS = model["velocity_vs"]
+            self.DENSITY = model["density"]
+        except (FileNotFoundError, json.JSONDecodeError, KeyError) as e:
+            raise ValueError(f"Invalid velocity model file '{self.VELOCITY_MODEL_FILE}': {e} ")
        
         # Validation
         if not(len(self.LAYER_BOUNDARIES) == len(self.VELOCITY_VP) == len(self.VELOCITY_VS) == len(self.DENSITY)):
