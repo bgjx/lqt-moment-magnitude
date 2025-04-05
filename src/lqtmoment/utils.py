@@ -7,7 +7,7 @@ This module provides useful functionalities such as user input validation,
 waveform reader, instrument response removal and Signal-to-Noise ratio calculation.
 
 Dependencies:
-    - See `pip install lqt-moment-magnitude` for required packages.
+    - See `pyproject.toml` or `pip install lqtmoment` for required packages.
 """
 
 import logging
