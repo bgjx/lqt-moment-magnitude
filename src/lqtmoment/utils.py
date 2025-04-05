@@ -38,11 +38,11 @@ REQUIRED_HYPO_COLUMNS = [
     ]
 
 REQUIRED_PICKING_COLUMNS = [
-    "id", "network_code", "station_code", "year", "month", "day", "hour", "minute_p",
+    "id", "station_code", "year", "month", "day", "hour", "minute_p",
     "p_arr_sec", "p_polarity", "p_onset", "minute_s", "s_arr_sec"
     ]
 
-REQUIRED_STATION_COLUMNS = ["station_code", "lat", "lon", "elev_m"]
+REQUIRED_STATION_COLUMNS = ["network_code", "station_code", "lat", "lon", "elev_m"]
 
 
 def load_data(data_dir: str) -> pd.DataFrame:
