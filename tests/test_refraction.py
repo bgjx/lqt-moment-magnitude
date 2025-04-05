@@ -19,17 +19,18 @@ def test_data():
     boundaries = [
                     [-3.00, -1.90], [-1.90, -0.59], [-0.59, 0.22], [0.22, 2.50], [2.50, 7.00]
     ]
-    velocities = [2.68, 2.99, 3.95, 4.50, 4.99]
+    velocity_p = [2.68, 2.99, 3.95, 4.50, 4.99]
+    velocity_s = [1.60, 1.79, 2.37, 2.69, 2.99]
     hypo = [37.916973, 126.651613, 200]
     station = [ 37.916973, 126.700882, 2200]
     epi_dist_m = 4332.291
-    return hypo, station, epi_dist_m, boundaries, velocities
+    return hypo, station, epi_dist_m, boundaries, velocity_p, velocity_s
 
 
 @pytest.fixture
 def sample_model(test_data):
-    _, _, _, boundaries, velocities = test_data
-    return build_raw_model(boundaries, velocities)
+    _, _, _, boundaries, velocity_p, velocity_s = test_data
+    return build_raw_model(boundaries, velocity_p)
 
 
 def test_build_raw_model(sample_model):
@@ -75,16 +76,18 @@ def test_up_refract(sample_model):
 
 
 def test_calculate_inc_ange(test_data, tmp_path):
-    hypo, station, epi_dist_m, boundaries, velocities = test_data
+    hypo, station, epi_dist_m, boundaries, velocity_p, velocity_s = test_data
     figure_path = tmp_path / "figures"
     figure_path.mkdir()
     take_off_p, total_tt_p, inc_angle_p, take_off_s, total_tt_s, inc_angle_s = calculate_inc_angle(
                                                                                 hypo, station,
-                                                                                boundaries, velocities,
+                                                                                boundaries,
+                                                                                velocity_p,
+                                                                                velocity_s,
                                                                                 source_type='very_local_earthquake',
                                                                                 generate_figure=True,
                                                                                 figure_path=str(figure_path))
-    expected_value = [98.64864864864865, 1.4680449010337573, 42.12621600327373]
+    expected_value = [98.64864864864865, 1.4680449010337573, 42.12621600327373, 98.55855855855856, 2.4581347184387163, 41.88115419698122]
     assert take_off_p == pytest.approx(expected_value[0], rel=1e-1)
     assert total_tt_p == pytest.approx(expected_value[1], rel=1e-1)
     assert inc_angle_p == pytest.approx(expected_value[2], rel=1e-1)
@@ -94,6 +97,15 @@ def test_calculate_inc_ange(test_data, tmp_path):
     assert 0 <= take_off_p <= 180
     assert total_tt_p > 0
     assert 0 <= inc_angle_p <=90
+    assert take_off_s == pytest.approx(expected_value[3], rel=1e-1)
+    assert total_tt_s == pytest.approx(expected_value[4], rel=1e-1)
+    assert inc_angle_s == pytest.approx(expected_value[5], rel=1e-1)
+    assert isinstance(take_off_s, float)
+    assert isinstance(total_tt_s, float)
+    assert isinstance(inc_angle_s, float)
+    assert 0 <= take_off_s <= 180
+    assert total_tt_s > 0
+    assert 0 <= inc_angle_s <=90
     plot_file = figure_path/ "ray_path_event.png"
     assert plot_file.exists(), f"plot file {plot_file} was not created"
 
