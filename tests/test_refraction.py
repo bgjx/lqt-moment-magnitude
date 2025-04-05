@@ -78,17 +78,22 @@ def test_calculate_inc_ange(test_data, tmp_path):
     hypo, station, epi_dist_m, boundaries, velocities = test_data
     figure_path = tmp_path / "figures"
     figure_path.mkdir()
-    take_off, tt, inc_angle = calculate_inc_angle(hypo, station, boundaries, velocities, figure_statement=True, figure_path=str(figure_path))
+    take_off_p, total_tt_p, inc_angle_p, take_off_s, total_tt_s, inc_angle_s = calculate_inc_angle(
+                                                                                hypo, station,
+                                                                                boundaries, velocities,
+                                                                                source_type='very_local_earthquake',
+                                                                                generate_figure=True,
+                                                                                figure_path=str(figure_path))
     expected_value = [98.64864864864865, 1.4680449010337573, 42.12621600327373]
-    assert take_off == pytest.approx(expected_value[0], rel=1e-1)
-    assert tt == pytest.approx(expected_value[1], rel=1e-1)
-    assert inc_angle == pytest.approx(expected_value[2], rel=1e-1)
-    assert isinstance(take_off, float)
-    assert isinstance(tt, float)
-    assert isinstance(inc_angle, float)
-    assert 0 <= take_off <= 180
-    assert tt > 0
-    assert 0 <= inc_angle <=90
+    assert take_off_p == pytest.approx(expected_value[0], rel=1e-1)
+    assert total_tt_p == pytest.approx(expected_value[1], rel=1e-1)
+    assert inc_angle_p == pytest.approx(expected_value[2], rel=1e-1)
+    assert isinstance(take_off_p, float)
+    assert isinstance(total_tt_p, float)
+    assert isinstance(inc_angle_p, float)
+    assert 0 <= take_off_p <= 180
+    assert total_tt_p > 0
+    assert 0 <= inc_angle_p <=90
     plot_file = figure_path/ "ray_path_event.png"
     assert plot_file.exists(), f"plot file {plot_file} was not created"
 
