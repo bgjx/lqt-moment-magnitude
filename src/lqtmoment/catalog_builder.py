@@ -149,7 +149,7 @@ def main(args=None):
         FileNotFoundError: If required input paths do not exists.
     
     Example:
-        $ lqtcatalog --hypo-file data/hypo_catalog.xlsx --pick-file data/catalog/picking_catalog.xlsx
+        $ lqtcatalog --hypo-file data/catalog/hypo_catalog.xlsx --pick-file data/catalog/picking_catalog.xlsx
     
     """
     parser = argparse.ArgumentParser(description="Build lqt-moment-magnitude acceptable catalog format automatically.")
@@ -174,7 +174,7 @@ def main(args=None):
         "--output-dir",
         type=Path,
         default="results/lqt_catalog",
-        help="Output directory for results"
+        help="Output directory for results. Defaults to results/lqt_catalog if not specified"
         )
     parser.add_argument(
         "--output-format",
@@ -186,7 +186,7 @@ def main(args=None):
         "--output-file",
         type=str,
         default="combined_catalog",
-        help="Set base name for the output file. Defaults to 'combined_catalog'."
+        help="Set base name for the output file. Defaults to 'combined_catalog' if not specified."
     )
     args = parser.parse_args(args if args is not None else sys.argv[1:])
 
