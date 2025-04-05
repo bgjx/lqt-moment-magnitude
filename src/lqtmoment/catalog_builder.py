@@ -7,7 +7,7 @@ This module helps user to build the LQT catalog format. The special excel format
 required by lqt-moment-magnitude to be able to calculate the moment magnitude.
 
 Dependencies:
-    - See `requirements.txt` or `pip install lqt-moment-magnitude` for required packages.
+    - See `pyproject.toml` or `pip install lqtmoment` for required packages.
 """
 
 import sys
