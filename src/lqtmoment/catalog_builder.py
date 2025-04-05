@@ -150,6 +150,7 @@ def main(args=None):
     
     Example:
         $ lqtcatalog --hypo-file data/catalog/hypo_catalog.xlsx --pick-file data/catalog/picking_catalog.xlsx
+                        --station-file data/station/station.xlsx --output-format csv
     
     """
     parser = argparse.ArgumentParser(description="Build lqt-moment-magnitude acceptable catalog format automatically.")
