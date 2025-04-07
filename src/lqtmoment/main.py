@@ -61,7 +61,7 @@ def main(args: Optional[List[str]] = None) -> None:
     
     Example:
         $ lqtmoment --wave-dir data/waveforms --catalog-file data/catalog/lqt_catalog.xlsx
-        $ lqtmoment --wave-dir data/waveforms --catalog-file data/catalog/lqt_catalog.xlsx --config data/new_config.ini
+        $ lqtmoment --wave-dir data/waveforms --catalog-file data/catalog/lqt_catalog.xlsx --config-file data/new_config.ini
 
     """
     parser = argparse.ArgumentParser(description="Calculate moment magnitude in full LQT component.")
@@ -76,25 +76,25 @@ def main(args: Optional[List[str]] = None) -> None:
         default=Path("data/calibration"),
         help="Path to the calibration directory")
     parser.add_argument(
-        "--fig-dir",
-        type=Path,
-        default=Path("results/figures"),
-        help="Path to save figures")
-    parser.add_argument(
         "--catalog-file",
         type=Path,
         default=Path("data/catalog/lqt_catalog.xlsx"),
         help="LQT formatted catalog file")
     parser.add_argument(
+        "--config-file",
+        type=Path,
+        default=Path("data/new_config.ini"),
+        help="Path to custom config.ini file to reload")
+    parser.add_argument(
+        "--fig-dir",
+        type=Path,
+        default=Path("results/figures"),
+        help="Path to save figures")
+    parser.add_argument(
         "--output-dir",
         type=Path,
         default=Path("results/calculation"),
         help="Output directory for results")
-    parser.add_argument(
-        "--config",
-        type=Path,
-        default=Path("data/new_config.ini"),
-        help="Path to custom config.ini file to reload")
     parser.add_argument(
         "--id-start",
         type=int,
@@ -137,13 +137,13 @@ def main(args: Optional[List[str]] = None) -> None:
     args = parser.parse_args(args if args is not None else sys.argv[1:])
 
     # Reload configuration if specified
-    if args.config and args.config.exists():
+    if args.config_file and args.config_file.exists():
         try:
-            CONFIG.reload(args.config)
+            CONFIG.reload(args.config_file)
         except (FileNotFoundError, ValueError) as e:
             raise RuntimeError (f"Failed to reload configuration: {e}")
-    elif args.config and not args.config.exists():
-        raise FileNotFoundError(f"Config file {args.config} not found, using default configuration")
+    elif args.config_file and not args.config_file.exists():
+        raise FileNotFoundError(f"Config file {args.config_file} not found, using default configuration")
 
     # Validate input paths
     for path in [args.wave_dir, args.cal_dir]:
