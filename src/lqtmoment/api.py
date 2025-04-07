@@ -48,8 +48,8 @@ def magnitude_estimator(
     output_dir: str = "results/calculation",
     id_start: Optional[int] = None,
     id_end: Optional[int] = None,
-    generate_figure : bool = None,
-    lqt_mode: Optional[bool] = None,
+    generate_figure : bool = False,
+    lqt_mode: Optional[bool] = True,
     output_format: str = "excel",
     result_file_prefix: str = "lqt_magnitude"  
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
@@ -66,10 +66,10 @@ def magnitude_estimator(
         catalog_file (str): Path to the seismic catalog.
         fig_dir (str): path to save figures.
         output_dir (str, optional): Output directory for results. Defaults to "results".
-        id_start (Optional[int]): Starting earthquake ID. Defaults to min ID or interactive input.
-        id_end (Optional[int]): Ending earthquake ID. Defaults to max ID or interactive input.
-        generate_figure (Optional[bool]): Generate and save figures if True. Defaults to False or interactive input.
-        lqt_mode (Optional[bool]): Use LQT rotation if True, ZRT otherwise. Defaults to True or interactive input.
+        id_start (Optional[int]): Starting earthquake ID. Defaults to min ID.
+        id_end (Optional[int]): Ending earthquake ID. Defaults to max ID.
+        generate_figure (Optional[bool]): Generate and save figures if True. Defaults to False.
+        lqt_mode (Optional[bool]): Use LQT rotation if True, ZRT otherwise. Defaults to True.
         output_format (str): Format for saving results ("excel" or "csv"). Default to "excel".
         result_file_prefix (str): Prefix for result file names. Defaults to "lqt_magnitude"
         

@@ -552,8 +552,8 @@ def start_calculate(
     catalog_data: pd.DataFrame,
     id_start:Optional[int] = None,
     id_end: Optional[int] = None,
-    lqt_mode: Optional[bool] = None,
-    generate_figure : Optional[bool] = None,
+    lqt_mode: Optional[bool] = True,
+    generate_figure : Optional[bool] = False,
     ) -> Tuple [pd.DataFrame, pd.DataFrame]:
     """
     This function processes moment magnitude calculation by iterating over a user-specified range
@@ -566,10 +566,10 @@ def start_calculate(
         calibration_path (Path) : Path to the directory containing calibration file (.RESP format).
         figure_path (Path) : Path to the directory where spectral fitting figures will be saved.
         catalog_data (pd.DataFrame): Catalog DataFrame in LQTMomentMag format.
-        id_start (Optional[int]): Starting earthquake ID. If not provided, prompts user or uses min ID.
-        id_end (Optional[int]): Ending earthquake ID. If not provided, prompts user or uses max ID.
-        lqt_mode (Optional[bool]): Use LQT rotation if True, ZRT otherwise. If not provided, prompts user.
-        generate_figure (Optional[bool]): Generate and save figures if True. If not provided, prompts user.
+        id_start (Optional[int]): Starting earthquake ID. If not provided, id_start set to min ID in catalog.
+        id_end (Optional[int]): Ending earthquake ID. If not provided, id_end set to max ID in catalog.
+        lqt_mode (Optional[bool]): Use LQT rotation if True, ZRT otherwise. Defaults to True.
+        generate_figure (Optional[bool]): Generate and save figures if True. Defaults to False.
 
     Returns:
         Tuple [pd.Dataframe, pd.DataFrame]:
@@ -589,26 +589,11 @@ def start_calculate(
     # Set defaults ID range if not provided through API or CLI use.
     default_id_start = int(catalog_data["source_id"].min())
     default_id_end = int(catalog_data["source_id"].max())
-    default_lqt_mode = True
-    default_generate_figure = False
-    # Use user arguments if provided, otherwise fall back to interactive input.
-    if id_start is None or id_end is None or generate_figure is None or lqt_mode is None:
-        from .utils import get_user_input
-        try:
-            id_start_input, id_end_input, lqt_mode_input, generate_figure_input = get_user_input()
-            id_start = id_start if id_start is not None else id_start_input
-            id_end = id_end if id_end is not None else id_end_input
-            lqt_mode = lqt_mode if lqt_mode is not None else lqt_mode_input
-            generate_figure = generate_figure if generate_figure is not None else generate_figure_input
-        except ValueError as e:
-            logger.error(f"Invalid interactive input: {e}")
-            raise ValueError(f"Invalid interactive input: {e}")
 
-    # Use defaults if still None after interactive input
+    # Use defaults ID range if id_start and id_end are not provided by user.
     id_start = id_start if id_start is not None else default_id_start
     id_end = id_end if id_end is not None else default_id_end
-    lqt_mode = lqt_mode if lqt_mode is not None else default_lqt_mode
-    generate_figure = generate_figure if generate_figure is not None else default_generate_figure
+
 
     # Validate ID range
     if not (isinstance(id_start, int) and isinstance(id_end, int) and id_start <= id_end):

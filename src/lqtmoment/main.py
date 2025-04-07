@@ -98,23 +98,23 @@ def main(args: Optional[List[str]] = None) -> None:
     parser.add_argument(
         "--id-start",
         type=int,
-        help = "Starting earthquake ID (overrides interactive input)"
+        help = "Starting earthquake ID."
     )
     parser.add_argument(
         "--id-end",
         type=int,
-        help="Ending earthquake ID (overrides interactive input)"
+        help="Ending earthquake ID."
     )
     parser.add_argument(
         "--create-figure",
         action="store_true",
-        help="Generate and save spectral fitting figures (overrides interactive input)"
+        help="Generate and save spectral fitting figures."
     )
     parser.add_argument(
         "--non-lqt",
         action="store_false",
         dest="lqt_mode",
-        help="Use ZRT rotation instead of LQT for very local earthquake (overrides interactive input, default is LQT)"
+        help="Use ZRT rotation instead of LQT for very local earthquake."
     )
     parser.add_argument(
         "--output-format",
