@@ -1,7 +1,12 @@
+# Testing cache
 .pytest_cache/
-*.pyc
 *.log
-*.egg-info/
-__pycache__
+
+# python cache files
+__pycache__/
+*.pyc
+
+# Build and distribution files
 dist/
 build/
+*.egg-info/
