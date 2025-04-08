@@ -32,7 +32,6 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Topic :: Scientific/Engineering :: Physics",
-    "Topic :: Scientific/Engineering :: Geophysics",
     "Intended Audience :: Science/Research",
     "Development Status :: 4 - Beta",
     "Natural Language :: English"
