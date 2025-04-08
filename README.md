@@ -11,3 +11,15 @@
 #### What is it?
 
 **lqtmoment** is python package designed for moment magnitude calculations using pure P, SV, and SH components in the LQT ray coordinate system. It leverages rapid ray tracing to compute incidence angles for component rotation and employs fast spectral fitting to find optimal solution, ensuring high accuracy and efficient automated computation.
+
+The **lqtmoment** includes modules for building input catalog format, performing moment magnitude calculation, visualizations, and simple data analysis.
+
+Developer: Arham Zakki Edelo (edelo.arham@gmail.com)
+
+* [Links](#links)
+* [Installation](#installations)
+* [Tutorials](#tutorials)
+* [Simple Example](#example)
+* [References](#references)
+* [Contributing](#contributing)
+* [Report Bugs](#reportbugs)
