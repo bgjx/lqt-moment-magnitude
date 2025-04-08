@@ -1,4 +1,4 @@
-![Follow me on Twitter](https://img.shields.io/badge/twitter-@myusername-blue?logo=x&logoColor=white&style=flat)(https://twitter.com/zakki_edelo)
+[![Follow me on Twitter](https://img.shields.io/badge/tweet-@zakki_edelo-blue?logo=x&logoColor=white&style=flat)(https://twitter.com/zakki_edelo)]
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-arham_zakki-0A66C2?style=flat&logo=linkedin)](https://www.linkedin.com/in/arhamzakki)
 [![CI - Tests](https://github.com/bgjx/lqt-moment-magnitude/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/bgjx/lqt-moment-magnitude/actions/workflows/ci-cd.yml)
 [![GitHub Issues](https://img.shields.io/github/issues/YourUsername/YourRepo?style=flat)](https://github.com/bgjx/lqt-moment-magnitude/issues)
