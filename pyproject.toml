@@ -52,3 +52,6 @@ lqtcatalog = "lqtmoment.catalog_builder:main"
 package-dir = {"" = "src"}
 packages = ["lqtmoment"]
 include-package-data = true
+
+[tool.setuptools.package-data]
+"lqtmoment" = ["data/*"]
