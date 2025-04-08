@@ -55,12 +55,19 @@ Usage:
     ```
 """
 
+import importlib.resources as pkg_resources
+from contextlib import contextmanager
 from dataclasses import dataclass
 from configparser import ConfigParser
 from typing import List, Tuple
 from pathlib import Path
 import json
 
+@contextmanager
+def _package_file(filename):
+    """ Helper function to access package files using importlib.resources. """
+    with pkg_resources.path("lqtmoment.data", filename) as file_path:
+        yield file_path
 
 @dataclass
 class MagnitudeConfig:
@@ -119,22 +126,37 @@ class MagnitudeConfig:
         self.VELOCITY_VS = self.VELOCITY_VS or [1.60, 1.79, 2.37, 2.69, 2.99, 3.35, 3.47, 3.83, 4.79]
         self.DENSITY = self.DENSITY or [2700] * 9
 
-        # Load velocity model from a JSON file if specified
+        # Load velocity model from a defautl package JSON data
         if self.VELOCITY_MODEL_FILE == 'None' or self.VELOCITY_MODEL_FILE is None:
-            self.VELOCITY_MODEL_FILE = Path(__file__).parent.parent.parent.joinpath("velocity_model.json")
-        try:
-            with open(self.VELOCITY_MODEL_FILE, "r") as f:
-                model = json.load(f)
-            required_keys = {"layer_boundaries", "velocity_vp", "velocity_vs", "density"}
-            if not all(key in model for key in required_keys):
-                raise KeyError(f"Missing keys: {required_keys - set(model.keys())}")
-            self.LAYER_BOUNDARIES = model["layer_boundaries"]
-            self.VELOCITY_VP = model["velocity_vp"]
-            self.VELOCITY_VS = model["velocity_vs"]
-            self.DENSITY = model["density"]
-        except (FileNotFoundError, json.JSONDecodeError, KeyError) as e:
-            print(f"Failed to load velocity model: {e}. Using defaults")
-       
+            try:
+                with _package_file("velocity_model.json") as velocity_model_path:
+                    with open(velocity_model_path, "r") as f:
+                        model = json.load(f)
+                    required_keys = {"layer_boundaries", "velocity_vp", "velocity_vs", "density"}
+                    if not all(key in model for key in required_keys):
+                        raise KeyError(f"Missing keys: {required_keys - set(model.keys())}")
+                    self.LAYER_BOUNDARIES = model["layer_boundaries"]
+                    self.VELOCITY_VP = model["velocity_vp"]
+                    self.VELOCITY_VS = model["velocity_vs"]
+                    self.DENSITY = model["density"]
+            except (FileNotFoundError, json.JSONDecodeError, KeyError) as e:
+                print(f"Failed to load velocity model: {e}. Using defaults")
+                    
+        else:
+            # Load from user-specified file
+            try:
+                with open(self.VELOCITY_MODEL_FILE, "r") as f:
+                    model = json.load(f)
+                required_keys = {"layer_boundaries", "velocity_vp", "velocity_vs", "density"}
+                if not all(key in model for key in required_keys):
+                    raise KeyError(f"Missing keys: {required_keys - set(model.keys())}")
+                self.LAYER_BOUNDARIES = model["layer_boundaries"]
+                self.VELOCITY_VP = model["velocity_vp"]
+                self.VELOCITY_VS = model["velocity_vs"]
+                self.DENSITY = model["density"]
+            except (FileNotFoundError, json.JSONDecodeError, KeyError) as e:
+                print(f"Failed to load velocity model: {e}. Using defaults.")
+
         # Validation
         if not(len(self.LAYER_BOUNDARIES) == len(self.VELOCITY_VP) == len(self.VELOCITY_VS) == len(self.DENSITY)):
             raise ValueError("LAYER_BOUNDARIES, VELOCITY_VP, VELOCITY_VS, and DENSITY must have the same length")
@@ -146,7 +168,6 @@ class MagnitudeConfig:
             raise ValueError("R_PATTERN_P and R_PATTERN_S must be positive")
         if self.K_P <= 0 or self.K_S <= 0:
             raise ValueError("K_P and K_S must be positive")
-
 
 @dataclass
 class SpectralConfig:
@@ -311,10 +332,15 @@ class Config:
         """
         config  = ConfigParser()
         if config_file is None:
-            config_file = Path(__file__).parent.parent.parent.joinpath("config.ini")
-        if not config.read(config_file):
-            raise FileNotFoundError(f"Configuration file {config_file} not found or unreadable")
-        
+            # Load the default config.ini from package default data
+            with _package_file("config.ini") as default_config_path:
+                if not config.read(default_config_path):
+                    raise FileNotFoundError(f"Default configuration file {default_config_path} not found in package")
+        else:
+            config_file = Path(config_file)
+            if not config.read(config_file):
+                raise FileNotFoundError(f"Configuration file {config_file} not  found or unreadable")
+            
         # Load magnitude config section
         if "Magnitude" in config:
             mag_section = config["Magnitude"]
