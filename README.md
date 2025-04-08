@@ -14,12 +14,15 @@
 
 The **lqtmoment** includes modules for building input catalog format, performing moment magnitude calculation, visualizations, and simple data analysis.
 
-Developer: Arham Zakki Edelo (edelo.arham@gmail.com)
+Contact the developer: Arham Zakki Edelo (edelo.arham@gmail.com)
 
-* [Links](#links)
-* [Installation](#installations)
-* [Tutorials](#tutorials)
-* [Simple Example](#example)
-* [References](#references)
-* [Contributing](#contributing)
-* [Report Bugs](#reportbugs)
+* [Links](#Links)
+* [Installation](#Installations)
+* [Tutorials](#Tutorials)
+* [Simple Example](#simple-Example)
+* [References](#References)
+* [Contributing](#Contributing)
+* [Report Bugs](#Report-Bugs)
+
+--------------
+## Links
