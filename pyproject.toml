@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "lqtmoment"
 version = "0.1.0"
-description = "Seismic moment magnitude calculation using advanced spectral fitting method in LQT components"
+description = "Compute seismic moment in LQT systems with advanced spectral fitting"
 readme = "README.md"
 authors = [{name = "Arham Zakki Edelo", email = "edelo.arham@gmail.com"}]
 license = { file = "LICENSE" }
@@ -40,7 +40,7 @@ classifiers = [
 [project.urls]
 Homepage = "https://github.com/bgjx/lqt-moment-magnitude"
 Repository = "https://github.com/bgjx/lqt-moment-magnitude"
-Documentation = "https://bgjx.io/"
+Documentation = "https://bgjx.io/lqtmoment"
 BugTracker = "https://github.com/bgjx/lqt-moment-magnitude/issues"
 
 [project.scripts]
