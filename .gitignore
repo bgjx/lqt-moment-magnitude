@@ -10,3 +10,6 @@ __pycache__/
 dist/
 build/
 *.egg-info/
+
+# Pypi token
+.pypirc
