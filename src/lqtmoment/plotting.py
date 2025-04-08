@@ -1,6 +1,8 @@
 """
 Plotting module for lqt-moment-magnitude package.
 
+Version: 0.1.1
+
 This module provides internal modular function for plotting purpose in lqt-moment-magnitude package.
 Users can generate spectral fitting and 1-D refraction figures from the earthquake during calculation
 

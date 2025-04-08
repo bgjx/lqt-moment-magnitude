@@ -1,7 +1,7 @@
 """
 Functionality module for lqt-moment-magnitude package.
 
-Version: 0.1.0
+Version: 0.1.1
 
 This module helps user to build the LQT catalog format. The special excel format
 required by lqt-moment-magnitude to be able to calculate the moment magnitude.

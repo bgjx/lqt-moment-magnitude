@@ -1,7 +1,7 @@
 """
 Functionality module for lqt-moment-magnitude package.
 
-Version: 0.1.0
+Version: 0.1.1
 
 This module calculates incidence angles, travel times, and ray paths for seismic waves (P-waves, S-waves)
 using a layered 1-D velocity model and Snell’s Law-based shooting method, suitable for shallow borehole 
