@@ -16,7 +16,7 @@ The **lqtmoment** includes modules for building input catalog format, performing
 
 Contact the developer: Arham Zakki Edelo (edelo.arham@gmail.com)
 
-* [Installation](###Installations)
+* [Installation](#Installation)
 * [Tutorials](#Tutorials)
 * [Simple Example](#simple-Example)
 * [References](#References)
@@ -24,11 +24,11 @@ Contact the developer: Arham Zakki Edelo (edelo.arham@gmail.com)
 * [Report Bugs](#Report-Bugs)
 
 --------------
-### Installations
+### Installation
 **lqtmoment** can be installed and run on multiple platforms, including macOS, Windows, and Linux, using Python versions 3.8 to 3.12. Choose one of the following installation methods:
 
 #### Option 1: Via Anaconda
-If you have Anaconda installed, create and activate a new environment (for clean installation), then install `lqtmoment` from the `bgjx` channel:
+If you have Anaconda installed, create and activate a new environment (for clean installation), then install **lqtmoment** from the `bgjx` channel:
 
 ```bash
     conda create -n lqtmoment python=3.8
@@ -64,3 +64,28 @@ And install the package
 ```bash
     python -m pip install .
 ```
+
+--------------
+### Tutorials
+A series of tutorials are provided here: 
+
+[Tutorials](https://github.com/bgjx/lqt-moment-magnitude/tree/main/lqt-tutorials)
+
+These tutorials explain how to prepare input data, set initial parameters for your specific case, run the moment magnitude calculation, and use other features. Below are key details about **lqtmoment** capabilities in this version:
+
+- 1. Earthquake Classification: 
+    **lqtmoment** automatically categorizes earthquake data based on epicentral distance or source depth:
+    - `very_local_earthquake`: Epicentral distance < 30 km or < 2× source depth (whichever is satisfied first).
+    - `local_earthquake`: Epicentral distance > 30 km or > 2× source depth (whichever is satisfied first) and < 100 km.
+    - `regional_earthquake`: Epicentral distance > 100 km and < 1110 km.
+    - `far_regional_earthquake`: Epicentral distance > 1110 km and < 2220 km.
+    - `teleseismic_earthquake`: Epicentral distance > 2220 km.
+
+- 2. Velocity Model Usage:
+    In this current version, user defined velocity model (in a `.json` file) is applied only for calculating the incidence angle via ray tracing (Shooting Snell's Method) for ZNE to LQT rotation for `very_local_earthquake` and `local_earthquake` classifications. For farther earthquake types,  the model defaults to `TauPyModel` from `obspy.taup` module configurable in `config.ini`
+
+- 3. Velocity Model Limitation:
+    For this current version, the user-defined velocity model (e.g., `velocity_model.json`, or any name you choose), still and must be a 1-D velocity model for rapid estimation.
+
+- 4. Testing Status:
+    Due to limited datasets, **lqtmoment** has been rigorously tested only for `very_local_earthquake` and `local_earthquake` classifications. If you encounter miscalculations in other earthquake classifications,  please report them as issues here: [Report Issues](https://github.com/bgjx/lqt-moment-magnitude/issues), any support will be beneficial for future development.
