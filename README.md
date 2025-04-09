@@ -20,6 +20,7 @@ Contact the developer: Arham Zakki Edelo (edelo.arham@gmail.com)
 
 * [Installation](#Installation)
 * [Tutorials](#Tutorials)
+* [Scope of Capabilities](#Scope-of-Capabilities)
 * [Examples](#Examples)
 * [References](#References)
 * [Contributing](#Contributing)
@@ -74,7 +75,11 @@ A series of tutorials are provided here:
 
 [Tutorials](https://github.com/bgjx/lqt-moment-magnitude/tree/main/lqt-tutorials)
 
-These tutorials explain how to prepare input data, set initial parameters for your specific case, run the moment magnitude calculation, and use other features. Below are key details about **lqtmoment** capabilities in this version:
+These tutorials explain how to prepare input data, set initial parameters for your specific case, run the moment magnitude calculation, and use other features. 
+
+--------------
+### Scope of Capabilities
+Below are key details outlining the capabilities and limitations of `lqtmoment` in its current version:
 
 - **1. Earthquake Classification**: 
     **lqtmoment** automatically categorizes earthquake data based on epicentral distance or source depth:
@@ -90,8 +95,14 @@ These tutorials explain how to prepare input data, set initial parameters for yo
 - **3. Velocity Model Limitation**:
     For this current version, the user-defined velocity model (e.g., `velocity_model.json`, or any name you choose), still and must be a 1-D velocity model for rapid estimation.
 
+- **4. Incidence Angle Calculation**:
+    Incidence angles are computed using ray tracing of refracted P and S waves, enabling ZNE-to-LQT rotation across all earthquake classifications:  
+    - For `very_local_earthquake` and `local_earthquake`, **lqtmoment** uses an internal method: it performs vectorized computation based on Shooting Snell's Method and energy comparison between direct (Pg/Sg) and critically refracted (Pn/Sn) phases, selecting the incidence angle of the stronger phase if their arrival times differ by at least ~2× the dominant period. This ensures robustness, rapidness and precision for local events where refracted waves dominate. 
+    - For farther earthquake classifications, incidence angles for P and S phases are retrieved from the TauPyModel (via obspy.taup), supporting LQT rotation without energy-based phase selection.
+    - Reflected waves (e.g., pP, sP) are not currently considered, which may affect accuracy for shallow events (<10 km depth) or teleseismic distances (>2220 km) where reflections contribute significant energy. Future versions may support reflected waves and extended internal ray tracing optionally.
+
 - **4. Testing Status**:
-    Due to limited datasets, **lqtmoment** has been rigorously tested only for `very_local_earthquake` and `local_earthquake` classifications. If you encounter miscalculations in other earthquake classifications,  please report them as issues here: [Report Issues](https://github.com/bgjx/lqt-moment-magnitude/issues), any support will be beneficial for future development.
+    Due to limited datasets, **lqtmoment** has been rigorously tested only for `very_local_earthquake` and `local_earthquake` classifications. If you encounter miscalculations in other earthquake categoris,  please report them as issues here: [Report Issues](https://github.com/bgjx/lqt-moment-magnitude/issues), any support will be beneficial for future development.
 
 
 --------------
