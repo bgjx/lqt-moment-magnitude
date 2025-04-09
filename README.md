@@ -16,7 +16,6 @@ The **lqtmoment** includes modules for building input catalog format, performing
 
 Contact the developer: Arham Zakki Edelo (edelo.arham@gmail.com)
 
-* [Links](#Links)
 * [Installation](#Installations)
 * [Tutorials](#Tutorials)
 * [Simple Example](#simple-Example)
@@ -25,4 +24,15 @@ Contact the developer: Arham Zakki Edelo (edelo.arham@gmail.com)
 * [Report Bugs](#Report-Bugs)
 
 --------------
-## Links
+### Installation
+The **lqtmoment** can be run in multiple platforms, including macOS, Windows and Linux in python 3.8 - 3.12. For installation, you can choose the following options:
+
+
+build **lqtmoment** by cloning this repository using 
+> python -m build
+> python -m pip install dist\lqtmoment-0.1.1-py3-none-any.whl
+
+or Via PyPI:
+
+> python -m pip install --upgrade pip
+> python -m pip install lqtmoment
