@@ -163,7 +163,7 @@ We kindly welcome contributions to **lqtmoment!** To get started, follow these s
     ```bash
         git checkout -b your-feature-branch
     ```
-- **Make Changes**: Implement your improvements or fixes, ensuring they align with the project's goals, or even new revolutionized idea (you can contact the developer if you will [Arham Zakki Edelo's mail](edelo.arham@gmail.com))
+- **Make Changes**: Implement your improvements or fixes, ensuring they align with the project's goals, or even new revolutionized ideas (you can contact the developer if you will by mail to edelo.arham@gmail.com)
 
 - **Test Your Code**: You can extend the existed tests or add new ones if needed.
 - **Commit & Push**: Save your work and push it to your fork:
@@ -175,16 +175,17 @@ We kindly welcome contributions to **lqtmoment!** To get started, follow these s
 - **Submit and Pull Request**: Open the pull request (PR) on the original repository, detailing your changes and their purpose.
 
 **Who can contributes ?**
-* Geophysicist/Seismologist: To validate and improve moment magnitude calculation method for better accuracy.
-* Python Developer: To optimize code or expand features.
-* Data Scientist: To refine the ray tracing and spectral fitting algorithm to handle larger datasets effectively.
-* ML/AI Engineer: To revolutionized the method to Artificial Intelligence approach.
-* Open-Source Enthusiast: Anyone passionate about python programming and scientific research.
+* **Geophysicist/Seismologist**: To validate and improve moment magnitude calculation method for better accuracy.
+* **Python Developer**: To optimize code or expand features.
+* **Data Scientist**: To refine the ray tracing and spectral fitting algorithm to handle larger datasets effectively.
+* **ML/AI Engineer**: To revolutionized the method to Artificial Intelligence approach.
+* **Open-Source Enthusiast**: Anyone passionate about python programming and scientific research.
 
 --------------
 ### Report Bugs
 If you encounter any issues while running **lqtmoment**, please report them here: [Report Bugs](https://github.com/bgjx/lqt-moment-magnitude/issues). To help maintainer address the problem efficiently, include the following details:
-    - Your operating system and Python Version(e.g., Windows11 Python 3.11)
-    - A detailed description of the bug, including steps to reproduce it and any error messages.
+
+- Your operating system and Python Version(e.g., Windows11 Python 3.11)
+- A detailed description of the bug, including steps to reproduce it and any error messages.
 
 Your contributions is crucial for improving the tool!
