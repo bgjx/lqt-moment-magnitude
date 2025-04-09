@@ -16,7 +16,7 @@ The **lqtmoment** includes modules for building input catalog format, performing
 
 Contact the developer: Arham Zakki Edelo (edelo.arham@gmail.com)
 
-* [Installation](#Installations)
+* [Installation](###Installations)
 * [Tutorials](#Tutorials)
 * [Simple Example](#simple-Example)
 * [References](#References)
@@ -24,7 +24,7 @@ Contact the developer: Arham Zakki Edelo (edelo.arham@gmail.com)
 * [Report Bugs](#Report-Bugs)
 
 --------------
-### Installation
+### Installations
 **lqtmoment** can be installed and run on multiple platforms, including macOS, Windows, and Linux, using Python versions 3.8 to 3.12. Choose one of the following installation methods:
 
 #### Option 1: Via Anaconda
