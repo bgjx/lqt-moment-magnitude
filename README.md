@@ -28,11 +28,30 @@ Contact the developer: Arham Zakki Edelo (edelo.arham@gmail.com)
 The **lqtmoment** can be run in multiple platforms, including macOS, Windows and Linux in python 3.8 - 3.12. For installation, you can choose the following options:
 
 
-build **lqtmoment** by cloning this repository using 
-> python -m build
-> python -m pip install dist\lqtmoment-0.1.1-py3-none-any.whl
+* Via Anaconda:
+```
+    conda create -n lqtmoment python=3.8
+    conda activate lqtmoment
+    conda install -c bgjx lqtmoment
+````
 
-or Via PyPI:
+* Via PyPI:
+```
+    python -m pip install --upgrade pip
+    python -m pip install lqtmoment
 
-> python -m pip install --upgrade pip
-> python -m pip install lqtmoment
+```
+
+* Build from Source Code:
+
+First you clone the source from GitHub repo:
+```
+    git clone https://github.com/bgjx/lqt-moment-magnitude.git
+```
+
+Change directory (cd) to `lqt-moment-magnitude`
+
+```
+cd lqt-moment-magnitude
+python -m pip install .
+```
