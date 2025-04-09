@@ -57,7 +57,7 @@ Usage:
     ```
 """
 
-from importlib.resources import files
+from importlib.resources import path
 from contextlib import contextmanager
 from dataclasses import dataclass
 from configparser import ConfigParser
@@ -68,7 +68,7 @@ import json
 @contextmanager
 def _package_file(filename):
     """ Helper function to access package files using importlib.resources. """
-    with files("lqtmoment.data", filename) as file_path:
+    with path("lqtmoment.data", filename) as file_path:
         yield file_path
 
 @dataclass
