@@ -39,6 +39,9 @@ class LqtAnalysis:
                 raise ValueError("DataFrame cannot be empty")
         self.data = dataframe
     
+    def average(self, column_name ):
+        return None
+    
 
 
 
