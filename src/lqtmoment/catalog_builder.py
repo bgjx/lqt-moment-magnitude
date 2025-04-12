@@ -73,7 +73,12 @@ def build_catalog(
         if pick_data.empty:
             continue
         hypo_info = hypo_df[hypo_df.id == id].iloc[0]
-        source_lat, source_lon, source_depth_m, year, month, day, hour, minute, t0, hypo_remarks = hypo_info.lat, hypo_info.lon, hypo_info.depth_m, hypo_info.year, hypo_info.month, hypo_info.day, hypo_info.hour, hypo_info.minute, hypo_info.t_0, hypo_info.remarks
+        source_lat, source_lon, source_depth_m = hypo_info.lat, hypo_info.lon, hypo_info.depth_m        
+        year, month, day, hour, minute, t0 = hypo_info.year, hypo_info.month, hypo_info.day, hypo_info.hour, hypo_info.minute, hypo_info.t_0
+        source_err_rms_s, n_phases, gap_degree = hypo_info.source_err_rms_s, hypo_info.n_phases, hypo_info.gap_degree
+        x_horizontal_err_m, y_horizontal_err_m, z_depth_err_m = hypo_info.x_horizontal_err_m, hypo_info.y_horizontal_err_m, hypo_info.z_depth_err_m
+        hypo_remarks = hypo_info.remarks
+
         int_t0 = int(t0)
         microsecond = int((t0 - int_t0)*1e6)
         source_origin_time =datetime(int(year), int(month), int(day), int(hour), int(minute), int_t0, microsecond)
@@ -115,12 +120,12 @@ def build_catalog(
                 "source_lat": source_lat, 
                 "source_lon": source_lon,
                 "source_depth_m": source_depth_m,
-                "source_origin_time": source_origin_time,
                 "network_code": network_code,
                 "station_code": station_code,
                 "station_lat": station_lat,
                 "station_lon": station_lon, 
                 "station_elev_m": station_elev,
+                "source_origin_time": source_origin_time,
                 "p_arr_time": p_arr_time,
                 "p_travel_time_sec": p_travel_time,
                 "p_polarity": p_polarity,
@@ -128,6 +133,12 @@ def build_catalog(
                 "s_arr_time": s_arr_time,
                 "s_travel_time_sec": s_travel_time,
                 "s_p_lag_time_sec": s_p_lag_time,
+                "source_err_rms_s": source_err_rms_s,
+                "n_phases": n_phases,
+                "gap_degree": gap_degree,
+                "x_horizontal_err_m": x_horizontal_err_m,
+                "y_horizontal_err_m": y_horizontal_err_m,
+                "z_depth_err_m": z_depth_err_m,
                 "earthquake_type": earthquake_type,
                 "remarks": hypo_remarks
             }
