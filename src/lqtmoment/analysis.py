@@ -40,15 +40,7 @@ class LqtAnalysis:
         self.data = dataframe
     
     def average(self, column_name ):
-        return None
-    
-
-
-
-
-
-
-    
+        return None   
 
 def load_catalog(catalog_file: str) -> LqtAnalysis:
     """
