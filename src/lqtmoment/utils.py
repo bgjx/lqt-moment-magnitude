@@ -32,7 +32,7 @@ REQUIRED_CATALOG_COLUMNS = [
     "p_polarity", "p_onset",
     "s_arr_time", "s_travel_time_sec", "s_p_lag_time_sec",
     "source_err_rms_s", "n_phases", "gap_degree", 
-    "x_horizontal_err_m", "y_horizontal_err_m", "z_depth_err_m"
+    "x_horizontal_err_m", "y_horizontal_err_m", "z_depth_err_m",
     "earthquake_type", "remarks"
     ]
 
