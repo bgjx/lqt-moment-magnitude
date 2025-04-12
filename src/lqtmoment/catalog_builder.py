@@ -75,7 +75,7 @@ def build_catalog(
         hypo_info = hypo_df[hypo_df.id == id].iloc[0]
         source_lat, source_lon, source_depth_m = hypo_info.lat, hypo_info.lon, hypo_info.depth_m        
         year, month, day, hour, minute, t0 = hypo_info.year, hypo_info.month, hypo_info.day, hypo_info.hour, hypo_info.minute, hypo_info.t_0
-        source_err_rms_s, n_phases, gap_degree = hypo_info.source_err_rms_s, int(hypo_info.n_phases), hypo_info.gap_degree
+        source_err_rms_s, n_phases, gap_degree = hypo_info.source_err_rms_s, hypo_info.n_phases, hypo_info.gap_degree
         x_horizontal_err_m, y_horizontal_err_m, z_depth_err_m = hypo_info.x_horizontal_err_m, hypo_info.y_horizontal_err_m, hypo_info.z_depth_err_m
         hypo_remarks = hypo_info.remarks
 
