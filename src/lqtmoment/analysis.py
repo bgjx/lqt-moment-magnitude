@@ -327,30 +327,53 @@ class LqtAnalysis:
 
         # Plotting
         if plot:
-            plt.figure(figsize = (8,6))
-            plt.scatter(mag_bins_cum, log_cumulative_counts, label = "Cumulative (N>=M)", color='blue', marker='o')
-            plt.scatter(mag_bins_non_cum, log_non_cumulative_counts, label='Non-Cumulative (per bin)', color='green', marker='^')
-            plt.plot(mag_bins_cum, slope * mag_bins_cum + intercept, color='red',
-                     label=f"Fit b={b_value:2f}, R_square = {r_value**2:.2f}")
-            plt.xlabel('Magnitude')
-            plt.ylabel('Log10(Count)')
-            plt.title(f"Gutenberg-Richter Analysis (bin_width = {bin_width})")
-            plt.legend()
+            fig = go.Figure()
+
+            # Cumulative plot
+            fig.add_trace(go.scatter(
+                x = mag_bins_cum,
+                y = log_cumulative_counts,
+                mode = 'markers',
+                name = 'Cumulative (N >= M)',
+                marker = dict(symbol = 'circle', color= 'blue',  size=8),
+                hovertemplate = 'Magnitude: %{x:.3f}<br>Log10(Count): %{y:.2f}'
+            ))
+
+            # Non-cumulative scatter (triangles)
+            fig.add_trace(go.scatter(
+                x = mag_bins_non_cum,
+                y = log_non_cumulative_counts,
+                mode= 'markers',
+                name= 'Non-Cumulative (per bin)',
+                marker = dict(symbol='triangle-up', color='green', size=8),
+                hovertemplate = 'Magnitude: %{x:.3f}<br>Log10(Count): %{y:.2f}'
+
+            ))
+
+            # Fitted line
+            fit_y = slope * mag_bins_cum + intercept
+            fig.add_trace(
+                go.scatter(
+                    x = mag_bins_cum,
+                    y = fit_y,
+                    mode = 'Lines',
+                    name = f"Fit: b={b_value:.2f}, R_square = {r_value**2:.2f}"
+                )
+            )
+
+            # Layout
+            fig.update_layout(
+                title = f"Gutenberg-Richter Analysis (bin_width = {bin_width})",
+                xaxis_title = "Magnitude",
+                yaxis_title = "Log10(Count)",
+                legend = dict(x=0.7, y=0.9),
+                showlegend = True,
+                template = 'plotly_white'
+            )
+
             if save_plot:
-                plt.savefig("b_value_analysis.png", bbox_inches='tight')
-                plt.close()
-            else:
-                plt.show()
+                fig.write_image("gutenberg_richter.png")
         return result
-
-
-
-        
-
-
-
-
-
 
 
 def load_catalog(catalog_file: str) -> LqtAnalysis:
