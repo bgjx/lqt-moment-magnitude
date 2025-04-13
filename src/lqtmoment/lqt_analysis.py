@@ -23,7 +23,6 @@ from datetime import datetime
 from .utils import load_data
 
 
-
 class LqtAnalysis:
     """
     A class for analyzing and visualizing lqtmoment catalog data.
@@ -232,7 +231,7 @@ class LqtAnalysis:
         save_figure: Optional[bool] = False
         ) -> None:
         """
-        Plot histogram for the specific column.
+        Plot a histogram for the specific column.
 
         Args:
             column_name (str): Name of the column to plot the histogram for.
@@ -245,18 +244,20 @@ class LqtAnalysis:
         
         Raises:
             KeyError: If the column_name does not exist in the DataFrame.
-            ValueError: If no DataFrame is provided, the column is empty, or it contains no valid numeric data.        
+            ValueError: If no DataFrame is provided, the column is empty, or it contains no valid numeric data.
+
+        Example:
+            >>> df = pd.DataFrame({"magnitude": [1, 2, 2, 3]})
+            >>> lqt = LqtAnalysis(df)
+            >>> lqt.plot_histogram("magnitude", bin_width=0.5)        
         """
-        if self.data is None:
-            raise ValueError("No DataFrame provided")
-        data = self._clean_column(column_name)
-        data = data.dropna()
+        data = self._clean_column(column_name).dropna()
 
         if data.empty:
             raise ValueError(f"No valid data available for plotting in column {column_name}")
 
         # Compute bins
-        if bin_width:
+        if bin_width is not None:
             min_val = np.floor(data.min() / bin_width) * bin_width
             max_val = np.ceil(data.max() / bin_width) * bin_width
             bin_edges = np.arange(min_val, max_val + bin_width, bin_width)
@@ -277,28 +278,24 @@ class LqtAnalysis:
 
         # Figure playout
         fig.update_layout(
-            xaxis_title = column_name,
-            yaxis_title = "Count",
+            xaxis_title=column_name,
+            yaxis_title="Count",
             showlegend=False,
-            bargap = 0.2,
-            xaxis = dict(
-                tickmode= 'array',
-                tickvals = bin_edges[:-1] + bin_width/2 if bin_edges is not None else None,
-                ticktext = [f"{x:.3f}" for x in (bin_edges[:-1] + bin_width / 2)] if bin_edges is not None else None
+            bargap=0.2,
+            xaxis=dict(
+                tickmode='array',
+                tickvals=bin_edges[:-1] + bin_width/2 if bin_edges is not None else None,
+                ticktext=[f"{x:.3f}" for x in (bin_edges[:-1] + bin_width / 2)] if bin_edges is not None else None
             )
         )
         
         # Customize hover to show bin center
         if bin_width is not None:
             fig.update_trace(
-                hovertemplate = "Bin Center: %{x:.3f}<br>Count: %{y}"
+                hovertemplate="Bin Center: %{x:.3f}<br>Count: %{y}"
             )
         
-        # Save histogram
-        if save_figure:
-            fig.write_image(f"histogram_{column_name}.png")
-        else:
-            fig.show()
+        self._render_figure(fig, f"histogram_{column_name}", save_figure)
 
         return None
     
