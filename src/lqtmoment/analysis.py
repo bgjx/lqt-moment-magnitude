@@ -258,7 +258,160 @@ class LqtAnalysis:
             fig.show()
 
         return None
+    
+
+    def plot_hypocenter_3d(
+        self,
+        lat_column: str,
+        lon_column: str,
+        depth_column: str,
+        color_by: Optional[str] = None ,
+        size_by: Optional[str] = None,
+        save_figure: Optional[bool] = False
+        ) -> None:
+        """
+        Create interactive 2D or 3D hypocenter plot.
+
+        Args:
+            lat_column (str): Name of the latitude column.
+            lon_column (str): Nme of longitude column.
+            depth_column (str) : Name of the depth column.
+            color_by (Optional[str]): Name of the column to map color points by. If None,
+                                        use single color.
+            size_by (Optional[str]): Name of the column to map size points by. If None,
+                                        use default size.
         
+        Raises:
+            KeyError: If any specified column does not exist in the DataFrame.
+            ValueError: If no DataFrame is provided, columns are empty, or contain no valid numeric data.        
+        """
+        if self.data is None:
+            raise ValueError("No DataFrame provided")
+
+        # Get the data
+        lat = self._clean_column(lat_column)
+        lon = self._clean_column(lon_column)
+        depth = self._clean_column(depth_column) if depth_column else None
+        color = self._clean_column(color_by) if color_by else None
+        size = self._clean_column(size_by) if size_by else None
+
+        # Combine the data to a Dict object and drop NaN
+        data = pd.DataFrame(
+            {
+                'lat': lat,
+                'lon': lon,
+                'depth': depth if depth else np.zeros_like(lat),
+                'color': color if color else np.ones_like(lat),
+                'size': size if size else np.ones_like(lat)
+            }
+        )
+        data = data.dropna()
+
+        if data.empty:
+            raise ValueError("No valid data available for plotting after removing NaN values")
+        
+        # Plotting the Data
+        fig = px.scatter_3d(
+            data,
+            x='lon',
+            y='lat',
+            z='depth',
+            color= 'color' if color_by else None,
+            size = 'size' if size_by else None,
+            color_continuous_scale= 'Varidis',
+            hover_data = {'lat': ':.2f', 'lon': ':.2f', 'depth': ':.2f', 'color': ':.2f'},
+            title= 'Earthquake Locations (3D)'
+        )
+        fig.update_scenes(
+            xaxis_title = "Longitude",
+            xaxis_title = "Latitude",
+            zaxis_title = 'Depth (km)'
+        )
+        fig.update_layout(
+            showlegend = bool(color_by),
+            coloraxis_colorbar_title = color_by if color_by else None,
+            template = 'plotly_white'
+        )
+
+        if save_figure:
+            fig.write_image("3d_plot_hypocenter.png")
+        else:
+            fig.show()
+
+
+    def plot_hypocenter_2d(
+        self,
+        lat_column: str,
+        lon_column: str,
+        color_by: Optional[str] = None ,
+        size_by: Optional[str] = None,
+        save_figure: Optional[bool] = False
+        ) -> None:
+        """
+        Create interactive 2D or 3D hypocenter plot.
+
+        Args:
+            lat_column (str): Name of the latitude column.
+            lon_column (str): Nme of longitude column.
+            color_by (Optional[str]): Name of the column to map color points by. If None,
+                                        use single color.
+            size_by (Optional[str]): Name of the column to map size points by. If None,
+                                        use default size.
+        
+        Raises:
+            KeyError: If any specified column does not exist in the DataFrame.
+            ValueError: If no DataFrame is provided, columns are empty, or contain no valid numeric data.        
+        """
+        if self.data is None:
+            raise ValueError("No DataFrame provided")
+
+        # Get the data
+        lat = self._clean_column(lat_column)
+        lon = self._clean_column(lon_column)
+        color = self._clean_column(color_by) if color_by else None
+        size = self._clean_column(size_by) if size_by else None
+
+        # Combine the data to a Dict object and drop NaN
+        data = pd.DataFrame(
+            {
+                'lat': lat,
+                'lon': lon,
+                'color': color if color else np.ones_like(lat),
+                'size': size if size else np.ones_like(lat)
+            }
+        )
+        data = data.dropna()
+
+        if data.empty:
+            raise ValueError("No valid data available for plotting after removing NaN values")
+        
+        # Plotting the Data
+        fig = px.scatter_geo(
+            data,
+            x='lon',
+            y='lat',
+            color= 'color' if color_by else None,
+            size = 'size' if size_by else None,
+            color_continuous_scale= 'Varidis',
+            hover_data = {'lat': ':.2f', 'lon': ':.2f', 'depth': ':.2f', 'color': ':.2f'},
+            title= 'Earthquake Locations (2D)',
+            projection='natural earth'
+        )
+        fig.update_geos(
+            showcountries=True, showcoastlines=True
+        )
+
+        fig.update_layout(
+            showlegend = bool(color_by),
+            coloraxis_colorbar_title = color_by if color_by else None,
+            template = 'plotly_white'
+        )
+
+        if save_figure:
+            fig.write_image("2d_plot_hypocenter.png")
+        else:
+            fig.show()
+            
 
     def gutenberg_richter(
         self,
