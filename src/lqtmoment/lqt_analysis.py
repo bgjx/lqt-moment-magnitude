@@ -45,27 +45,44 @@ class LqtAnalysis:
             dataframe (Optional[pd.DataFrame]): A DataFrame object of full lqtmoment formatted catalog.
                                                 Defaults to None and create empty class object.
         """
+        self.data = None
+        self._cache_cleaned_column = {} 
         if dataframe is not None:
-            if not isinstance(dataframe, pd.DataFrame):
-                raise TypeError("Input must be a pandas DataFrame")
-            if dataframe.empty:
-                raise ValueError("DataFrame cannot be empty")
-        self.data = dataframe
+            self._set_dataframe(dataframe)
+    
+
+    def _set_dataframe(self, dataframe: pd.DataFrame) -> None:
+        """ Helper function to set the dataframe for analysis """
+        if not isinstance(dataframe, pd.DataFrame):
+            raise TypeError("Input must be a pandas DataFrame")
+        if dataframe.empty:
+            raise ValueError("DataFrame cannot be empty")
+        if 'source_id' not in dataframe.columns:
+            raise ValueError("DataFrame must contain a 'source_id' column")
+        self.data = dataframe.copy()
+        self._cache_cleaned_column.clear()
 
 
-    def _clean_column(self, column_name: str) -> pd.DataFrame:
+    def _clean_column(self, column_name: str) -> pd.Series:
         """ Helper function to clean and make sure the column is numeric."""
+        # Check this column in cache first
+        if column_name in self._cache_cleaned_column:
+            return self._cache_cleaned_column[column_name]
+        
+        if self.data is None:
+            raise ValueError("No DataFrame provided")
         if column_name not in self.data.columns:
             raise KeyError(f"Column {column_name} does not exist in the DataFrame")
-        df_column = self.data[column_name]
-        if np.issubdtype(df_column.dtype, np.number):
-            return df_column
-        if df_column.empty:
-            raise ValueError(f"Column {column_name} is empty")
-        numeric_column = pd.to_numeric(df_column, errors='coerce')
-        if numeric_column.isna().all():
+        
+        column_series = self.data[['source_id', column_name]].drop_duplicates(subset='source_id')[column_name] 
+
+        if not np.issubdtype(column_series.dtype, np.number):
+            column_series = pd.to_numeric(column_series, errors='coerce')
+
+        if column_series.isna().all():
             raise ValueError(f"Column {column_name} contains no valid numeric data")
-        return numeric_column
+        self._cache_cleaned_column[column_name] = column_series
+        return column_series
     
 
     def average(self, column_name: str) -> float:
@@ -240,7 +257,7 @@ class LqtAnalysis:
             bargap = 0.2,
             xaxis = dict(
                 tickmode= 'array',
-                tickvas = bin_edges[:-1] + bin_width/2 if bin_edges is not None else None,
+                tickvals = bin_edges[:-1] + bin_width/2 if bin_edges is not None else None,
                 ticktext = [f"{x:.3f}" for x in (bin_edges[:-1] + bin_width / 2)] if bin_edges is not None else None
             )
         )
