@@ -18,9 +18,20 @@ import plotly.graph_objects as go
 import plotly.express as px
 from typing import Optional, List, Callable, Tuple, Dict
 from scipy.stats import linregress
+from enum import Enum
 from datetime import datetime
 
 from .utils import load_data
+
+
+class Statistic(Enum):
+    "Enumeration for statistical operations."
+    MEAN = "mean"
+    MEDIAN = "median"
+    STD = 'std'
+    MIN = 'min'
+    MAX = 'max'
+    DESCRIBE = 'describe'
 
 
 class LqtAnalysis:
@@ -84,6 +95,7 @@ class LqtAnalysis:
         self._cache_cleaned_column[column_name] = column_series
         return column_series
     
+
     def _validate_geo_columns(
         self,
         lat: pd.Series,
@@ -110,119 +122,38 @@ class LqtAnalysis:
             fig.show()
     
 
-    def average(self, column_name: str) -> float:
+    def compute_statistic(self, column_name: str, statistic_op : Statistic) -> float:
         """
-        Calculate the average value of the specified column.   
+        Compute statistic operation for the specified column.
 
         Args:
-            column_name (str): Name of the column ot compute the mean for.
+            column_name(str): Name of the column.
+            statistic_op (Statistic): Statistic operation to compute (mean, median, std, max, min)
         
         Returns:
-            float: The mean of the column if it contains valid numeric data.
+            float: The result of the statistic operation.
         
         Raises:
-            KeyError: If the column_name does not exist in the DataFrame.
-            ValueError: If not DataFrame is provided.
+            KeyError: If column_name does not exist.
+            ValueError: If data is invalid.
+        
+        Example:
+            >>> df = pd.DataFrame({"magnitude": [1, 2, 3]})
+            >>> lqt = LqtAnalysis(df)
+            >>> lqt.compute_statistic("magnitude", Statistic.MEAN)
+            2.0
         """
-        if self.data is None:
-            raise ValueError("No dataframe provided")
-        return self._clean_column(column_name).mean()
-
-
-    def median(self, column_name: str) -> float:
-        """
-        Calculate the median value of the specified column.   
-
-        Args:
-            column_name (str): Name of the column ot compute the median for
-        
-        Returns:
-            float: The median of the column if it contains valid numeric data.
-        
-        Raises:
-            KeyError: If the column_name does not exist in the DataFrame.
-            ValueError: If not DataFrame is provided.
-        """
-        if self.data is None:
-            raise ValueError("No dataframe provided")
-        return self._clean_column(column_name).median()
-
-
-    def std_dev(self, column_name: str) -> float:
-        """
-        Calculate the standard deviation value of the specified column.   
-
-        Args:
-            column_name (str): Name of the column ot compute the standard deviation for.
-        
-        Returns:
-            float: The standard deviation of the column if it contains valid numeric data.
-        
-        Raises:
-            KeyError: If the column_name does not exist in the DataFrame.
-            ValueError: If not DataFrame is provided.
-        """
-        if self.data is None:
-            raise ValueError("No dataframe provided")
-        return self._clean_column(column_name).std()
-
-
-    def minimum(self, column_name: str) -> float:
-        """
-        Calculate the minimum value of the specified column.
-        
-        Args:
-            column_name (str): Name of the column to compute the minimum for.
-        
-        Returns:
-            float: The minimum of the column if it contains valid numeric data.
-        
-        Raises:
-            KeyError: If the column_name does not exist in the DataFrame.
-            ValueError: If no DataFrame is provided, the column is empty, or it contains no valid numeric data.
-        """
-        if self.data is None:
-            raise ValueError("No DataFrame provided")
-        return self._clean_column(column_name).min()
-    
-
-    def maximum(self, column_name: str) -> float:
-        """
-        Calculate the maximum value of the specified column.
-        
-        Args:
-            column_name (str): Name of the column to compute the maximum for.
-        
-        Returns:
-            float: The maximum of the column if it contains valid numeric data.
-        
-        Raises:
-            KeyError: If the column_name does not exist in the DataFrame.
-            ValueError: If no DataFrame is provided, the column is empty, or it contains no valid numeric data.
-        """
-        if self.data is None:
-            raise ValueError("No DataFrame provided")
-        return self._clean_column(column_name).max()
-    
-
-    def describe(self, column_name) -> float:
-        """
-        Compute summary statistics for the specified column.
-        
-        Args:
-            column_name (str): Name of the column to summarize.
-        
-        Returns:
-            pd.Series: A Series containing count, mean, std, min, max, and quartiles.
-        
-        Raises:
-            KeyError: If the column_name does not exist in the DataFrame.
-            ValueError: If no DataFrame is provided, the column is empty, or it contains no valid numeric data.
-        """
-        if self.data is None:
-            raise ValueError("No DataFrame provided")
-        return self._clean_column(column_name).describe()
-    
+        data = self._clean_column(column_name)
+        statistic_function = {
+            Statistic.MEAN: data.mean,
+            Statistic.MEDIAN: data.median,
+            Statistic.STD: data.std,
+            Statistic.MAX: data.max,
+            Statistic.MIN: data.min,
+            Statistic.DESCRIBE: data.describe
+        }[statistic_op]
+        return statistic_function()
+       
     
     def plot_histogram(
         self,
@@ -378,7 +309,7 @@ class LqtAnalysis:
         )
         fig.update_scenes(
             xaxis_title = "Longitude",
-            xaxis_title = "Latitude",
+            yaxis_title = "Latitude",
             zaxis_title = 'Depth (m)'
         )
         fig.update_layout(
