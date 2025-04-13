@@ -18,6 +18,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 from typing import Optional, List, Callable, Tuple, Dict
 from scipy.stats import linregress
+from datetime import datetime
 
 from .utils import load_data
 
@@ -83,6 +84,31 @@ class LqtAnalysis:
             raise ValueError(f"Column {column_name} contains no valid numeric data")
         self._cache_cleaned_column[column_name] = column_series
         return column_series
+    
+    def _validate_geo_columns(
+        self,
+        lat: pd.Series,
+        lon: pd.Series
+        ) -> None:
+        """ Helper Function to validate geographic coordinate columns"""
+
+        if not lat.between(-90, 90).all():
+            raise ValueError("Latitude values must be between -90 and 90")
+        if not lon.between(-180, 180).all():
+            raise ValueError("Longitude must be between -180 and 180")
+    
+    def _render_figure(
+        self,
+        fig: go.Figure,
+        filename: str,
+        save_figure: bool = False
+        )-> None:
+        """ Helper function for rendering and saving the figure """
+        if save_figure:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            fig.write_image(f"{filename}_{timestamp}.png")
+        else:
+            fig.show()
     
 
     def average(self, column_name: str) -> float:
@@ -297,10 +323,19 @@ class LqtAnalysis:
                                         use single color.
             size_by (Optional[str]): Name of the column to map size points by. If None,
                                         use default size.
+            save_figure (Optional[bool]): If True, save the plot.
         
         Raises:
             KeyError: If any specified column does not exist in the DataFrame.
-            ValueError: If no DataFrame is provided, columns are empty, or contain no valid numeric data.        
+            ValueError: If no DataFrame is provided, columns are empty, or contain no valid numeric data.
+
+        Example:
+            >>> df = pd.DataFrame({
+            ...     "lat": [34.0, 34.1], "lon": [-118.0, -118.1],
+            ...     "depth": [10, 12], "magnitude": [3.0, 3.5]
+            ... })
+            >>> lqt = LqtAnalysis(df)
+            >>> lqt.plot_hypocenter_3d("lat", "lon", "depth", color_by="magnitude")      
         """
         if self.data is None:
             raise ValueError("No DataFrame provided")
@@ -312,20 +347,25 @@ class LqtAnalysis:
         color = self._clean_column(color_by) if color_by else None
         size = self._clean_column(size_by) if size_by else None
 
+        # Validate the geographic coordinate
+        self._validate_geo_columns(lat, lon)
+
         # Combine the data to a Dict object and drop NaN
         data = pd.DataFrame(
             {
                 'lat': lat,
                 'lon': lon,
-                'depth': depth if depth else np.zeros_like(lat),
+                'depth': depth,
                 'color': color if color else np.ones_like(lat),
                 'size': size if size else np.ones_like(lat)
             }
-        )
-        data = data.dropna()
+        ).dropna()
 
         if data.empty:
             raise ValueError("No valid data available for plotting after removing NaN values")
+        
+        if size_by:
+            data['size'] = (data['size'] - data['size'].min()) / (data['size'].max() - data['size'].min() + 1e-10) * 10
         
         # Plotting the Data
         fig = px.scatter_3d(
@@ -342,7 +382,7 @@ class LqtAnalysis:
         fig.update_scenes(
             xaxis_title = "Longitude",
             xaxis_title = "Latitude",
-            zaxis_title = 'Depth (km)'
+            zaxis_title = 'Depth (m)'
         )
         fig.update_layout(
             showlegend = bool(color_by),
@@ -350,10 +390,7 @@ class LqtAnalysis:
             template = 'plotly_white'
         )
 
-        if save_figure:
-            fig.write_image("3d_plot_hypocenter.png")
-        else:
-            fig.show()
+        self._render_figure(fig, "3d_plot_hypocenter", save_figure)
 
 
     def plot_hypocenter_2d(
@@ -374,11 +411,16 @@ class LqtAnalysis:
                                         use single color.
             size_by (Optional[str]): Name of the column to map size points by. If None,
                                         use default size.
+            save_figure (Optional[bool]): If True, save the plot.
         
         Raises:
             KeyError: If any specified column does not exist in the DataFrame.
-            ValueError: If no DataFrame is provided, columns are empty, or contain no valid numeric data.        
+            ValueError: If no DataFrame is provided, columns are empty, or contain no valid numeric data.
+
+        Example:
+            >>> lqt.plot_hypocenter_2d("lat", "lon", color_by="magnitude")    
         """
+
         if self.data is None:
             raise ValueError("No DataFrame provided")
 
@@ -388,6 +430,9 @@ class LqtAnalysis:
         color = self._clean_column(color_by) if color_by else None
         size = self._clean_column(size_by) if size_by else None
 
+        # Validate the geographic coordinate
+        self._validate_geo_columns(lat, lon)
+
         # Combine the data to a Dict object and drop NaN
         data = pd.DataFrame(
             {
@@ -396,14 +441,16 @@ class LqtAnalysis:
                 'color': color if color else np.ones_like(lat),
                 'size': size if size else np.ones_like(lat)
             }
-        )
-        data = data.dropna()
+        ).dropna()
 
         if data.empty:
             raise ValueError("No valid data available for plotting after removing NaN values")
         
+        if size_by:
+            data['size'] = (data['size'] - data['size'].min()) / (data['size'].max() - data['size'].min() + 1e-10) * 10
+        
         # Plotting the Data
-        fig = px.scatter_geo(
+        fig = px.scatter(
             data,
             x='lon',
             y='lat',
@@ -411,24 +458,19 @@ class LqtAnalysis:
             size = 'size' if size_by else None,
             color_continuous_scale= 'Varidis',
             hover_data = {'lat': ':.2f', 'lon': ':.2f', 'depth': ':.2f', 'color': ':.2f'},
-            title= 'Earthquake Locations (2D)',
-            projection='natural earth'
-        )
-        fig.update_geos(
-            showcountries=True, showcoastlines=True
+            title= 'Earthquake Locations (2D)'
         )
 
         fig.update_layout(
             showlegend = bool(color_by),
             coloraxis_colorbar_title = color_by if color_by else None,
-            template = 'plotly_white'
+            template = 'plotly_white',
+            xaxis_title="Longitude",
+            yaxis_title="Latitude"
         )
 
-        if save_figure:
-            fig.write_image("2d_plot_hypocenter.png")
-        else:
-            fig.show()
-            
+        self._render_figure(fig, "2d_plot_hypocenter", save_figure)
+
 
     def gutenberg_richter(
         self,
@@ -455,25 +497,32 @@ class LqtAnalysis:
             dict object contains:
                 - 'b_value': Estimated b-value (slope of the linear fit).
                 - 'a_value': Estimated a-value (intercept of the linear fit).
+                - 'b_value_stderr': Standard error of the b-value.
+                - 'r_squared': R-squared value of the fit.
                 - 'data': DataFrame with 'magnitude' and 'log_cumulative_count'
         
         Raises:
             KeyError: If the column_name does not exist in the DataFrame.
             ValueError: If no DataFrame is provided, the column is empty, contains no valid numeric data,
-                    or insufficient data for fitting.        
-        """
-        if self.data is None:
-            raise ValueError("No DataFrame provided")
+                    or insufficient data for fitting. 
 
+        Example:
+            >>> df = pd.DataFrame({"magnitude": [3.0, 3.5, 4.0, 4.5, 5.0]})
+            >>> lqt = LqtAnalysis(df)
+            >>> result = lqt.gutenberg_richter(bin_width=0.5)
+            >>> print(result['b_value'])    
+        """
         if bin_width <= 0:
             raise ValueError("bind_width must be positive")
         
-        magnitudes = self._clean_column(column_name)
-        valid_magnitudes = magnitudes.dropna()
-
+        valid_magnitudes = self._clean_column(column_name).dropna()
         if len(valid_magnitudes) < 10:
             raise  ValueError("Insufficient valid data for Gutenberg-Richter analysis")
         
+        data_range = valid_magnitudes.max() - valid_magnitudes.min()
+        if bin_width > data_range / 2:
+            raise ValueError(f"bin width {bin_width} is too large for data range ({data_range})")
+
         if min_magnitude is None:
             min_magnitude = np.floor(valid_magnitudes.min() / bin_width) *bin_width
         elif min_magnitude > valid_magnitudes.max():
@@ -510,7 +559,7 @@ class LqtAnalysis:
         # Non-cumulative data
         mag_bins_non_cum = mag_bins_non_cum[valid_count_indices_non_cum]
         non_cumulative_counts = non_cumulative_counts[valid_count_indices_non_cum]
-        log_non_cumulative_counts = np.log10(non_cumulative_counts + 1e-10)
+        log_non_cumulative_counts = np.log10(non_cumulative_counts)
 
         # Linear fitting for b-value
         slope, intercept, r_value, _, stderr = linregress(mag_bins_cum, log_cumulative_counts)
@@ -544,7 +593,7 @@ class LqtAnalysis:
             fig = go.Figure()
 
             # Cumulative plot
-            fig.add_trace(go.scatter(
+            fig.add_trace(go.Scatter(
                 x = mag_bins_cum,
                 y = log_cumulative_counts,
                 mode = 'markers',
@@ -554,7 +603,7 @@ class LqtAnalysis:
             ))
 
             # Non-cumulative scatter (triangles)
-            fig.add_trace(go.scatter(
+            fig.add_trace(go.Scatter(
                 x = mag_bins_non_cum,
                 y = log_non_cumulative_counts,
                 mode= 'markers',
@@ -565,13 +614,17 @@ class LqtAnalysis:
             ))
 
             # Fitted line
+            fit_x = np.array([mag_bins_cum.min(), mag_bins_cum.max()])
             fit_y = slope * mag_bins_cum + intercept
             fig.add_trace(
-                go.scatter(
-                    x = mag_bins_cum,
+                go.Scatter(
+                    x = fit_x,
                     y = fit_y,
                     mode = 'Lines',
-                    name = f"Fit: b={b_value:.2f}, R_square = {r_value**2:.2f}"
+                    name = f"Fit: b={b_value:.2f}, R_square = {r_value**2:.2f}",
+                    line = dict(
+                        color='red'
+                    )
                 )
             )
 
@@ -585,8 +638,7 @@ class LqtAnalysis:
                 template = 'plotly_white'
             )
 
-            if save_figure:
-                fig.write_image("gutenberg_richter.png")
+            self._render_figure(fig, "gutenberg_ritcher", save_figure)
         return result
 
 
