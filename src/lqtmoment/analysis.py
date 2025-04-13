@@ -14,7 +14,8 @@ Dependencies:
 """
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
+import plotly.graph_objects as go 
+import plotly.express as px
 from typing import Optional, List, Callable, Tuple, Dict
 from scipy.stats import linregress
 
@@ -180,6 +181,40 @@ class LqtAnalysis:
             raise ValueError("No DataFrame provided")
         return self._clean_column(column_name).describe()
     
+    
+    def plot_histogram(
+        self,
+        column_name: str,
+        bins: Optional[int] =10,
+        save_figure: Optional[bool] = False
+        ) -> None:
+        """
+        Plot histogram for the specific column.
+
+        Args:
+            column_name (str): Name of the column to plot the histogram for.
+            bins (Optional[int]): The number of bins.
+            save_figure (Optional[bool]): If true, save the plot. Defaults to False.
+        
+        Return:
+            None
+        
+        Raises:
+            KeyError: If the column_name does not exist in the DataFrame.
+            ValueError: If no DataFrame is provided, the column is empty, or it contains no valid numeric data.        
+        """
+        if self.data is None:
+            raise ValueError("No DataFrame provided")
+        data = self._clean_column(column_name)
+        plt.hist(data.dor)     
+        
+        
+        return None
+        
+
+
+
+
     def gutenberg_richter(
         self,
         column_name: Optional[str] = 'magnitude',
