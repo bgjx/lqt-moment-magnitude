@@ -185,7 +185,7 @@ class LqtAnalysis:
     def plot_histogram(
         self,
         column_name: str,
-        bins: Optional[int] =10,
+        bin_width: Optional[float] = None,
         save_figure: Optional[bool] = False
         ) -> None:
         """
@@ -193,7 +193,8 @@ class LqtAnalysis:
 
         Args:
             column_name (str): Name of the column to plot the histogram for.
-            bins (Optional[int]): The number of bins.
+            bin_width (Optional[float]): Determine the bin width. Defaults to None,
+                                        trigger automatic binning.
             save_figure (Optional[bool]): If true, save the plot. Defaults to False.
         
         Return:
@@ -206,14 +207,58 @@ class LqtAnalysis:
         if self.data is None:
             raise ValueError("No DataFrame provided")
         data = self._clean_column(column_name)
-        plt.hist(data.dor)     
+        data = data.dropna()
+
+        if data.empty:
+            raise ValueError(f"No valid data available for plotting in column {column_name}")
+
+        # Compute bins
+        if bin_width:
+            min_val = np.floor(data.min() / bin_width) * bin_width
+            max_val = np.ceil(data.max() / bin_width) * bin_width
+            bin_edges = np.arange(min_val, max_val + bin_width, bin_width)
+            nbins = len(bin_edges) - 1
+        else:
+            nbins = None
+            bin_edges = None
+
+        # Plot the histogram
+        fig = px.histogram(
+            x = data,
+            nbins= nbins,
+            range_x = [bin_edges[0], bin_edges[-1]] if bin_edges is not None else None,
+            title=f"Histogram of {column_name}",
+            labels={'x': column_name, 'y': 'Count'},
+            template='plotly_white'
+        )
+
+        # Figure playout
+        fig.update_layout(
+            xaxis_title = column_name,
+            yaxis_title = "Count",
+            showlegend=False,
+            bargap = 0.2,
+            xaxis = dict(
+                tickmode= 'array',
+                tickvas = bin_edges[:-1] + bin_width/2 if bin_edges is not None else None,
+                ticktext = [f"{x:.3f}" for x in (bin_edges[:-1] + bin_width / 2)] if bin_edges is not None else None
+            )
+        )
         
+        # Customize hover to show bin center
+        if bin_width is not None:
+            fig.update_trace(
+                hovertemplate = "Bin Center: %{x:.3f}<br>Count: %{y}"
+            )
         
+        # Save histogram
+        if save_figure:
+            fig.write_image(f"histogram_{column_name}.png")
+        else:
+            fig.show()
+
         return None
         
-
-
-
 
     def gutenberg_richter(
         self,
@@ -221,7 +266,7 @@ class LqtAnalysis:
         min_magnitude: Optional[float] = None,
         bin_width: float = 0.1,
         plot: Optional[bool] = True,
-        save_plot: Optional[bool] = False
+        save_figure: Optional[bool] = False
         ) -> Dict:
         """
         Compute Gutenberg-Richter magnitude-frequency analysis and estimate the b-value.
@@ -234,6 +279,7 @@ class LqtAnalysis:
                                             Default is True.
             plot(Optional[bool]): If True, display a plot of the Gutenberg-Richter relationship. 
                                     Defaults is True.
+            save_figure (Optional[bool]): If true, save the plot. Defaults to False.
         
         Returns:
             dict object contains:
@@ -296,14 +342,12 @@ class LqtAnalysis:
         non_cumulative_counts = non_cumulative_counts[valid_count_indices_non_cum]
         log_non_cumulative_counts = np.log10(non_cumulative_counts + 1e-10)
 
-
         # Linear fitting for b-value
         slope, intercept, r_value, _, stderr = linregress(mag_bins_cum, log_cumulative_counts)
         b_value = -slope
         a_value = intercept
 
         # Result
-
         result_data = pd.DataFrame(
             {
                 'magnitude': mag_bins[:-1] + bin_width/2,
@@ -371,7 +415,7 @@ class LqtAnalysis:
                 template = 'plotly_white'
             )
 
-            if save_plot:
+            if save_figure:
                 fig.write_image("gutenberg_richter.png")
         return result
 
