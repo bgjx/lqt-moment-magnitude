@@ -687,6 +687,10 @@ def start_calculate(
     df_result = pd.concat(result_list, ignore_index = True) if result_list else df_result
     df_fitting = pd.concat(fitting_list, ignore_index = True) if fitting_list else df_fitting
 
+    # Merge the lqt catalog with the magnitude result
+    
+
+
     # Summary message
     sys.stdout.write(
         f"Finished. Proceed {total_earthquakes - failed_events} earthquakes successfully,"
