@@ -666,10 +666,14 @@ def start_calculate(
             # Calculate the moment magnitude
             try:
                 mw_results, fitting_result = calculate_moment_magnitude(
-                                            wave_path, source_data,
-                                            pick_data, calibration_path,
-                                            source_id, figure_path,
-                                            lqt_mode, generate_figure
+                                            wave_path= wave_path,
+                                            calibration_path= calibration_path,
+                                            source_df= source_data,
+                                            pick_df= pick_data,
+                                            source_id= source_id,
+                                            lqt_mode= lqt_mode,
+                                            generate_figure= generate_figure,
+                                            figure_path= figure_path
                                             )
                 result_list.append(pd.DataFrame.from_dict(mw_results))
                 fitting_list.append(pd.DataFrame.from_dict(fitting_result))
