@@ -102,7 +102,6 @@ class LqtAnalysis:
         lon: pd.Series
         ) -> None:
         """ Helper Function to validate geographic coordinate columns"""
-
         if not lat.between(-90, 90).all():
             raise ValueError("Latitude values must be between -90 and 90")
         if not lon.between(-180, 180).all():
