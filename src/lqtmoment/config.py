@@ -9,6 +9,9 @@ organized into three dataclasses: `MagnitudeConfig`, `SpectralConfig`, and `Perf
 Default values are defined in the dataclasses, but users can override them by providing a
 `config.ini` file in the parent directory of this module.
 
+Dependencies:
+    - See `pyproject.toml` or `pip install lqtmoment` for required packages.
+
 Usage:
     The `CONFIG` object is automatically loaded when the module is imported. To use the default
     configuration:

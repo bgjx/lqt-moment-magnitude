@@ -8,7 +8,7 @@ using a layered 1-D velocity model and Snell’s Law-based shooting method, suit
 3-C sensor.
 
 Dependencies:
-    - See `requirements.txt` or `pip install lqt-moment-magnitude` for required packages.
+    - See `pyproject.toml` or `pip install lqtmoment` for required packages.
 
 References:
 - Aki, K., & Richards, P. G. (2002). Quantitative Seismology, 2nd Edition. University Science Books.

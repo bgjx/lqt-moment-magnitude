@@ -7,7 +7,7 @@ This module provides internal modular function for plotting purpose in lqt-momen
 Users can generate spectral fitting and 1-D refraction figures from the earthquake during calculation
 
 Dependencies:
-    - See `requirements.txt` or `pip install lqt-moment-magnitude` for required packages.
+    - See `pyproject.toml` or `pip install lqtmoment` for required packages.
 """
 
 import logging

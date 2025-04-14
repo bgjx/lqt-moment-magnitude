@@ -6,7 +6,10 @@ Version: 0.1.1
 This module provides functions to calculate seismic moment magnitude in the LQT
 component system. Users can import and use these functions in their own Python scripts.
 
-Example:
+Dependencies:
+    - See `pyproject.toml` or `pip install lqtmoment` for required packages.
+
+Usage:
     >>> from lqtmoment import magnitude_estimator
     >>> merged_catalog_df, result_df, fitting_df = magnitude_estimator(
     ...                                             wave_dir = "data/waveforms",  

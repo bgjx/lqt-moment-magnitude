@@ -7,6 +7,9 @@ This package computes moment magnitude using full P, SV, and SH energy component
 seismic data processing, ray tracing in a 1-D velocity model, and rapid spectral fitting via advanced
 stochastic methods. It is designed for seismologists and researchers analyzing earthquake data.
 
+Dependencies:
+    - See `pyproject.toml` or `pip install lqtmoment` for required packages.
+
 Key Features:
 - Vectorized computation for incidence angles (LQT rotation)
 - Spectral fitting with Brune or Boatwright models

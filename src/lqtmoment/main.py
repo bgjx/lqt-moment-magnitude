@@ -7,12 +7,7 @@ This module provides complete automatic calculation for seismic moment magnitude
 in the LQT component system.
 
 Dependencies:
-    - pandas: For catalog data handling.
-    - numpy: For numerical calculation.
-    - scipy: For mathematical optimization.
-    - obspy: For waveform processing.
-    - matplotlib: For generating figures.
-    - tqdm: For progress feedback
+    - See `pyproject.toml` or `pip install lqtmoment` for required packages.
 
 Usage:
     $ lqtmoment --help
