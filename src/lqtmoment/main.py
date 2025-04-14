@@ -81,16 +81,6 @@ def main(args: Optional[List[str]] = None) -> None:
         default=Path("data/new_config.ini"),
         help="Path to custom config.ini file to reload")
     parser.add_argument(
-        "--fig-dir",
-        type=Path,
-        default=Path("results/figures"),
-        help="Path to save figures")
-    parser.add_argument(
-        "--output-dir",
-        type=Path,
-        default=Path("results/calculation"),
-        help="Output directory for results")
-    parser.add_argument(
         "--id-start",
         type=int,
         help = "Starting earthquake ID."
@@ -101,16 +91,26 @@ def main(args: Optional[List[str]] = None) -> None:
         help="Ending earthquake ID."
     )
     parser.add_argument(
-        "--create-figure",
-        action="store_true",
-        help="Generate and save spectral fitting figures."
-    )
-    parser.add_argument(
         "--non-lqt",
         action="store_false",
         dest="lqt_mode",
         help="Use ZRT rotation instead of LQT for very local earthquake."
     )
+    parser.add_argument(
+        "--create-figure",
+        action="store_true",
+        help="Generate and save spectral fitting figures."
+    )
+    parser.add_argument(
+        "--fig-dir",
+        type=Path,
+        default=Path("results/figures"),
+        help="Path to save figures")
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=Path("results/calculation"),
+        help="Output directory for results")
     parser.add_argument(
         "--output-format",
         type = str,
