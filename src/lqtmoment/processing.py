@@ -620,7 +620,8 @@ def start_calculate(
     fitting_list = []
 
     # Pre-grouping catalog by the id for efficiency
-    grouped_data = catalog_data.groupby("source_id")
+    catalog_data_copy = catalog_data.copy()
+    grouped_data = catalog_data_copy.groupby("source_id")
     total_earthquakes = id_end - id_start + 1
     with tqdm(
         total = total_earthquakes,
@@ -688,12 +689,23 @@ def start_calculate(
     df_fitting = pd.concat(fitting_list, ignore_index = True) if fitting_list else df_fitting
 
     # Merge the lqt catalog with the magnitude result
-    
+    merged_catalog = pd.merge(
+        catalog_data_copy,
+        df_result[['source_id', 'mw_average']],
+        on='source_id',
+        how='left'
+    )
+    # Rename column name 'mw_average' to just 'magnitude' for generalization.
+    merged_catalog = merged_catalog.rename(columns={'mw_average':'magnitude'})
 
+    # Re-order the columns by index
+    columns_name = merged_catalog.columns.to_list()
+    columns_name.remove('magnitude')
+    columns_name.insert(5, 'magnitude')
 
     # Summary message
     sys.stdout.write(
         f"Finished. Proceed {total_earthquakes - failed_events} earthquakes successfully,"
         f"{failed_events} failed. Check runtime.log for details. \n"
     )
-    return df_result, df_fitting
+    return merged_catalog, df_result, df_fitting
