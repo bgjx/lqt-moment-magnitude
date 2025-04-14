@@ -1,6 +1,6 @@
 import pytest
 import pandas as pd
-from lqtmoment.lqt_analysis import load_catalog, LqtAnalysis
+from lqtmoment.lqt_analysis import load_catalog, LqtAnalysis, Statistic
 
 @pytest.fixture
 def test_data():
@@ -28,6 +28,7 @@ def test_data():
                     705, 705, 705, 770, 770, 770,
                     1005, 1005, 1005, 670, 670, 670,
                     1135, 1135, 1135, 876, 876, 676,
+                    1035, 1035, 1135, 976, 976, 976,
                   ],
         'magnitude': [  0.220,0.220,0.220, 1.220,1.220,1.220,
                         0.720,0.720,0.720, 1.520,1.520,1.520,
@@ -40,11 +41,18 @@ def test_data():
     return pd.DataFrame(data_dict)
 
 def test_class(test_data):
+    """ Test LqtAnalysis instantiation with valid data. """
     data = LqtAnalysis(test_data)
     assert isinstance(data, LqtAnalysis)
 
-def test_statistic(test_data):   
+def test_statistic_mean(test_data):
+    """ Test compute_statistic for mean. """   
     data = LqtAnalysis(test_data)
-    assert data.compute_statistic('magnitude', Statistic.MEAN) 
+    expected_mean = 0.9990000000000002
+    assert data.compute_statistic('magnitude', Statistic.MEAN) == pytest.approx(expected_mean, rel=1e-5)
 
-
+def test_statistic_median(test_data):
+    """ Test compute_statistic for median. """   
+    data = LqtAnalysis(test_data)
+    expected_median = 0.835
+    assert data.compute_statistic('magnitude', Statistic.MEDIAN) == pytest.approx(expected_median, rel=1e-5)
