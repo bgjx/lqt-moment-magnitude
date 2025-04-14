@@ -140,24 +140,25 @@ def magnitude_estimator(
         raise ValueError("Calculation returned invalid results (None).")
     
     # Saving the results
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    merged_file = f"{result_file_prefix}_merged_catalog_{timestamp}"
-    result_file = f"{result_file_prefix}_result_{timestamp}"
-    fitting_file = f"{result_file_prefix}_fitting_result_{timestamp}"
-    logger.info(f"Saving results to {output_dir}")
-    try:
-        if output_format.lower() == "excel":
-            merged_catalog_df.to_excel(output_dir/f"{merged_file}.xlsx", index=False)
-            mw_result_df.to_excel(output_dir/f"{result_file}.xlsx", index=False)
-            mw_fitting_df.to_excel(output_dir/f"{fitting_file}.xlsx", index=False)
-        elif output_format.lower() == "csv":
-            merged_catalog_df.to_csv(output_dir/f"{merged_file}.csv", index=False)
-            mw_result_df.to_csv(output_dir/f"{result_file}.csv", index=False)
-            mw_fitting_df.to_csv(output_dir/f"{fitting_file}.csv", index=False)
-        else:
-            raise ValueError(f"Unsupported output format: {output_format}. Use 'excel' or 'csv'. ")
-    except Exception as e:
-        raise RuntimeError(f"Failed to save results: {e}")
+    if save_output_file:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        merged_file = f"{result_file_prefix}_merged_catalog_{timestamp}"
+        result_file = f"{result_file_prefix}_result_{timestamp}"
+        fitting_file = f"{result_file_prefix}_fitting_result_{timestamp}"
+        logger.info(f"Saving results to {output_dir}")
+        try:
+            if output_format.lower() == "excel":
+                merged_catalog_df.to_excel(output_dir/f"{merged_file}.xlsx", index=False)
+                mw_result_df.to_excel(output_dir/f"{result_file}.xlsx", index=False)
+                mw_fitting_df.to_excel(output_dir/f"{fitting_file}.xlsx", index=False)
+            elif output_format.lower() == "csv":
+                merged_catalog_df.to_csv(output_dir/f"{merged_file}.csv", index=False)
+                mw_result_df.to_csv(output_dir/f"{result_file}.csv", index=False)
+                mw_fitting_df.to_csv(output_dir/f"{fitting_file}.csv", index=False)
+            else:
+                raise ValueError(f"Unsupported output format: {output_format}. Use 'excel' or 'csv'. ")
+        except Exception as e:
+            raise RuntimeError(f"Failed to save results: {e}")
     
     return mw_result_df, mw_fitting_df
 
