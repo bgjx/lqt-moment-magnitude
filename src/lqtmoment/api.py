@@ -52,7 +52,7 @@ def magnitude_estimator(
     lqt_mode: Optional[bool] = True,
     output_format: str = "excel",
     result_file_prefix: str = "lqt_magnitude"  
-    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Calculate seismic moment magnitude in the LQT component system.
 
@@ -74,7 +74,8 @@ def magnitude_estimator(
         result_file_prefix (str): Prefix for result file names. Defaults to "lqt_magnitude"
         
     Returns:
-        Tuple[pd.DataFrame, pd.DataFrame]: A tuple containing the result DataFrame and fitting DataFrame
+        Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]: A tuple containing the merged lqt catalog DataFrame,
+                                                         result DataFrame and fitting DataFrame.
     
     Raises:
         FileNotFoundError: If input directories or config file do not exist.
@@ -121,30 +122,33 @@ def magnitude_estimator(
     # Call the processing function
     logger.info(f"Starting magnitude calculation for catalog: {catalog_file}")
     try:
-        mw_result_df, mw_fitting_df = start_calculate(
-                                        wave_dir, cal_dir, fig_dir,
-                                        catalog_df, id_start=id_start,
-                                        id_end=id_end, lqt_mode=lqt_mode,
-                                        generate_figure=generate_figure,
+        merged_catalog_df, mw_result_df, mw_fitting_df = start_calculate(
+                                                wave_dir, cal_dir, fig_dir,
+                                                catalog_df, id_start=id_start,
+                                                id_end=id_end, lqt_mode=lqt_mode,
+                                                generate_figure=generate_figure,
                                         )
     except Exception as e:
         logger.error(f"Calculation failed: {e}")
         raise ValueError(f"Failed to calculate moment magnitude: {e}") from e
 
     # Validate calculation output:
-    if mw_result_df is None or mw_fitting_df is None:
+    if merged_catalog_df is None or mw_result_df is None or mw_fitting_df is None:
         raise ValueError("Calculation returned invalid results (None).")
     
     # Saving the results
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    merged_file = f"{result_file_prefix}_merged_catalog_{timestamp}"
     result_file = f"{result_file_prefix}_result_{timestamp}"
     fitting_file = f"{result_file_prefix}_fitting_result_{timestamp}"
     logger.info(f"Saving results to {output_dir}")
     try:
         if output_format.lower() == "excel":
+            merged_catalog_df.to_excel(output_dir/f"{merged_file}.xlsx", index=False)
             mw_result_df.to_excel(output_dir/f"{result_file}.xlsx", index=False)
             mw_fitting_df.to_excel(output_dir/f"{fitting_file}.xlsx", index=False)
         elif output_format.lower() == "csv":
+            merged_catalog_df.to_csv(output_dir/f"{merged_file}.csv", index=False)
             mw_result_df.to_csv(output_dir/f"{result_file}.csv", index=False)
             mw_fitting_df.to_csv(output_dir/f"{fitting_file}.csv", index=False)
         else:
