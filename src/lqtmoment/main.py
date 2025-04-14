@@ -173,13 +173,13 @@ def main(args: Optional[List[str]] = None) -> None:
     # Call the function to start calculating moment magnitude
     logger.info(f"Starting magnitude calculation for catalog: {args.catalog_file}")
     try:
-        mw_result_df, mw_fitting_df = start_calculate(
-                                        args.wave_dir, args.cal_dir,
-                                        args.fig_dir, catalog_df,
-                                        id_start=args.id_start,
-                                        id_end=args.id_end,
-                                        lqt_mode=args.lqt_mode,
-                                        generate_figure=args.create_figure,
+        merged_catalog_df, mw_result_df, mw_fitting_df = start_calculate(
+                                                args.wave_dir, args.cal_dir,
+                                                args.fig_dir, catalog_df,
+                                                id_start=args.id_start,
+                                                id_end=args.id_end,
+                                                lqt_mode=args.lqt_mode,
+                                                generate_figure=args.create_figure,
                                         )
     except Exception as e:
         logger.error(f"Calculation failed: {e}")
@@ -191,14 +191,17 @@ def main(args: Optional[List[str]] = None) -> None:
 
     # Saving the results
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    merged_file = f"{args.result_file_prefix}_merged_catalog_{timestamp}"
     result_file  = f"{args.result_file_prefix}_result_{timestamp}"
     fitting_file = f"{args.result_file_prefix}_fitting_result_{timestamp}"
     logger.info(f"Saving results to {args.output_dir}")
     try:
         if args.output_format.lower() == 'excel':
+            merged_catalog_df.to_excel(args.output_dir / f"{merged_file}.xlsx", index = False)
             mw_result_df.to_excel(args.output_dir / f"{result_file}.xlsx", index = False)
             mw_fitting_df.to_excel(args.output_dir/ f"{fitting_file}.xlsx", index = False)
         elif args.output_format.lower() == 'csv':
+            merged_catalog_df.to_csv(args.output_dir / f"{merged_file}.csv", index = False)
             mw_result_df.to_csv(args.output_dir / f"{result_file}.csv", index = False)
             mw_fitting_df.to_csv(args.output_dir/ f"{fitting_file}.csv", index = False)
         else:
