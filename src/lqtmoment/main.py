@@ -169,12 +169,14 @@ def main(args: Optional[List[str]] = None) -> None:
     logger.info(f"Starting magnitude calculation for catalog: {args.catalog_file}")
     try:
         merged_catalog_df, mw_result_df, mw_fitting_df = start_calculate(
-                                                args.wave_dir, args.cal_dir,
-                                                args.fig_dir, catalog_df,
-                                                id_start=args.id_start,
-                                                id_end=args.id_end,
-                                                lqt_mode=args.lqt_mode,
-                                                generate_figure=args.create_figure,
+                                                wave_path= args.wave_dir,
+                                                calibration_path= args.cal_dir,
+                                                catalog_data= catalog_df,
+                                                id_start= args.id_start,
+                                                id_end= args.id_end,
+                                                lqt_mode= args.lqt_mode,
+                                                generate_figure= args.create_figure,
+                                                figure_path= args.fig_dir,        
                                         )
     except Exception as e:
         logger.error(f"Calculation failed: {e}")

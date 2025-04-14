@@ -130,10 +130,14 @@ def magnitude_estimator(
     logger.info(f"Starting magnitude calculation for catalog: {catalog_file}")
     try:
         merged_catalog_df, mw_result_df, mw_fitting_df = start_calculate(
-                                                wave_dir, cal_dir, fig_dir,
-                                                catalog_df, id_start=id_start,
-                                                id_end=id_end, lqt_mode=lqt_mode,
-                                                generate_figure=generate_figure,
+                                                wave_path= wave_dir,
+                                                calibration_path= cal_dir,
+                                                catalog_data= catalog_df,
+                                                id_start= id_start,
+                                                id_end= id_end,
+                                                lqt_mode=lqt_mode,
+                                                generate_figure= generate_figure,
+                                                figure_path=fig_dir
                                         )
     except Exception as e:
         logger.error(f"Calculation failed: {e}")

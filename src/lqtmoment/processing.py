@@ -246,13 +246,13 @@ def _rotate_stream(
 
 def calculate_moment_magnitude(
     wave_path: Path, 
+    calibration_path: Path,
     source_df: pd.DataFrame, 
     pick_df: pd.DataFrame,
-    calibration_path: Path, 
     source_id: int, 
-    figure_path: Path, 
     lqt_mode: bool = True,
-    generate_figure: bool = False
+    generate_figure: bool = False,
+    figure_path: Optional[Path] = None, 
     ) -> Tuple[Dict[str, str], Dict[str,List]]:
     
     """
@@ -263,14 +263,15 @@ def calculate_moment_magnitude(
 
     Args:
         wave_path (Path): Path to the directory containing waveform files.
+        calibration_path (Path): Path to the calibration files for instrument response removal.
         source_df (pd.DataFrame): DataFrame containing hypocenter information (latitude, longitude, depth).
         pick_df (pd.DataFrame): DataFrame containing pick information (arrival times).
-        calibration_path (Path): Path to the calibration files for instrument response removal.
         source_id (int): Unique identifier for the earthquake.
-        figure_path (Path): Path to save the generated figures.
         lqt_mode (bool): If True, perform LQT rotation; otherwise, use ZRT for very local earthquakes
                             default to True.
-        generate_figure (bool): Boolean statement to generate and save figures (default is False).
+        generate_figure (bool): Boolean statement to generate and save figures (default is False).                    
+        figure_path (Optional[Path]): Path to save the generated figures. Defaults to None, 
+                                        then generate folder at current directory.
 
     Returns:
         Tuple[Dict[str, str], Dict[str, List]]:
@@ -548,12 +549,12 @@ def calculate_moment_magnitude(
 def start_calculate(
     wave_path: Path,
     calibration_path: Path,
-    figure_path: Path,
     catalog_data: pd.DataFrame,
     id_start:Optional[int] = None,
     id_end: Optional[int] = None,
     lqt_mode: Optional[bool] = True,
     generate_figure : Optional[bool] = False,
+    figure_path: Optional[Path] = None,
     ) -> Tuple [pd.DataFrame, pd.DataFrame]:
     """
     This function processes moment magnitude calculation by iterating over a user-specified range
@@ -564,12 +565,13 @@ def start_calculate(
     Args:
         wave_path (Path): Path to the directory containing waveforms file (.miniSEED format).
         calibration_path (Path) : Path to the directory containing calibration file (.RESP format).
-        figure_path (Path) : Path to the directory where spectral fitting figures will be saved.
         catalog_data (pd.DataFrame): Catalog DataFrame in LQTMomentMag format.
         id_start (Optional[int]): Starting earthquake ID. If not provided, id_start set to min ID in catalog.
         id_end (Optional[int]): Ending earthquake ID. If not provided, id_end set to max ID in catalog.
         lqt_mode (Optional[bool]): Use LQT rotation if True, ZRT otherwise. Defaults to True.
         generate_figure (Optional[bool]): Generate and save figures if True. Defaults to False.
+        figure_path (Optional[Path]) : Path to the directory where spectral fitting figures will be saved.
+                                        Defaults to None, then generate folder at current directory.      
 
     Returns:
         Tuple [pd.Dataframe, pd.DataFrame]:
