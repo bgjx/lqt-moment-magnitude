@@ -8,12 +8,13 @@ component system. Users can import and use these functions in their own Python s
 
 Example:
     >>> from lqtmoment import magnitude_estimator
-    >>> result_df, fitting_df = magnitude_estimator(
-    ...     wave_dir = "data/waveforms",  
-    ...     cal_dir = "data/calibration"
-    ...     catalog_dir = "data/catalog/catalog.xlsx",
-    ...     config_file = "data/new_config.ini"
-    ...     fig_dir = "results/figures",
+    >>> merged_catalog_df, result_df, fitting_df = magnitude_estimator(
+    ...                                             wave_dir = "data/waveforms",  
+    ...                                             cal_dir = "data/calibration"
+    ...                                             catalog_dir = "data/catalog/catalog.xlsx",
+    ...                                             config_file = "data/new_config.ini",
+    ...                                             generate_figure = True,
+    ...                                             fig_dir = "results/figures",
     ... )
 
 Notes:
@@ -44,13 +45,13 @@ def magnitude_estimator(
     cal_dir: str,
     catalog_file: str,
     config_file: Optional[str] = None,
+    id_start: Optional[int] = None,
+    id_end: Optional[int] = None,
+    lqt_mode: Optional[bool] = True,
     generate_figure : Optional[bool] = False,
     fig_dir: Optional[str] = "figures",
     save_output_file: Optional[bool] = False, 
     output_dir: Optional[str] = "results/calculation",
-    id_start: Optional[int] = None,
-    id_end: Optional[int] = None,
-    lqt_mode: Optional[bool] = True,
     output_format: Optional[str] = "excel",
     result_file_prefix: Optional[str] = "lqt_magnitude"  
     ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
@@ -64,15 +65,15 @@ def magnitude_estimator(
         wave_dir (str): Path to the waveform directory.
         cal_dir (str): Path to the calibration directory.
         catalog_file (str): Path to the seismic catalog.
+        id_start (Optional[int]): Starting earthquake ID. Defaults to min ID.
+        id_end (Optional[int]): Ending earthquake ID. Defaults to max ID.
+        lqt_mode (Optional[bool]): Use LQT rotation if True, ZRT otherwise. Defaults to True.
         config_file (Optional[str]): Path to a custom config.ini file to reload. Defaults to None.
         generate_figure (Optional[bool]): Generate and save figures if True. Defaults to False.
         fig_dir (Optional[str]): path to save figures.
         save_output_file (Optional[bool]): If True, save the result DataFrames to files. Default
                                             to False.
         output_dir (Optional[str]): Output directory for results. Defaults to "results".
-        id_start (Optional[int]): Starting earthquake ID. Defaults to min ID.
-        id_end (Optional[int]): Ending earthquake ID. Defaults to max ID.
-        lqt_mode (Optional[bool]): Use LQT rotation if True, ZRT otherwise. Defaults to True.
         output_format (Optional[str]): Format for saving results ("excel" or "csv"). Default to "excel".
         result_file_prefix (Optional[str]): Prefix for result file names. Defaults to "lqt_magnitude"
         
@@ -160,7 +161,7 @@ def magnitude_estimator(
         except Exception as e:
             raise RuntimeError(f"Failed to save results: {e}")
     
-    return mw_result_df, mw_fitting_df
+    return merged_catalog_df, mw_result_df, mw_fitting_df
 
 
 # Optional: Expose a function to reload config without running calculation
