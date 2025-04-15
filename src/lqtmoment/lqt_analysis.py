@@ -171,6 +171,17 @@ class LqtAnalysis:
 
         Raises:
             ValueError: Unmatched string format input.
+        
+        Usage:
+            >>> df = pd.DataFrame({
+            ...     "lat": [34.0, 34.1], "lon": [-118.0, -118.1],
+            ...     "depth": [10, 12], "magnitude": [3.0, 3.5]
+            ... })
+            >>> lqt = LqtAnalysis(df)
+            >>> subset_df = lqt.window_time(
+            ...             min_tame = '2025-09-22 10:10:01',
+            ...             max_time = '2025-09-25 10:10:01'
+            ... )
         """
         try:
             min_datetime = datetime.strptime(min_time, '%Y-%m-%d %H:%M:%S')
@@ -189,24 +200,63 @@ class LqtAnalysis:
         
     
     def area_rectangle(
+        self,
         min_latitude: float,
         max_latitude: float,
         min_longitude: float,
         max_longitude: float,       
         ) -> pd.DataFrame:
         """
+        Subset DataFrame by specifying rectangle area.
+
+        Args:
+            min_latitude (float): Minimum latitude or North border.
+            max_latitude (float): Maximum latitude or South border.
+            min_longitude (float): Minimum longitude or West border.
+            max_longitude (float): Maximum longitude or East border.
         
+        Returns:
+            pd.DataFrame: A subset from main DataFrame based on rectangle area.
         
-        
-        
-        
+        Raises:
+            ValueError: Rectangle area outside the main DataFrame.
+
+        Usage:
+            >>> df = pd.DataFrame({
+            ...     "lat": [34.0, 34.1], "lon": [-118.0, -118.1],
+            ...     "depth": [10, 12], "magnitude": [3.0, 3.5]
+            ... })
+            >>> lqt = LqtAnalysis(df)
+            >>> subset_df = lqt.window_time(
+            ...             min_latitude = 34.0,
+            ...             max_latitude = 34.1,
+            ...             min_longitude = -118.1,
+            ...             max_longitude = -118.0,
+            ... )        
         """
+        self._validate_geo_columns(min_latitude, min_longitude)
+        self._validate_geo_columns(max_latitude, max_longitude)
 
+        # Check if are rectangle outside the DataFrame
+        if min_latitude > max_latitude: 
+            raise ValueError("min_latitude must be smaller than max_latitude")
+        if min_longitude > max_longitude:
+            raise ValueError("min_longitude must be smaller than max_longitude")
+        
+        if min_latitude < self.data['source_lat'].min() or max_latitude > self.data['source_lat'].max():
+            raise ValueError("Given latitude range are outside catalog area coverage")
+        if min_longitude < self.data['source_lon'].min() or max_longitude > self.data['source_lon'].max():
+            raise ValueError("Given longitude range are outside catalog area coverage")
 
+        subset_df = self.data[
+            (self.data['latitude'] >= min_latitude) & 
+            (self.data['latitude'] <= max_latitude) & 
+            (self.data['longitude'] >= min_longitude) & 
+            (self.data['longitude'] <= max_longitude)
+            ]
 
-        return None
+        return subset_df
     
-
 
     def plot_histogram(
         self,
