@@ -42,7 +42,7 @@ class LqtAnalysis:
         data (pd.DataFrame): The lqtmoment-formatted catalog data stored as pandas
                             DataFrame.   
 
-    Example:
+    Usage:
         >>> from lqtmoment.analysis import LqtAnalysis, load_catalog
         >>> lqt_data = load_catalog(r"tests/data/catalog/")
         >>> mw_average = lqt_data.average('magnitude')
@@ -136,7 +136,7 @@ class LqtAnalysis:
             KeyError: If column_name does not exist.
             ValueError: If data is invalid.
         
-        Example:
+        Usage:
             >>> df = pd.DataFrame({"magnitude": [1, 2, 3]})
             >>> lqt = LqtAnalysis(df)
             >>> lqt.compute_statistic("magnitude", Statistic.MEAN)
@@ -154,6 +154,60 @@ class LqtAnalysis:
         return statistic_function()
        
     
+    def window_time(
+        self,
+        min_time : str,
+        max_time : str,
+        ) -> pd.DataFrame:
+        """
+        Subset DataFrame by specific date time range.
+
+        Args:
+            min_time (str): A string following this format '%Y-%m-%d %H:%M:%S' as min time range.
+            max_time (str): A string following this format '%Y-%m-%d %H:%M:%S' as min time range.
+        
+        Returns:
+            pd.DataFrame: A subset from main DataFrame after time windowing.
+
+        Raises:
+            ValueError: Unmatched string format input.
+        """
+        try:
+            min_datetime = datetime.strptime(min_time, '%Y-%m-%d %H:%M:%S')
+            max_datetime = datetime.strptime(max_time, '%Y-%m-%d %H:%M:%S')
+        except ValueError as e:
+            raise ValueError("Given time range follows unmatched format") from e
+        
+        if min_datetime > max_datetime:
+            raise ValueError ("min_datetime must be earlier than max_datetime")
+        if min_datetime < self.data['source_origin_time'].min() or max_datetime > self.data['source_origin_time'].max():
+            raise ValueError("Given time ranges are outside catalog time range.")
+
+        subset_df = self.data[(self.data['source_origin_time'] >= min_datetime ) & (self.data['source_origin_time'] <= max_datetime)]
+
+        return subset_df
+        
+    
+    def area_rectangle(
+        min_latitude: float,
+        max_latitude: float,
+        min_longitude: float,
+        max_longitude: float,       
+        ) -> pd.DataFrame:
+        """
+        
+        
+        
+        
+        
+        """
+
+
+
+        return None
+    
+
+
     def plot_histogram(
         self,
         column_name: str,
@@ -169,14 +223,14 @@ class LqtAnalysis:
                                         trigger automatic binning.
             save_figure (Optional[bool]): If true, save the plot. Defaults to False.
         
-        Return:
+        Returns:
             None
         
         Raises:
             KeyError: If the column_name does not exist in the DataFrame.
             ValueError: If no DataFrame is provided, the column is empty, or it contains no valid numeric data.
 
-        Example:
+        Usage:
             >>> df = pd.DataFrame({"magnitude": [1, 2, 2, 3]})
             >>> lqt = LqtAnalysis(df)
             >>> lqt.plot_histogram("magnitude", bin_width=0.5)        
@@ -256,7 +310,7 @@ class LqtAnalysis:
             KeyError: If any specified column does not exist in the DataFrame.
             ValueError: If no DataFrame is provided, columns are empty, or contain no valid numeric data.
 
-        Example:
+        Usage:
             >>> df = pd.DataFrame({
             ...     "lat": [34.0, 34.1], "lon": [-118.0, -118.1],
             ...     "depth": [10, 12], "magnitude": [3.0, 3.5]
@@ -344,7 +398,7 @@ class LqtAnalysis:
             KeyError: If any specified column does not exist in the DataFrame.
             ValueError: If no DataFrame is provided, columns are empty, or contain no valid numeric data.
 
-        Example:
+        Usage:
             >>> lqt.plot_hypocenter_2d("lat", "lon", color_by="magnitude")    
         """
 
@@ -433,7 +487,7 @@ class LqtAnalysis:
             ValueError: If no DataFrame is provided, the column is empty, contains no valid numeric data,
                     or insufficient data for fitting. 
 
-        Example:
+        Usage:
             >>> df = pd.DataFrame({"magnitude": [3.0, 3.5, 4.0, 4.5, 5.0]})
             >>> lqt = LqtAnalysis(df)
             >>> result = lqt.gutenberg_richter(bin_width=0.5)
