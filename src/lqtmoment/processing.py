@@ -708,6 +708,7 @@ def start_calculate(
     columns_name = merged_catalog.columns.to_list()
     columns_name.remove('magnitude')
     columns_name.insert(5, 'magnitude')
+    merged_catalog = merged_catalog[columns_name]
 
     # Summary message
     sys.stdout.write(
