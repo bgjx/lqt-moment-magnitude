@@ -33,7 +33,7 @@ from .config import CONFIG
 from .fitting_spectral import fit_spectrum_bayesian, fit_spectrum_grid_search, fit_spectrum_qmc
 from .refraction import calculate_inc_angle
 from .plotting import plot_spectral_fitting
-from .utils import instrument_remove, read_waveforms, trace_snr
+from .utils import instrument_remove, read_waveforms, trace_snr, REQUIRED_CONFIG
 
 
 logger = logging.getLogger("lqtmoment")
@@ -297,12 +297,17 @@ def calculate_moment_magnitude(
                 Mw = (2/3) * (log10(M_0) - CONFIG.magnitude.MW_CONSTANT), where M_0 is in Nm.
     """ 
     # Validate all config parameter before doing calculation
-    required_config = [
-        "LAYER_BOUNDARIES", "VELOCITY_VP", "VELOCITY_VS", "DENSITY", "SNR_THRESHOLD",
-        "R_PATTERN_P", "R_PATTERN_S", "FREE_SURFACE_FACTOR", "K_P", "K_S",
-        "PADDING_BEFORE_ARRIVAL", "NOISE_DURATION", "NOISE_PADDING", "F_MIN", "F_MAX"
-    ]
-    missing_config = [attr for attr in required_config if not hasattr(CONFIG.magnitude, attr) or not hasattr(CONFIG.spectral, attr)]
+    missing_config = []
+    for attr in REQUIRED_CONFIG['magnitude']:
+        if not hasattr(CONFIG.magnitude, attr):
+            missing_config.append(f"{attr} (missing in magnitude)")
+    for attr in REQUIRED_CONFIG['spectral']:
+        if not hasattr(CONFIG.spectral, attr):
+            missing_config.append(f"{attr} (missing in spectral)")
+    for attr in REQUIRED_CONFIG['performance']:
+        if not hasattr(CONFIG.performance, attr):
+            missing_config.append(f"{attr} (missing in performance)")
+
     if missing_config:
         logger.error(f"Earthquake_{source_id}: Missing config attributes: {missing_config}")
         raise ValueError(f"Missing config attributes: {missing_config}")
@@ -653,7 +658,9 @@ def start_calculate(
                                                     "earthquake_type"]].drop_duplicates()
             pick_data = catalog_data[["network_code", "station_code", "station_lat",
                                                     "station_lon", "station_elev_m",
-                                                    "p_arr_time", "s_arr_time"]].drop_duplicates()
+                                                    "p_arr_time", "s_arr_time",
+                                                    "s_p_lag_time_sec"]].drop_duplicates()
+            
             
             # Check for  empty data frame
             if source_data.empty or pick_data.empty:

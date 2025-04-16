@@ -51,6 +51,17 @@ REQUIRED_PICKING_COLUMNS = [
 
 REQUIRED_STATION_COLUMNS = ["network_code", "station_code", "lat", "lon", "elev_m"]
 
+REQUIRED_CONFIG = {
+    "magnitude": ["SNR_THRESHOLD", "WATER_LEVEL", "PRE_FILTER", "POST_FILTER_F_MIN",
+                  "POST_FILTER_F_MAX", "PADDING_BEFORE_ARRIVAL", "NOISE_DURATION",
+                  "NOISE_PADDING", "R_PATTERN_P", "R_PATTERN_S", "FREE_SURFACE_FACTOR",
+                  "K_P", "K_S", "TAUP_MODEL", "VELOCITY_MODEL_FILE", "MW_CONSTANT"],
+    "spectral": ["F_MIN", "F_MAX", "OMEGA_0_RANGE_MIN", "OMEGA_0_RANGE_MAX",
+                 "Q_RANGE_MIN", "Q_RANGE_MAX", "FC_RANGE_BUFFER", "DEFAULT_N_SAMPLES",
+                 "N_FACTOR", "Y_FACTOR"],
+    "performance": ["USE_PARALLEL", "LOGGING_LEVEL"]
+}
+
 
 def load_data(data_dir: str) -> pd.DataFrame:
     """
