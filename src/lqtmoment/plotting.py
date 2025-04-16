@@ -61,19 +61,19 @@ def plot_spectral_fitting(
         time_after_pick_p = 0.80 * s_p_time
         time_after_pick_s = 1.75 * s_p_time
 
-        for comp, label in zip(["L", "Q", "T"], ["P", "SV", "Sh"]):
-            trace = stream.select(comp=comp)[0]
+        for comp, label in zip(["L", "Q", "T"], ["P", "SV", "SH"]):
+            trace = stream.select(component=comp)[0]
             start_time = trace.stats.starttime
             trace.trim(start_time+(p_time - start_time) - 2.0, start_time+(s_time - start_time)+6.0)
 
             ax = axs[counter, 0]
             ax.plot(trace.times(), trace.data, "k")
             ax.axvline(p_time - trace.stats.starttime, color='r', linestyle='-', label='P arrival')
-            ax.axvline(s_time - trace.stats.starttiem, color='b', linestyle='-', label='S arrival')
-            ax.axvline(p_time - CONFIG.magnitude.PADDING_BEFORE_ARRIVAL - trace.stats.starttime, color='g', linestyle='--')
-            ax.axvline(p_time + (time_after_pick_p if comp == "L" else time_after_pick_s) - trace.stats.starttime, color='g', linestyle='--', label='P phase window')
+            ax.axvline(s_time - trace.stats.starttime, color='b', linestyle='-', label='S arrival')
+            ax.axvline((p_time if comp == "L" else s_time) - CONFIG.magnitude.PADDING_BEFORE_ARRIVAL - trace.stats.starttime, color='g', linestyle='--')
+            ax.axvline((p_time if comp == "L" else s_time) + (time_after_pick_p if comp == "L" else time_after_pick_s) - trace.stats.starttime, color='g', linestyle='--', label=f"{label} phase window")
             ax.axvline(p_time - CONFIG.magnitude.NOISE_DURATION - trace.stats.starttime, color='gray', linestyle='--')
-            ax.axvline(p_time - CONFIG.magnitude.NOISE_PADDING - trace.stats.starttime, color='gray', linestyle='--')
+            ax.axvline(p_time - CONFIG.magnitude.NOISE_PADDING - trace.stats.starttime, color='gray', linestyle='--', label='Noise Window')
             ax.set_title(f"{station}_BH{comp}", loc='right', va='center')
             ax.legend()
             ax.set_xlabel("Relative Time (s)")
