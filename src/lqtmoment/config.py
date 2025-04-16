@@ -381,7 +381,7 @@ class Config:
                 raise ValueError("free_surface_factor must be positive")
             k_p = self._parse_float(mag_section, "k_p", self.magnitude.K_P)
             k_s = self._parse_float(mag_section, "k_s", self.magnitude.K_S)
-            mw_constant = self._parse_int(mag_section, "mw_constant",self.magnitude.MW_CONSTANT)
+            mw_constant = self._parse_float(mag_section, "mw_constant",self.magnitude.MW_CONSTANT)
             taup_model = mag_section.get("taup_model", fallback=self.magnitude.TAUP_MODEL)
             velocity_model_file = mag_section.get("velocity_model_file", fallback=self.magnitude.VELOCITY_MODEL_FILE)
             
