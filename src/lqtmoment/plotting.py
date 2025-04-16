@@ -47,10 +47,9 @@ def plot_spectral_fitting(
         figure_path(Path): Directory to save the plot.
 
     """
-    
     # Initiate plotting dimension
     num_stations = len(streams)
-    fig, axs = plt.subplot(num_stations*3, 2, figsize=(20, num_stations*15), squeeze=False)
+    fig, axs = plt.subplots(num_stations*3, 2, figsize=(20, num_stations*15), squeeze=False)
     plt.subplots_adjust(hspace=0.5)
     axs[0,0].set_title("Phase Window", fontsize=20)
     axs[0,1].set_title("Spectra Fitting Profile", fontsize=20)
@@ -63,7 +62,7 @@ def plot_spectral_fitting(
         time_after_pick_s = 1.75 * s_p_time
 
         for comp, label in zip(["L", "Q", "T"], ["P", "SV", "Sh"]):
-            trace = stream.select(comp=trace)[0]
+            trace = stream.select(comp=comp)[0]
             start_time = trace.stats.starttime
             trace.trim(start_time+(p_time - start_time) - 2.0, start_time+(s_time - start_time)+6.0)
 
