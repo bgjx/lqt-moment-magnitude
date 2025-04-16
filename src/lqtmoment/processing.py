@@ -530,14 +530,14 @@ def calculate_moment_magnitude(
     mw = ((2.0 / 3.0) * np.log10(moment_average)) - CONFIG.magnitude.MW_CONSTANT
     mw_std = (2.0 /3.0) * moment_std/(moment_average * np.log(10))
  
-    results = {"source_id": source_id, 
-                "fc_avg": np.mean(corner_frequencies),
-                "fc_std": np.std(corner_frequencies),
-                "src_rad_avg_m": np.mean(source_radius),
-                "src_rad_std_m": np.std(source_radius),
-                "stress_drop_bar": (7 * moment_average) / (16 * np.mean(source_radius)** 3) *1e-5,
-                "mw_average": mw,
-                "mw_std": mw_std
+    results = {"source_id": [source_id], 
+                "fc_avg": [np.mean(corner_frequencies)],
+                "fc_std": [np.std(corner_frequencies)],
+                "src_rad_avg_m": [np.mean(source_radius)],
+                "src_rad_std_m": [np.std(source_radius)],
+                "stress_drop_bar": [(7 * moment_average) / (16 * np.mean(source_radius)** 3) *1e-5],
+                "mw_average": [mw],
+                "mw_std": [mw_std]
                 }
     
     # Create fitting spectral plot
