@@ -125,7 +125,7 @@ def window_trace(
     # Dynamic window parameters
     s_p_time = s_arr_time - p_arr_time    
     time_after_pick_p = 0.75 * s_p_time
-    time_after_pick_s = 1.75 * s_p_time
+    time_after_pick_s = 2.25 * s_p_time
     
     # Find the data index for phase windowing
     p_phase_start_index = int((p_arr_time - trace_P.stats.starttime - CONFIG.magnitude.PADDING_BEFORE_ARRIVAL)/trace_P.stats.delta)
