@@ -182,7 +182,7 @@ def _rotate_stream(
         stream_zrt.rotate(method="NE->RT", back_azimuth=azimuth)
         p_trace, sv_trace, sh_trace = stream_zrt.traces # Z, R, T components
     elif source_type == 'very_local_earthquake' and lqt_mode:
-        trace_Z = stream.select(component='Z')
+        trace_Z = stream.select(component='Z')[0]
         _, _, incidence_angle_p, _, _, incidence_angle_s = calculate_inc_angle(
                                                             source_coordinate,
                                                             station_coordinate,
@@ -202,7 +202,7 @@ def _rotate_stream(
         p_trace, _, _ = stream_lqt_p.traces # L, Q, T components
         _, sv_trace, sh_trace = stream_lqt_s.traces
     elif source_type == 'local_earthquake':
-        trace_Z = stream.select(component='Z')
+        trace_Z = stream.select(component='Z')[0]
         _, _, incidence_angle_p, _, _, incidence_angle_s = calculate_inc_angle(
                                                             source_coordinate,
                                                             station_coordinate,
