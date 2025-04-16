@@ -307,7 +307,6 @@ def calculate_moment_magnitude(
     for attr in REQUIRED_CONFIG['performance']:
         if not hasattr(CONFIG.performance, attr):
             missing_config.append(f"{attr} (missing in performance)")
-
     if missing_config:
         logger.error(f"Earthquake_{source_id}: Missing config attributes: {missing_config}")
         raise ValueError(f"Missing config attributes: {missing_config}")
@@ -391,17 +390,19 @@ def calculate_moment_magnitude(
         # Perform the instrument removal
         try:
             stream_displacement = instrument_remove(
-                                    stream_copy, calibration_path,
-                                    figure_path, network_code,
-                                    generate_figure=False)
-        except (ValueError, IOError) as e:
+                                        stream_copy,
+                                        calibration_path,
+                                        figure_path,
+                                        network_code,
+                                        generate_figure=False)
+        except Exception as e:
             logger.warning(f"Earthquake_{source_id}: An error occurred when correcting instrument for station {station}: {e}", exc_info=True)
             continue
         
         # Perform station rotation form ZNE to LQT in earthquake type dependent
         source_coordinate = [source_lat, source_lon , -1*source_depth_m]  # depth must be in negative notation
         station_coordinate = [station_lat, station_lon, station_elev_m]
-        
+
         try:
             rotated_stream = _rotate_stream(
                             stream_displacement, source_type,

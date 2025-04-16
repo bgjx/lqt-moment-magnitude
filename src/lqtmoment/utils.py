@@ -24,6 +24,7 @@ from obspy import Stream, read, read_inventory
 
 from .config import CONFIG
 
+logger = logging.getLogger("lqtmoment")
 
 REQUIRED_CATALOG_COLUMNS = [
     "source_id", "source_lat", "source_lon", "source_depth_m", 
@@ -251,7 +252,7 @@ def instrument_remove (
             if not trace_network:
                 raise ValueError(f"Network code not found in trace {trace.id} and not provided as parameter.")
             location = trace.stats.location if trace.stats.location else ""
-            inventory_path = calibration_path / f"RESP.{trace_network}.{station}.{location}.{channel}"
+            inventory_path = calibration_path / f"RESP.{trace_network}.{station}.{location}.{channel}*"
             if not inventory_path.exists():
                 raise FileNotFoundError(f"Calibration file not found: {inventory_path}")
             
@@ -280,7 +281,8 @@ def instrument_remove (
             # Add the processed trace to the Stream
             displacement_stream+=displacement_trace
             
-        except Exception as e:
+        except (ValueError, FileNotFoundError) as e:
+            logger.warning(f"Failed to perform instrument removal: {e}.", exc_info=True)
             continue
             
     return displacement_stream
