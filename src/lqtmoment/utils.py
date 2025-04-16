@@ -252,7 +252,7 @@ def instrument_remove (
             if not trace_network:
                 raise ValueError(f"Network code not found in trace {trace.id} and not provided as parameter.")
             location = trace.stats.location if trace.stats.location else ""
-            inventory_path = calibration_path / f"RESP.{trace_network}.{station}.{location}.{channel}*"
+            inventory_path = calibration_path / f"RESP.{trace_network}.{station}.{location}.{channel}.resp"
             if not inventory_path.exists():
                 raise FileNotFoundError(f"Calibration file not found: {inventory_path}")
             

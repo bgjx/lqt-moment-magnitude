@@ -117,9 +117,10 @@ class MagnitudeConfig:
     VELOCITY_VP: List[float] = None
     VELOCITY_VS: List[float] = None
     DENSITY: List[float] = None
+    MW_CONSTANT: float = 6.07
     TAUP_MODEL: str = 'iasp91'
     VELOCITY_MODEL_FILE: str = None
-    MW_CONSTANT: float = 6.07
+    
 
     def __post_init__(self):
         self.PRE_FILTER = self.PRE_FILTER or [0.01, 0.02, 55, 60]
@@ -380,10 +381,10 @@ class Config:
                 raise ValueError("free_surface_factor must be positive")
             k_p = self._parse_float(mag_section, "k_p", self.magnitude.K_P)
             k_s = self._parse_float(mag_section, "k_s", self.magnitude.K_S)
+            mw_constant = self._parse_int(mag_section, "mw_constant",self.magnitude.MW_CONSTANT)
             taup_model = mag_section.get("taup_model", fallback=self.magnitude.TAUP_MODEL)
             velocity_model_file = mag_section.get("velocity_model_file", fallback=self.magnitude.VELOCITY_MODEL_FILE)
-            mw_constant = mag_section.get("mw_constant", fallback=self.magnitude.MW_CONSTANT)
-
+            
             # Reconstruct MagnitudeConfig to trigger __post_init__
             self.magnitude = MagnitudeConfig(
                 SNR_THRESHOLD=snr_threshold,
@@ -399,9 +400,9 @@ class Config:
                 FREE_SURFACE_FACTOR=free_surface_factor,
                 K_P=k_p,
                 K_S=k_s,
+                MW_CONSTANT=mw_constant,
                 TAUP_MODEL=taup_model,
-                VELOCITY_MODEL_FILE=velocity_model_file,
-                MW_CONSTANT=mw_constant
+                VELOCITY_MODEL_FILE=velocity_model_file    
             )
 
             # Validate TAUP_MODEL
