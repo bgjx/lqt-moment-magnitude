@@ -423,7 +423,7 @@ def calculate_moment_magnitude(
                             s_p_lag_time_sec, p_arr_time,s_arr_time,
                             lqt_mode)
         except (ValueError, RuntimeError) as e:
-            logger.warning(f"Earthquake_{source_id}: Failed to rotate components for station {station}: {e}")
+            logger.warning(f"Earthquake_{source_id}: Failed to rotate components for station {station}: {e}.", exc_info=True)
             continue
 
         # Window the trace
@@ -660,8 +660,8 @@ def start_calculate(
             # Extract data for the current event
             try:
                 catalog_data = grouped_data.get_group(source_id)
-            except KeyError:
-                logger.warning(f"Earthquake_{source_id}: No data for earthquake ID {source_id}")
+            except KeyError as e:
+                logger.warning(f"Earthquake_{source_id}: No data for earthquake ID {source_id}: {e}.", exc_info=True)
                 failed_events += 1
                 pbar.set_postfix({"Failed": failed_events})
                 pbar.update(1)
