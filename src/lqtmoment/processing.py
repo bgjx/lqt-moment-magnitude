@@ -403,6 +403,7 @@ def calculate_moment_magnitude(
         source_coordinate = [source_lat, source_lon , -1*source_depth_m]  # depth must be in negative notation
         station_coordinate = [station_lat, station_lon, station_elev_m]
 
+        logger.info(f"Rotating station {station} for {source_type}: {source_id} and LQT mode is {'ON' if lqt_mode else 'OFF'}.")
         try:
             rotated_stream = _rotate_stream(
                             stream_displacement, source_type,
@@ -642,8 +643,8 @@ def start_calculate(
         smoothing=0.1
     ) as pbar:
         for source_id in range (id_start, id_end + 1):
-            logging.info(f"Earthquake_{source_id}: Calculating moment magnitude for earthquakes ID {source_id}")
-            
+            logger.info("\n\n")
+            logger.info(f"**========** Earthquakes ID {source_id} **========**")
             # Extract data for the current event
             try:
                 catalog_data = grouped_data.get_group(source_id)
