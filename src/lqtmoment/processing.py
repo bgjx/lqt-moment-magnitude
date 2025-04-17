@@ -734,6 +734,6 @@ def start_calculate(
     # Summary message
     sys.stdout.write(
         f"Finished. Proceed {total_earthquakes - failed_events} earthquakes successfully,"
-        f"{failed_events} failed. Check runtime.log for details. \n"
+        f"{failed_events} failed. Check lqt_runtime.log for details. \n"
     )
     return merged_catalog, df_result, df_fitting
