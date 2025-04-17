@@ -335,13 +335,25 @@ def calculate_moment_magnitude(
     if generate_figure:
         all_streams, all_p_times, all_s_times = [], [], []
         all_freqs = {
-            "P": [],  "SV":[], "SH":[], "N_P":[], "N_SV":[], "N_SH":[] 
+            "P": [],
+            "SV":[],
+            "SH":[],
+            "N_P":[],
+            "N_SV":[],
+            "N_SH":[] 
         }
         all_specs = {
-            "P": [],  "SV":[], "SH":[], "N_P":[], "N_SV":[], "N_SH":[] 
+            "P": [], 
+            "SV":[],
+            "SH":[],
+            "N_P":[],
+            "N_SV":[],
+            "N_SH":[] 
         }
         all_fits = {
-            "P":[], "SV":[], "SH":[]
+            "P":[],
+            "SV":[],
+            "SH":[]
         }
         station_names = []
 
@@ -644,7 +656,7 @@ def start_calculate(
     ) as pbar:
         for source_id in range (id_start, id_end + 1):
             logger.info("\n\n")
-            logger.info(f"**========** Earthquakes ID {source_id} **========**")
+            logger.info(f"**========** Earthquake ID: {source_id} **========**")
             # Extract data for the current event
             try:
                 catalog_data = grouped_data.get_group(source_id)

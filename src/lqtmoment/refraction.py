@@ -512,8 +512,8 @@ def calculate_inc_angle(
         take_off_s = take_off_upward_refract_s
         total_tt_s = upward_refract_tt_s
         inc_angle_s = upward_incidence_angle_s
-        logger.info(f"Very local earthquake at distance {epicentral_distance/1000:.1f} km, using Pg, "
-              f"P-Incidence Angle: {inc_angle_p:.2f}°, S-Incidence Angle: {inc_angle_s:.2f}°")
+        logger.info(f"Very local earthquake, at distance {epicentral_distance/1000:.1f} km, using Pg, "
+              f"P-Incidence Angle: {inc_angle_p:.2f}°, and Sg, S-Incidence Angle: {inc_angle_s:.2f}°")
     
     # For local earthquake, we perform the energy comparison with Pg as fallback if requirements unsatisfied
     else:
@@ -534,8 +534,8 @@ def calculate_inc_angle(
             take_off_s = take_off_upward_refract_s
             total_tt_s = upward_refract_tt_s
             inc_angle_s = upward_incidence_angle_s
-            logger.info(f"Local earthquake: Gap ({gap:.2f}) < {threshold}s at distance {epicentral_distance}Km, defaulting to Pg."
-                        f"P-Incidence Angle: {inc_angle_p:.2f}°, S-Incidence Angle: {inc_angle_s:.2f}°")
+            logger.info(f"Local earthquake, with Gap ({gap:.2f}) < {threshold}s at distance {epicentral_distance}Km, defaulting to Pg."
+                        f"P-Incidence Angle: {inc_angle_p:.2f}°, and Sg, S-Incidence Angle: {inc_angle_s:.2f}°")
         else:
             def _compute_snr(
                 trace: np.ndarray, 
@@ -593,7 +593,7 @@ def calculate_inc_angle(
                 snr_pg = _compute_snr(trace_z, arrival_time_pg, window_length, 0.75*window_length)
                 snr_pn = _compute_snr(trace_z, arrival_time_pn, window_length, 0.75*window_length)
             except (ValueError, RuntimeError) as e:
-                logger.info(f"Local earthquake: SNR computation failed at distance {epicentral_distance/1000:.1f} km ({str(e)}),"
+                logger.info(f"Local earthquake, SNR computation failed at distance {epicentral_distance/1000:.1f} km ({str(e)}),"
                             f"defaulting to Pg, P-Incidence Angle: {upward_incidence_angle_p:.2f}°, S-Incidence Angle: {upward_incidence_angle_s:.2f}°")
                 take_off_p = take_off_upward_refract_p
                 total_tt_p = upward_refract_tt_p
@@ -615,7 +615,7 @@ def calculate_inc_angle(
                 take_off_s = take_off_upward_refract_s
                 total_tt_s = upward_refract_tt_s
                 inc_angle_s = upward_incidence_angle_s
-                logger.info(f"Local earthquake: SNR too low (Pn: {snr_pn:.2f}, Pg: {snr_pg:.2f}) at distance {epicentral_distance/1000:.1f} km, "
+                logger.info(f"Local earthquake, SNR too low (Pn: {snr_pn:.2f}, Pg: {snr_pg:.2f}) at distance {epicentral_distance/1000:.1f} km, "
                       f"defaulting to Pg, P-Incidence Angle: {inc_angle_p:.2f}°, S-Incidence Angle: {inc_angle_s:.2f}°")
             else:
                 def _compute_phase_energy(
@@ -675,7 +675,7 @@ def calculate_inc_angle(
                         CONFIG.spectral.F_MAX
                     )
                 except ValueError as e:
-                    logger.info(f"Local earthquake: Energy computation failed at distance {epicentral_distance/1000:.1f} km ({str(e)}), "
+                    logger.info(f"Local earthquake, Energy computation failed at distance {epicentral_distance/1000:.1f} km ({str(e)}), "
                           f"defaulting to Pg, P-Incidence Angle: {upward_incidence_angle_p:.2f}°, S-Incidence Angle: {upward_incidence_angle_s:.2f}°")
                     take_off_p = take_off_upward_refract_p
                     total_tt_p = upward_refract_tt_p
@@ -695,13 +695,17 @@ def calculate_inc_angle(
                     take_off_s = take_off_critical_refract_s
                     total_tt_s = critical_refract_tt_s
                     inc_angle_s = critical_incidence_angle_s
+                    logger.info(f"Local earthquake, at distance {epicentral_distance/1000:.1f} km ({str(e)}), After energy comparison,"
+                          f" Pn energy greater than Pg, use Pn, P-Incidence Angle: {inc_angle_p:.2f}°, and Sn, S-Incidence Angle: {inc_angle_s:.2f}°")
                 else:
                     take_off_p = take_off_upward_refract_p
                     total_tt_p = upward_refract_tt_p
                     inc_angle_p = upward_incidence_angle_p
                     take_off_s = take_off_upward_refract_s
                     total_tt_s = upward_refract_tt_s
-                    inc_angle_s = upward_incidence_angle_s    
+                    inc_angle_s = upward_incidence_angle_s  
+                    logger.info(f"Local earthquake, at distance {epicentral_distance/1000:.1f} km ({str(e)}), After energy comparison,"
+                          f" Pg energy greater than Pn, use Pg, P-Incidence Angle: {inc_angle_p:.2f}°, and Sg, S-Incidence Angle: {inc_angle_s:.2f}°")
     if generate_figure:
         plot_rays(hypo_depth_m, sta_elev_m, epicentral_distance,
                   velocities_p, raw_model_p, up_model_p, down_model_p,
