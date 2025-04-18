@@ -439,6 +439,7 @@ def calculate_moment_magnitude(
             
         # check sampling rate
         fs = 1 / rotated_stream[0].stats.delta
+
         try:
             # Calculate source spectra
             freq_P , spec_P  = calculate_seismic_spectra(p_window_data, fs)
@@ -489,7 +490,7 @@ def calculate_moment_magnitude(
         try:
             # Calculate the  resultant omega
             omega_P = Omega_0_P*1e-9
-            omega_S = ((Omega_0_SV**2 + Omega_0_SH**2)**0.5)*1e-9
+            omega_S = (np.sqrt(Omega_0_SV**2 + Omega_0_SH**2))*1e-9
          
             # Calculate seismic moment
             M_0_P = (4.0 * np.pi * density_value * (velocity_P ** 3) * source_distance_m * omega_P) / (CONFIG.magnitude.R_PATTERN_P * CONFIG.magnitude.FREE_SURFACE_FACTOR)
@@ -539,7 +540,8 @@ def calculate_moment_magnitude(
         return {}, fitting_result
     
     # Calculate average and std of moment magnitude
-    moment_average, moment_std  = np.mean(moments), np.std(moments)
+    moment_average = np.mean(moments)
+    moment_std = np.std(moments)
     mw = ((2.0 / 3.0) * np.log10(moment_average)) - CONFIG.magnitude.MW_CONSTANT
     mw_std = (2.0 /3.0) * moment_std/(moment_average * np.log(10))
  

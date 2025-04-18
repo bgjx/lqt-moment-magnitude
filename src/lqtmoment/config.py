@@ -26,15 +26,20 @@ Usage:
     following structure:
 
     ```ini
-        [Magnitude]
-        snr_threshold = 2.0
-        pre_filter = 0.01,0.02,55,60
-        velocity_model_file = "data/config/velocity_model.json"
+        [Wave]
+        snr_threshold = 1.25
+        water_level = 20
+        pre_filter = 0.1,0.15,100,125
+        post_filter_f_min = 3
+        post_filter_f_max = 60
 
-        [Spectral]
-        f_min = 0.5
-        f_max = 40.0
-        default_n_samples = 2000
+        [Magnitude]
+        padding_before_arrival = 0.1
+        noise_duration = 0.5
+        noise_padding = 0.2
+        r_pattern_p = 0.52
+        r_pattern_s = 0.63
+        free_surface_factor = 2.0
 
         [Performance]
         use_parallel = true
@@ -75,9 +80,9 @@ def _package_file(filename):
         yield file_path
 
 @dataclass
-class MagnitudeConfig:
+class WaveConfig:
     """
-    Configuration for magnitude calculation parameters.
+    Configuration for wave treatment parameters.
 
     Attributes:
         SNR_THRESHOLD (float): Minimum signal-to-noise ratio for trace acceptance (default: 1.5).
@@ -85,6 +90,24 @@ class MagnitudeConfig:
         PRE_FILTER (List[float]): Bandpass filter corners [f1,f2,f3,f4] in Hz (default: placeholder, override in config.ini).
         POST_FILTER_F_MIN (float): Minimum post-filter frequency in Hz (default: 0.1).
         POST_FILTER_F_MAX (float): Maximum post-filter frequency in Hz (default: 50).
+
+
+    """
+    SNR_THRESHOLD: float = 1.5
+    WATER_LEVEL: int = 30
+    PRE_FILTER: List[float] = None
+    POST_FILTER_F_MIN: float = 0.1
+    POST_FILTER_F_MAX: float = 50
+
+    def __post_init__(self):
+        self.PRE_FILTER = self.PRE_FILTER or [0.01, 0.02, 55, 60]
+
+@dataclass
+class MagnitudeConfig:
+    """
+    Configuration for magnitude calculation parameters.
+
+    Attributes:
         PADDING_BEFORE_ARRIVAL (float): Padding before arrival in seconds (default: 0.1).
         NOISE_DURATION (float): Noise window duration in seconds (default: 0.5).
         NOISE_PADDING (float): Noise window padding in seconds (default: 0.2).
@@ -100,11 +123,6 @@ class MagnitudeConfig:
         TAUP_MODEL (str): ObsPy 1-D Velocity model.
         VELOCITY_MODEL_FILE (str): Path to a JSON file defining the velocity model (default: "", uses built-in model).
     """
-    SNR_THRESHOLD: float = 1.5
-    WATER_LEVEL: int = 30
-    PRE_FILTER: List[float] = None
-    POST_FILTER_F_MIN: float = 0.1
-    POST_FILTER_F_MAX: float = 50
     PADDING_BEFORE_ARRIVAL: float = 0.1
     NOISE_DURATION: float = 0.5
     NOISE_PADDING: float = 0.2
@@ -123,7 +141,6 @@ class MagnitudeConfig:
     
 
     def __post_init__(self):
-        self.PRE_FILTER = self.PRE_FILTER or [0.01, 0.02, 55, 60]
         self.LAYER_BOUNDARIES = self.LAYER_BOUNDARIES or [
                 [-3.00, -1.90], [-1.90, -0.59], [-0.59, 0.22], [0.22, 2.50],
                 [2.50, 7.00], [7.00, 9.00], [9.00, 15.00], [15.00, 33.00], [33.00, 9999]
@@ -151,7 +168,7 @@ class MagnitudeConfig:
         else:
             # Load from user-specified file
             try:
-                with open(self.VELOCITY_MODEL_FILE, "r") as f:
+                with open(Path(self.VELOCITY_MODEL_FILE), "r") as f:
                     model = json.load(f)
                 required_keys = {"layer_boundaries", "velocity_vp", "velocity_vs", "density"}
                 if not all(key in model for key in required_keys):
