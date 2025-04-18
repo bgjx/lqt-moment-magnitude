@@ -31,7 +31,7 @@ REQUIRED_CATALOG_COLUMNS = [
     "network_code", "station_code", "station_lat", "station_lon", "station_elev_m",
     "source_origin_time", "p_arr_time", "p_travel_time_sec",
     "p_polarity", "p_onset",
-    "s_arr_time", "s_travel_time_sec", "s_p_lag_time_sec",
+    "s_arr_time", "s_travel_time_sec", "s_p_lag_time_sec","coda_time",
     "source_err_rms_s", "n_phases", "gap_degree", 
     "x_horizontal_err_m", "y_horizontal_err_m", "z_depth_err_m",
     "earthquake_type", "remarks"
@@ -46,8 +46,10 @@ REQUIRED_HYPO_COLUMNS = [
     ]
 
 REQUIRED_PICKING_COLUMNS = [
-    "id", "station_code", "year", "month", "day", "hour", "minute_p",
-    "p_arr_sec", "p_polarity", "p_onset", "minute_s", "s_arr_sec"
+    "id", "station_code", "year", "month", "day",
+    "hour_p", "minute_p", "p_arr_sec", "p_polarity", "p_onset",
+    "hour_s", "minute_s", "s_arr_sec",
+    "hour_coda", "minute_coda", "sec_coda"
     ]
 
 REQUIRED_STATION_COLUMNS = ["network_code", "station_code", "lat", "lon", "elev_m"]

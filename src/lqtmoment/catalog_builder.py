@@ -13,6 +13,7 @@ Dependencies:
 import sys
 import argparse
 import pandas as pd
+import numpy as np
 from pathlib import Path
 from datetime import datetime
 from typing import Optional
@@ -87,7 +88,8 @@ def build_catalog(
             if station_data.empty:
                 continue
             station_info = station_data.iloc[0]
-            network_code, station_code, station_lat, station_lon, station_elev = station_info.network_code, station_info.station_code, station_info.lat, station_info.lon, station_info.elev_m
+            network_code, station_code = station_info.network_code, station_info.station_code
+            station_lat, station_lon, station_elev = station_info.lat, station_info.lon, station_info.elev_m
             
             # cek earthquake distance to determine earthquake type
             epicentral_distance, _, _ = gps2dist_azimuth(source_lat, source_lon, station_lat, station_lon)
@@ -102,15 +104,30 @@ def build_catalog(
             if pick_data_subset.empty:
                 continue
             pick_info = pick_data_subset.iloc[0]
-            year, month, day, hour, minute_p, second_p, p_polarity, p_onset, minute_s, second_s = pick_info.year, pick_info.month, pick_info.day, pick_info.hour, pick_info.minute_p, pick_info.p_arr_sec, pick_info.p_polarity, pick_info.p_onset, pick_info.minute_s, pick_info.s_arr_sec
-            int_p_second = int(second_p)
-            microsecond_p = int((second_p - int_p_second)*1e6)
-            int_s_second = int(second_s)
-            microsecond_s = int((second_s - int_s_second)*1e6)
-            p_arr_time = datetime(year, month, day, hour, minute_p, int_p_second, microsecond_p)
+            year, month, day = pick_info.year, pick_info.month, pick_info.day
+            hour_p, minute_p, second_p, p_polarity, p_onset = pick_info.hour_p, pick_info.minute_p, pick_info.p_arr_sec, pick_info.p_polarity, pick_info.p_onset
+            hour_s, minute_s, second_s = pick_info.hour_s, pick_info.minute_s, pick_info.s_arr_sec
+            hour_coda, minute_coda, second_coda = pick_info.hour_coda, pick_info.minute_coda, pick_info.sec_coda
+            
+            try:
+                int_p_second = int(second_p)
+                microsecond_p = int((second_p - int_p_second)*1e6)
+                int_s_second = int(second_s)
+                microsecond_s = int((second_s - int_s_second)*1e6)
+                p_arr_time = datetime(year, month, day, hour_p, minute_p, int_p_second, microsecond_p)
+                s_arr_time = datetime(year, month, day, hour_s, minute_s, int_s_second, microsecond_s)
+            except ValueError as e:
+                raise ValueError ("Cannot convert P and S arrival time data to datetime object, check your catalog data format.")
+            
+            if not hour_coda.isna() and not minute_coda.isna() and not second_coda.isna():
+                int_coda_second = int(second_coda)
+                microsecond_coda = int((second_coda - int_coda_second)*1e6)
+                coda_time = datetime(year, month, day, hour_coda, minute_coda, int_coda_second, microsecond_coda)
+            else:
+                coda_time = np.nan
+
             p_travel_time = p_arr_time - source_origin_time
             p_travel_time = p_travel_time.seconds + (p_travel_time.microseconds * 1e-6)
-            s_arr_time = datetime(year, month, day, hour, minute_s, int_s_second, microsecond_s)
             s_travel_time = s_arr_time - source_origin_time
             s_travel_time = s_travel_time.seconds + (s_travel_time.microseconds * 1e-6)
             s_p_lag_time = s_arr_time - p_arr_time
@@ -133,6 +150,7 @@ def build_catalog(
                 "s_arr_time": s_arr_time,
                 "s_travel_time_sec": s_travel_time,
                 "s_p_lag_time_sec": s_p_lag_time,
+                "coda_time": coda_time,
                 "source_err_rms_s": source_err_rms_s,
                 "n_phases": n_phases,
                 "gap_degree": gap_degree,

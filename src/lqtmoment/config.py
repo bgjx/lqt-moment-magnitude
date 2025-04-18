@@ -90,14 +90,17 @@ class WaveConfig:
         PRE_FILTER (List[float]): Bandpass filter corners [f1,f2,f3,f4] in Hz (default: placeholder, override in config.ini).
         POST_FILTER_F_MIN (float): Minimum post-filter frequency in Hz (default: 0.1).
         POST_FILTER_F_MAX (float): Maximum post-filter frequency in Hz (default: 50).
-
+        SEC_BF_P_ARR_TRIM (float): 
+        SEC_AF_P_ARR_TRIM (float): 
 
     """
     SNR_THRESHOLD: float = 1.5
-    WATER_LEVEL: int = 30
+    WATER_LEVEL: float = 30.0
     PRE_FILTER: List[float] = None
     POST_FILTER_F_MIN: float = 0.1
-    POST_FILTER_F_MAX: float = 50
+    POST_FILTER_F_MAX: float = 50.0
+    SEC_BF_P_ARR_TRIM: float = 15.0
+    SEC_AF_P_ARR_TRIM: float = 45.0 
 
     def __post_init__(self):
         self.PRE_FILTER = self.PRE_FILTER or [0.01, 0.02, 55, 60]
@@ -270,6 +273,7 @@ class Config:
     ```    
     """
     def __init__(self):
+        self.wave = WaveConfig()
         self.magnitude = MagnitudeConfig()
         self.spectral = SpectralConfig()
         self.performance = PerformanceConfig()
@@ -363,25 +367,45 @@ class Config:
             config_file = Path(config_file)
             if not config.read(config_file):
                 raise FileNotFoundError(f"Configuration file {config_file} not  found or unreadable")
-            
+        
+        # Load wave config section
+        if "Wave" in config:
+            wave_section = config["Wave"]
+            snr_threshold = self._parse_float(wave_section, "snr_threshold", self.wave.SNR_THRESHOLD)
+            if snr_threshold <= 0:
+                raise ValueError("snr_threshold must be positive")
+            water_level = self._parse_int(wave_section, "water_level", self.wave.WATER_LEVEL)
+            if water_level < 0:
+                raise ValueError("water_level must be non negative, otherwise mathematically meaningless")
+            pre_filter = self._parse_list(wave_section, "pre_filter", "0.01,0.02,55,60")
+            if len(pre_filter) != 4 or any(f <=0 for f in pre_filter):
+                raise ValueError("pre_filter must be four positive frequencies (f1, f2, f3, f4)")
+            post_filter_f_min = self._parse_float(wave_section, "post_filter_f_min", self.wave.POST_FILTER_F_MIN)
+            if post_filter_f_min < 0:
+                raise ValueError("post_filter_f_min must be non negative value")
+            post_filter_f_max = self._parse_float(wave_section, "post_filter_f_max", self.wave.POST_FILTER_F_MAX)
+            if post_filter_f_max <= post_filter_f_min:
+                raise ValueError("post_filter_f_max must be greater than post_filter_f_min")
+            sec_bf_p_arr_trim = self._parse_float(wave_section, "sec_bf_arr_trim", self.wave.SEC_BF_P_ARR_TRIM)
+            if sec_bf_p_arr_trim < 0:
+                 raise ValueError("Time before P arrival for trimming must be non-negative value")
+            sec_af_p_arr_trim = self._parse_float(wave_section, "sec_af_arr_trim", self.wave.SEC_AF_P_ARR_TRIM)
+            if sec_af_p_arr_trim <= sec_bf_p_arr_trim:
+                 raise ValueError("Time after P arrival for trimming must be greater than the time before.")
+
+            # Reconstruct WaveConfig to trigger __post_init__
+            self.wave = WaveConfig(
+                SNR_THRESHOLD=snr_threshold,
+                WATER_LEVEL=water_level,
+                PRE_FILTER=pre_filter,
+                POST_FILTER_F_MIN=post_filter_f_min,
+                POST_FILTER_F_MAX=post_filter_f_max,
+                SEC_BF_P_ARR_TRIM=sec_bf_p_arr_trim,
+                SEC_AF_P_ARR_TRIM=sec_af_p_arr_trim
+            )
         # Load magnitude config section
         if "Magnitude" in config:
             mag_section = config["Magnitude"]
-            snr_threshold = self._parse_float(mag_section, "snr_threshold", self.magnitude.SNR_THRESHOLD)
-            if snr_threshold <= 0:
-                raise ValueError("snr_threshold must be positive")
-            water_level = self._parse_int(mag_section, "water_level", self.magnitude.WATER_LEVEL)
-            if water_level <=0:
-                raise ValueError("water_level must be positive, otherwise mathematically meaningless")
-            pre_filter = self._parse_list(mag_section, "pre_filter", "0.01,0.02,55,60")
-            if len(pre_filter) != 4 or any(f <=0 for f in pre_filter):
-                raise ValueError("pre_filter must be four positive frequencies (f1, f2, f3, f4)")
-            post_filter_f_min = self._parse_float(mag_section, "post_filter_f_min", self.magnitude.POST_FILTER_F_MIN)
-            if post_filter_f_min <= 0:
-                raise ValueError("post_filter_f_min must be positive")
-            post_filter_f_max = self._parse_float(mag_section, "post_filter_f_max", self.magnitude.POST_FILTER_F_MAX)
-            if post_filter_f_max <= post_filter_f_min:
-                raise ValueError("post_filter_f_max must be greater than post_filter_f_min")
             padding_before_arrival = self._parse_float(mag_section, "padding_before_arrival", self.magnitude.PADDING_BEFORE_ARRIVAL)
             if padding_before_arrival < 0:
                 raise ValueError("padding_before_arrival must be non-negative")
@@ -404,11 +428,6 @@ class Config:
             
             # Reconstruct MagnitudeConfig to trigger __post_init__
             self.magnitude = MagnitudeConfig(
-                SNR_THRESHOLD=snr_threshold,
-                WATER_LEVEL=water_level,
-                PRE_FILTER=pre_filter,
-                POST_FILTER_F_MIN=post_filter_f_min,
-                POST_FILTER_F_MAX=post_filter_f_max,
                 PADDING_BEFORE_ARRIVAL=padding_before_arrival,
                 NOISE_DURATION=noise_duration,
                 NOISE_PADDING=noise_padding,
