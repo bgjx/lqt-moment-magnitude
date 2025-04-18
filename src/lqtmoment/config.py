@@ -90,15 +90,16 @@ class WaveConfig:
         PRE_FILTER (List[float]): Bandpass filter corners [f1,f2,f3,f4] in Hz (default: placeholder, override in config.ini).
         POST_FILTER_F_MIN (float): Minimum post-filter frequency in Hz (default: 0.1).
         POST_FILTER_F_MAX (float): Maximum post-filter frequency in Hz (default: 50).
-        SEC_BF_P_ARR_TRIM (float): 
-        SEC_AF_P_ARR_TRIM (float): 
-
+        TRIM_METHOD (str): Method used for seismogram trimming. Defaults to dynamic, primarily using the coda information from the catalog.
+        SEC_BF_P_ARR_TRIM (float): Time in seconds before P arrival as starting point of trimming.
+        SEC_AF_P_ARR_TRIM (float): Time in seconds after P arrival as ending point of trimming.
     """
     SNR_THRESHOLD: float = 1.5
     WATER_LEVEL: float = 30.0
     PRE_FILTER: List[float] = None
     POST_FILTER_F_MIN: float = 0.1
     POST_FILTER_F_MAX: float = 50.0
+    TRIM_METHOD: str = 'dynamic'
     SEC_BF_P_ARR_TRIM: float = 15.0
     SEC_AF_P_ARR_TRIM: float = 45.0 
 
@@ -386,6 +387,9 @@ class Config:
             post_filter_f_max = self._parse_float(wave_section, "post_filter_f_max", self.wave.POST_FILTER_F_MAX)
             if post_filter_f_max <= post_filter_f_min:
                 raise ValueError("post_filter_f_max must be greater than post_filter_f_min")
+            trim_method = wave_section.get("trim_method", fallback=self.wave.TRIM_METHOD)
+            if trim_method not in ('dynamic', 'static'):
+                raise ValueError("trim method must be either 'dynamic' or 'static'")
             sec_bf_p_arr_trim = self._parse_float(wave_section, "sec_bf_arr_trim", self.wave.SEC_BF_P_ARR_TRIM)
             if sec_bf_p_arr_trim < 0:
                  raise ValueError("Time before P arrival for trimming must be non-negative value")
@@ -400,6 +404,7 @@ class Config:
                 PRE_FILTER=pre_filter,
                 POST_FILTER_F_MIN=post_filter_f_min,
                 POST_FILTER_F_MAX=post_filter_f_max,
+                TRIM_METHOD=trim_method,
                 SEC_BF_P_ARR_TRIM=sec_bf_p_arr_trim,
                 SEC_AF_P_ARR_TRIM=sec_af_p_arr_trim
             )
