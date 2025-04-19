@@ -385,6 +385,11 @@ def calculate_moment_magnitude(
         station_lat, station_lon, station_elev_m = station_info.station_lat, station_info.station_lon, station_info.station_elev_m
         p_arr_time = UTCDateTime(station_info.p_arr_time)
         s_arr_time = UTCDateTime(station_info.s_arr_time)
+        if not station_info.coda_time.isna():
+            coda_time = UTCDateTime(station_info.coda_time)
+        else:
+            coda_time = None
+
         s_p_lag_time_sec = station_info.s_p_lag_time_sec
         
         # Calculate the source distance and the azimuth (hypo to station azimuth)
@@ -398,7 +403,14 @@ def calculate_moment_magnitude(
         if len(stream_copy) < 3:
             logger.warning(f"Earthquake_{source_id}: Not all components available for station {station} to calculate earthquake {source_id} moment magnitude")
             continue
-        
+
+        # Trimming the waveform prior to processing
+        try:
+            if CONFIG.wave.TRIM_METHOD == 'dynamic':
+                if coda_time:
+                    stream_copy.trim()
+
+
         # Perform the instrument removal
         try:
             stream_displacement = instrument_remove(

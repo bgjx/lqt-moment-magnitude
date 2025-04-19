@@ -20,7 +20,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from obspy import Stream, read, read_inventory
+from obspy import Stream, read, read_inventory, UTCDateTime
 
 from .config import CONFIG
 
@@ -219,6 +219,61 @@ def read_waveforms(path: Path, source_id: int, station:str) -> Stream:
             continue
             
     return stream
+
+
+def wave_trim(
+    stream: Stream,
+    p_arrival: UTCDateTime,
+    coda_time: UTCDateTime = None,
+    padding_bf_p: float = CONFIG.wave.SEC_BF_P_ARR_TRIM,
+    padding_af_p: float = CONFIG.wave.SEC_AF_P_ARR_TRIM
+    ) -> Stream:
+    """
+    Trim the seismogram to specific time window. 
+
+    Args:
+        stream (Stream): A Stream object containing all the waveforms from specific earthquake id.
+        p_arrival (UTCDateTime): P arrival time as initial reference for trimming start point.
+        coda_time (UTCDateTime): Coda time as primary reference for trimming end point.
+                                    Defaults to None, use static padding after P arrival 
+                                    instead.
+        padding_bf_p (float): Time in seconds before P arrival for exact trimming start point.
+        padding_af_p (float): Time in seconds after P arrival for exact trimming end point.
+
+    Returns:
+        Stream: A stream object containing all trimmed traces.
+
+    Raises:
+        ValueError: If trace data is empty or trimming window is invalid.
+    """
+    for trace in stream:
+        if trace.data.size == 0:
+            raise ValueError("Trace data cannot be empty")
+        trace_starttime = trace.stats.starttime
+        trace_endtime = trace.stats.endtime
+
+        # Calculate start time for trimming
+        start_trim = max(p_arrival - padding_bf_p, trace_starttime)
+
+        # Calculate end time for trimming
+        if coda_time:
+            end_trim = min(coda_time, trace_endtime)
+        else:
+            end_trim = min(p_arrival + padding_af_p, trace_endtime)
+
+        # Validate trimming window
+        if start_trim >= end_trim:
+            raise ValueError(
+                f"Invalid trimming window for trace {trace.id}: "
+                f"Start time {start_trim} is not before end time {end_trim}"
+            )
+        
+        # Perform trimming
+        trace.trim(start_trim, end_trim)
+    
+    return stream
+
+
 
 
 def instrument_remove (
