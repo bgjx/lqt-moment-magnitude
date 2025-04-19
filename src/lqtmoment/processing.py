@@ -33,7 +33,7 @@ from .config import CONFIG
 from .fitting_spectral import fit_spectrum_bayesian, fit_spectrum_grid_search, fit_spectrum_qmc
 from .refraction import calculate_inc_angle
 from .plotting import plot_spectral_fitting
-from .utils import instrument_remove, read_waveforms, trace_snr, REQUIRED_CONFIG
+from .utils import instrument_remove, read_waveforms, trace_snr, wave_trim, REQUIRED_CONFIG
 
 
 logger = logging.getLogger("lqtmoment")
@@ -401,15 +401,29 @@ def calculate_moment_magnitude(
         stream = read_waveforms(wave_path, source_id, station)
         stream_copy = stream.copy()
         if len(stream_copy) < 3:
-            logger.warning(f"Earthquake_{source_id}: Not all components available for station {station} to calculate earthquake {source_id} moment magnitude")
+            logger.warning(f"Earthquake_{source_id}: Not all components available for station {station}"
+                           f"to calculate earthquake {source_id} moment magnitude")
             continue
 
         # Trimming the waveform prior to processing
         try:
             if CONFIG.wave.TRIM_METHOD == 'dynamic':
-                if coda_time:
-                    stream_copy.trim()
-
+                trimmed_stream = wave_trim(stream_copy, 
+                                           p_arr_time, 
+                                           s_arr_time, 
+                                           coda_time,
+                                           CONFIG.wave.SEC_BF_P_ARR_TRIM,
+                                           CONFIG.wave.SEC_AF_P_ARR_TRIM)
+            else:
+                trimmed_stream = wave_trim(stream_copy,
+                                           p_arr_time,
+                                           s_arr_time,
+                                           CONFIG.wave.SEC_BF_P_ARR_TRIM,
+                                           CONFIG.wave.SEC_AF_P_ARR_TRIM)
+                
+        except (ValueError, RuntimeError) as e:
+            logger.warning(f"Earthquake_{source_id}: Failed to trim wave data from {station}: {e}.")
+            continue
 
         # Perform the instrument removal
         try:
