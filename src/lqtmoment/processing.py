@@ -436,6 +436,10 @@ def calculate_moment_magnitude(
         except Exception as e:
             logger.warning(f"Earthquake_{source_id}: An error occurred when correcting instrument for station {station}: {e}", exc_info=True)
             continue
+
+        # Perform post instrument removal if specified by the User
+        if CONFIG.wave.APPLY_POST_INSTRUMENT_REMOVAL_FILTER == 'yes':
+            stream_displacement.filter("bandpass", freqmin=CONFIG.wave.POST_FILTER_F_MIN, freqmax=CONFIG.wave.POST_FILTER_F_MAX, corners=4, zerophase=True)
         
         # Perform station rotation form ZNE to LQT in earthquake type dependent
         source_coordinate = [source_lat, source_lon , -1*source_depth_m]  # depth must be in negative notation
