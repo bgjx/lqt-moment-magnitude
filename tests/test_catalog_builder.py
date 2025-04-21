@@ -26,7 +26,7 @@ def test_catalog_builder(test_data):
     "network_code", "station_code", "station_lat", "station_lon", "station_elev_m",
     "source_origin_time", "p_arr_time", "p_travel_time_sec",
     "p_polarity", "p_onset",
-    "s_arr_time", "s_travel_time_sec", "s_p_lag_time_sec",
+    "s_arr_time", "s_travel_time_sec", "s_p_lag_time_sec","coda_time",
     "source_err_rms_s", "n_phases", "gap_degree", 
     "x_horizontal_err_m", "y_horizontal_err_m", "z_depth_err_m",
     "earthquake_type", "remarks"

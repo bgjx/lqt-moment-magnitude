@@ -28,10 +28,14 @@ Usage:
     ```ini
         [Wave]
         snr_threshold = 1.25
-        water_level = 20
+        water_level = 20.0
         pre_filter = 0.1,0.15,100,125
+        apply_post_instrument_removal_filter = yes
         post_filter_f_min = 3
         post_filter_f_max = 60
+        trim_method = dynamic
+        sec_bf_p_arr_trim = 5
+        sec_af_p_arr_trim = 25
 
         [Magnitude]
         padding_before_arrival = 0.1
@@ -40,10 +44,27 @@ Usage:
         r_pattern_p = 0.52
         r_pattern_s = 0.63
         free_surface_factor = 2.0
+        k_p = 0.32
+        k_s = 0.21
+        mw_constant = 6.07
+        taup_model = iasp91
+        velocity_model_file = velocity_model.json
+
+        [Spectral]
+        f_min = 1
+        f_max = 50
+        omega_0_range_min = 0.001
+        omega_0_range_max = 1000
+        q_range_min = 50
+        q_range_max = 250
+        fc_range_buffer = 1
+        default_n_samples = 3000
+        n_factor = 2
+        y_factor = 1
 
         [Performance]
-        use_parallel = true
-        logging_level = "DEBUG"
+        use_parallel = false
+        logging_level = INFO
     ```
 
     For custom velocity model, the "velocity_model.json" file should have the 
@@ -94,15 +115,15 @@ class WaveConfig:
         SEC_BF_P_ARR_TRIM (float): Time in seconds before P arrival as starting point of trimming.
         SEC_AF_P_ARR_TRIM (float): Time in seconds after P arrival as ending point of trimming.
     """
-    SNR_THRESHOLD: float = 1.5
-    WATER_LEVEL: float = 30.0
+    SNR_THRESHOLD: float = 1.75
+    WATER_LEVEL: float = 60.0
     PRE_FILTER: List[float] = None
     APPLY_POST_INSTRUMENT_REMOVAL_FILTER: str = 'yes'
     POST_FILTER_F_MIN: float = 0.1
     POST_FILTER_F_MAX: float = 50.0
     TRIM_METHOD: str = 'dynamic'
-    SEC_BF_P_ARR_TRIM: float = 15.0
-    SEC_AF_P_ARR_TRIM: float = 45.0 
+    SEC_BF_P_ARR_TRIM: float = 10.0
+    SEC_AF_P_ARR_TRIM: float = 50.0 
 
     def __post_init__(self):
         self.PRE_FILTER = self.PRE_FILTER or [0.01, 0.02, 55, 60]
@@ -214,13 +235,13 @@ class SpectralConfig:
         N_FACTOR (int): Brune model n factor for spectral decay (default: 2).
         Y_FACTOR (int): Brune model y factor for spectral decay (default: 1).
     """
-    F_MIN: float = 1.0
+    F_MIN: float = 0.1
     F_MAX: float = 45.0
     OMEGA_0_RANGE_MIN: float = 0.01
     OMEGA_0_RANGE_MAX: float = 2000.0
     Q_RANGE_MIN: float = 50.0
     Q_RANGE_MAX: float = 250.0
-    FC_RANGE_BUFFER: float = 2.0
+    FC_RANGE_BUFFER: float = 1.0
     DEFAULT_N_SAMPLES: int = 3000
     N_FACTOR: int = 2
     Y_FACTOR: int = 1
