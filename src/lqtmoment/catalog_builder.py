@@ -119,7 +119,7 @@ def build_catalog(
             except ValueError as e:
                 raise ValueError ("Cannot convert P and S arrival time data to datetime object, check your catalog data format.")
             
-            if not hour_coda.isna() and not minute_coda.isna() and not second_coda.isna():
+            if not np.isnan(hour_coda) and not np.isnan(minute_coda) and not np.isnan(second_coda):
                 int_coda_second = int(second_coda)
                 microsecond_coda = int((second_coda - int_coda_second)*1e6)
                 coda_time = datetime(year, month, day, hour_coda, minute_coda, int_coda_second, microsecond_coda)
