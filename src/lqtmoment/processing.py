@@ -428,7 +428,7 @@ def calculate_moment_magnitude(
         # Perform the instrument removal
         try:
             stream_displacement = instrument_remove(
-                                        stream_copy,
+                                        trimmed_stream,
                                         calibration_path,
                                         figure_path,
                                         network_code,

@@ -69,7 +69,7 @@ from importlib.resources import path
 from contextlib import contextmanager
 from dataclasses import dataclass
 from configparser import ConfigParser
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 from pathlib import Path
 import json
 
@@ -88,8 +88,8 @@ class WaveConfig:
         SNR_THRESHOLD (float): Minimum signal-to-noise ratio for trace acceptance (default: 1.5).
         WATER_LEVEL (int): Water level for deconvolution stabilization (default: 30).
         PRE_FILTER (List[float]): Bandpass filter corners [f1,f2,f3,f4] in Hz (default: placeholder, override in config.ini).
-        POST_FILTER_F_MIN (float): Minimum post-filter frequency in Hz (default: 0.1).
-        POST_FILTER_F_MAX (float): Maximum post-filter frequency in Hz (default: 50).
+        POST_FILTER_F_MIN (float): Minimum post-filter frequency in Hz (default: 0.1) after instrument removal.
+        POST_FILTER_F_MAX (float): Maximum post-filter frequency in Hz (default: 50) after instrument removal.
         TRIM_METHOD (str): Method used for seismogram trimming. Defaults to dynamic, primarily using the coda information from the catalog.
         SEC_BF_P_ARR_TRIM (float): Time in seconds before P arrival as starting point of trimming.
         SEC_AF_P_ARR_TRIM (float): Time in seconds after P arrival as ending point of trimming.
@@ -97,6 +97,7 @@ class WaveConfig:
     SNR_THRESHOLD: float = 1.5
     WATER_LEVEL: float = 30.0
     PRE_FILTER: List[float] = None
+    APPLY_POST_INSTRUMENT_REMOVAL_FILTER: str = 'yes'
     POST_FILTER_F_MIN: float = 0.1
     POST_FILTER_F_MAX: float = 50.0
     TRIM_METHOD: str = 'dynamic'
@@ -346,7 +347,7 @@ class Config:
             raise ValueError(f"Invalid format for {key} in config.ini: {e}")
 
 
-    def load_from_file(self, config_file: str = None) -> None:
+    def load_from_file(self, config_file: Optional[str] = None) -> None:
         """
         Load configuration from an INI file, with fallback to defaults.
         
@@ -381,6 +382,9 @@ class Config:
             pre_filter = self._parse_list(wave_section, "pre_filter", "0.01,0.02,55,60")
             if len(pre_filter) != 4 or any(f <=0 for f in pre_filter):
                 raise ValueError("pre_filter must be four positive frequencies (f1, f2, f3, f4)")
+            apply_post_instrument_removal_filter = wave_section.get("apply_post_instrument_removal_filter", fallback=self.wave.APPLY_POST_INSTRUMENT_REMOVAL_FILTER)
+            if apply_post_instrument_removal_filter.lower().strip() not in ('yes', 'no'):
+                raise ValueError("post filter statement must be either 'YES/yes' or 'NO/no'")
             post_filter_f_min = self._parse_float(wave_section, "post_filter_f_min", self.wave.POST_FILTER_F_MIN)
             if post_filter_f_min < 0:
                 raise ValueError("post_filter_f_min must be non negative value")
@@ -402,6 +406,7 @@ class Config:
                 SNR_THRESHOLD=snr_threshold,
                 WATER_LEVEL=water_level,
                 PRE_FILTER=pre_filter,
+                APPLY_POST_INSTRUMENT_REMOVAL_FILTER=apply_post_instrument_removal_filter,
                 POST_FILTER_F_MIN=post_filter_f_min,
                 POST_FILTER_F_MAX=post_filter_f_max,
                 TRIM_METHOD=trim_method,
@@ -492,7 +497,7 @@ class Config:
             if self.performance.LOGGING_LEVEL not in valid_levels:
                 raise ValueError(f"logging_level must be one of: {valid_levels}")
     
-    def reload(self, config_file: str = None) -> None:
+    def reload(self, config_file:Optional[str] = None) -> None:
         """
         Reload configuration from INI file, resetting to defaults first.
 
