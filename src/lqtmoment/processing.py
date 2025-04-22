@@ -487,7 +487,7 @@ def calculate_moment_magnitude(
             continue
 
         # Perform post instrument removal if specified by the User
-        if CONFIG.wave.APPLY_POST_INSTRUMENT_REMOVAL_FILTER == 'yes':
+        if CONFIG.wave.APPLY_POST_INSTRUMENT_REMOVAL_FILTER:
             stream_displacement.filter("bandpass", freqmin=CONFIG.wave.POST_FILTER_F_MIN, freqmax=CONFIG.wave.POST_FILTER_F_MAX, corners=4, zerophase=True)
         
         # Perform station rotation form ZNE to LQT in earthquake type dependent
