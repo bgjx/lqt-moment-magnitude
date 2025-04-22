@@ -11,8 +11,6 @@ from lqtmoment.refraction import (
     calculate_inc_angle
 )
 
-from lqtmoment.config import CONFIG 
-
 @pytest.fixture
 def test_data():
     "Fixture providing consistent test data."
