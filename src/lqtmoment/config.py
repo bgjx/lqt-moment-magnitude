@@ -123,11 +123,11 @@ class WaveConfig:
         PADDING_BEFORE_ARRIVAL (float): Padding before arrival in seconds (default: 0.1).
         MIN_P_WINDOW (float): Minimum P phase window in second for calculating source spectra
                                 (default: 1.0).
-        MAX_P_WINDOW (float): Maximum P phase window in second for calculating source spectra.
+        MAX_P_WINDOW (float): Maximum P phase window in second for calculating source spectra
                                 (default: 10.0).
-        MIN_S_WINDOW (float): Minimum S phase window in second for calculating source spectra.
+        MIN_S_WINDOW (float): Minimum S phase window in second for calculating source spectra
                                 (default: 2.0).
-        MAX_S_WINDOW (float): Maximum S phase window in second for calculating source spectra.
+        MAX_S_WINDOW (float): Maximum S phase window in second for calculating source spectra
                                 (default: 20.0).
         NOISE_DURATION (float): Noise window duration in seconds (default: 0.5).
         NOISE_PADDING (float): Noise window padding in seconds (default: 0.2).
