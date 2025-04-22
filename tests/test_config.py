@@ -11,7 +11,7 @@ def test_wave_params():
     expected_post_filter_statement = 'yes'
     expected_post_filter_f_min = 0.1
     expected_post_filter_f_max = 50
-    expected_trim_method = 'dynamic'
+    expected_trim_mode = 'dynamic'
     expected_sec_bf_p = 10
     expected_sec_af_p = 50
     assert CONFIG.wave.SNR_THRESHOLD == expected_snr
@@ -20,7 +20,7 @@ def test_wave_params():
     assert CONFIG.wave.APPLY_POST_INSTRUMENT_REMOVAL_FILTER == expected_post_filter_statement
     assert CONFIG.wave.POST_FILTER_F_MIN == expected_post_filter_f_min
     assert CONFIG.wave.POST_FILTER_F_MAX == expected_post_filter_f_max
-    assert CONFIG.wave.TRIM_METHOD == expected_trim_method
+    assert CONFIG.wave.TRIM_MODE == expected_trim_mode
     assert CONFIG.wave.SEC_BF_P_ARR_TRIM == expected_sec_bf_p
     assert CONFIG.wave.SEC_AF_P_ARR_TRIM == expected_sec_af_p
 

@@ -33,7 +33,7 @@ Usage:
         apply_post_instrument_removal_filter = yes
         post_filter_f_min = 3
         post_filter_f_max = 60
-        trim_method = dynamic
+        trim_mode = dynamic
         sec_bf_p_arr_trim = 5
         sec_af_p_arr_trim = 25
 
@@ -109,9 +109,10 @@ class WaveConfig:
         SNR_THRESHOLD (float): Minimum signal-to-noise ratio for trace acceptance (default: 1.5).
         WATER_LEVEL (int): Water level for deconvolution stabilization (default: 30).
         PRE_FILTER (List[float]): Bandpass filter corners [f1,f2,f3,f4] in Hz (default: placeholder, override in config.ini).
+        APPLY_POST_INSTRUMENT_REMOVAL_FILTER: Statement to whether use post filter or not after instrument removal.
         POST_FILTER_F_MIN (float): Minimum post-filter frequency in Hz (default: 0.1) after instrument removal.
         POST_FILTER_F_MAX (float): Maximum post-filter frequency in Hz (default: 50) after instrument removal.
-        TRIM_METHOD (str): Method used for seismogram trimming. Defaults to dynamic, primarily using the coda information from the catalog.
+        TRIM_MODE (str): Method used for seismogram trimming. Defaults to dynamic, primarily using the coda information from the catalog.
         SEC_BF_P_ARR_TRIM (float): Time in seconds before P arrival as starting point of trimming.
         SEC_AF_P_ARR_TRIM (float): Time in seconds after P arrival as ending point of trimming.
     """
@@ -121,7 +122,7 @@ class WaveConfig:
     APPLY_POST_INSTRUMENT_REMOVAL_FILTER: str = 'yes'
     POST_FILTER_F_MIN: float = 0.1
     POST_FILTER_F_MAX: float = 50.0
-    TRIM_METHOD: str = 'dynamic'
+    TRIM_MODE: str = 'dynamic'
     SEC_BF_P_ARR_TRIM: float = 10.0
     SEC_AF_P_ARR_TRIM: float = 50.0 
 
@@ -412,8 +413,8 @@ class Config:
             post_filter_f_max = self._parse_float(wave_section, "post_filter_f_max", self.wave.POST_FILTER_F_MAX)
             if post_filter_f_max <= post_filter_f_min:
                 raise ValueError("post_filter_f_max must be greater than post_filter_f_min")
-            trim_method = wave_section.get("trim_method", fallback=self.wave.TRIM_METHOD)
-            if trim_method not in ('dynamic', 'static'):
+            trim_mode = wave_section.get("trim_mode", fallback=self.wave.TRIM_MODE)
+            if trim_mode not in ('dynamic', 'static'):
                 raise ValueError("trim method must be either 'dynamic' or 'static'")
             sec_bf_p_arr_trim = self._parse_float(wave_section, "sec_bf_arr_trim", self.wave.SEC_BF_P_ARR_TRIM)
             if sec_bf_p_arr_trim < 0:
@@ -430,7 +431,7 @@ class Config:
                 APPLY_POST_INSTRUMENT_REMOVAL_FILTER=apply_post_instrument_removal_filter,
                 POST_FILTER_F_MIN=post_filter_f_min,
                 POST_FILTER_F_MAX=post_filter_f_max,
-                TRIM_METHOD=trim_method,
+                TRIM_MODE=trim_mode,
                 SEC_BF_P_ARR_TRIM=sec_bf_p_arr_trim,
                 SEC_AF_P_ARR_TRIM=sec_af_p_arr_trim
             )
