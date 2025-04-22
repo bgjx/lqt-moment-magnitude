@@ -24,6 +24,8 @@ from typing import Optional, Dict, List, Tuple
 import numpy as np
 import pandas as pd 
 from obspy import Stream, UTCDateTime
+from obspy.signal.detrend import simple as detrend_simple
+from obspy.signal.util import _npts2nfft
 from obspy.geodetics import gps2dist_azimuth, locations2degrees
 from obspy.taup import TauPyModel
 from scipy.signal import windows
@@ -41,7 +43,7 @@ logger = logging.getLogger("lqtmoment")
 def calculate_seismic_spectra(
     trace_data: np.ndarray,
     sampling_rate: float,
-    apply_window: bool = True
+    apply_window: bool = False
     ) -> Tuple[np.ndarray, np.ndarray]:
     """
     Calculates the displacement amplitude spectrum of a seismogram using FFT.
@@ -50,7 +52,7 @@ def calculate_seismic_spectra(
         trace_data (np.ndarray): Array of displacement signal ( in meters).
         sampling_rate (float): Sampling rate of the signal in Hz.
         apply_window (bool, optional): Apply a Hann window to reduce spectral leakage.
-            Defaults to True.
+            Defaults to False (assumes window_trace function already applied a cosine taper).
 
     Returns:
         Tuple[np.ndarray, np.ndarray]: 
@@ -62,23 +64,25 @@ def calculate_seismic_spectra(
     if not trace_data.size or sampling_rate <= 0:
         raise ValueError("Trace data cannot be empty and sampling rate must be positive")
     
-    n_samples = len(trace_data)
+    # Apply Hann window only if explicitly requested (window_trace already tapers)
     if apply_window:
-        window = windows.hann(n_samples)
+        logger.warning("Hann window applied in calculate_seismic_spectra; window_trace already applies a cosine taper")
+        window = windows.hann(len(trace_data))
         trace_data_processed = trace_data * window
+        window_correction = np.sqrt(8.0/3.0)
     else:
         trace_data_processed = trace_data
+        window_correction = 1.0
     
-    # Compute the FFT and single-sided spectrum
-    fft_data = np.fft.fft(trace_data_processed)
-    frequencies = np.fft.fftfreq(n_samples, 1 / sampling_rate)
-    amplitudes = np.abs(fft_data) * (2.0/n_samples)
-    positive_mask = frequencies >= 0
-    frequencies = frequencies[positive_mask]
-    amplitudes = amplitudes[positive_mask]
+    # Zero pad to next power of 2 for FFT efficiency and resolution
+    n_samples = len(trace_data_processed)
+    nfft = _npts2nfft(n_samples)
+    padded_data = np.pad(trace_data_processed, (0, nfft - n_samples), mode='constant')
 
-    if apply_window: 
-        amplitudes *= 2.0 # Correct for Hann window gain (average reduction gain is 0.5)
+    # Compute the FFT and single-sided spectrum
+    fft_data = np.fft.rfft(padded_data)
+    frequencies = np.fft.rfftfreq(nfft, d=1.0/sampling_rate)
+    amplitudes = np.abs(fft_data) * (2.0 / (nfft * sampling_rate)) * window_correction
     
     amplitudes *= 1e9  # Convert to nm (nanometers)
 
@@ -122,26 +126,68 @@ def window_trace(
     except IndexError as e:
         raise ValueError(f"Missing {components} components in stream")
     
-    # Dynamic window parameters
-    s_p_time = s_arr_time - p_arr_time    
-    time_after_pick_p = 0.75 * s_p_time
-    time_after_pick_s = 2.25 * s_p_time
+    # Verify trace starttime consistency
+    ref_starttime = trace_P.stats.starttime
+    for tr in [trace_SV, trace_SH]:
+        if tr.stats.starttime != ref_starttime:
+            logger.warning(f"Traces {tr.id} have inconsistent starttime")
     
+    # Dynamic window parameters
+    s_p_time = s_arr_time - p_arr_time
+    p_factor = 0.75 if s_p_time > 1.0 else 1.0
+    s_factor = 2.25 if s_p_time > 1.0 else 3.0
+    time_after_pick_p = min(max(p_factor * s_p_time, CONFIG.wave.MIN_P_WINDOW), CONFIG.wave.MAX_P_WINDOW)
+    time_after_pick_s = min(max(s_factor * s_p_time, CONFIG.wave.MIN_S_WINDOW), CONFIG.wave.MAX_S_WINDOW)
+    
+    # Prevent P/S window overlap
+    p_phase_end_time = p_arr_time + time_after_pick_p
+    s_phase_start_time = s_arr_time - CONFIG.wave.PADDING_BEFORE_ARRIVAL
+    if p_phase_end_time > s_phase_start_time:
+        mid_time = p_arr_time + (s_p_time / 2)
+        time_after_pick_p = mid_time - p_arr_time
+        s_phase_start_time = mid_time
+        logger.info(f"Windows adjusted to prevent P/S overlap: P ends at {mid_time}, S starts at {mid_time}")
+
     # Find the data index for phase windowing
     p_phase_start_index = int((p_arr_time - trace_P.stats.starttime - CONFIG.wave.PADDING_BEFORE_ARRIVAL)/trace_P.stats.delta)
     p_phase_end_index = int((p_arr_time - trace_P.stats.starttime + time_after_pick_p )/trace_P.stats.delta)
-    s_phase_start_index = int((p_arr_time - trace_SV.stats.starttime - CONFIG.wave.PADDING_BEFORE_ARRIVAL)/trace_SV.stats.delta)
-    s_phase_end_index = int((p_arr_time - trace_SV.stats.starttime + time_after_pick_s )/trace_SV.stats.delta)
+    s_phase_start_index = int((s_phase_start_time - trace_SV.stats.starttime)/trace_SV.stats.delta)
+    s_phase_end_index = int((s_arr_time - trace_SV.stats.starttime + time_after_pick_s )/trace_SV.stats.delta)
     noise_start_index = int((p_arr_time - trace_P.stats.starttime - CONFIG.wave.NOISE_DURATION)/trace_P.stats.delta)                             
     noise_end_index  = int((p_arr_time - trace_P.stats.starttime - CONFIG.wave.NOISE_PADDING )/trace_P.stats.delta)
 
+    # Slicing method
+    def _slice(data, start_idx, end_idx):
+        """ Helper function to do data slicing. """
+        start_idx = max(0, min(start_idx, len(data) - 1))
+        end_idx = max(start_idx, min(end_idx + 1, len(data)))
+        return data[start_idx:end_idx]
+
     # Window the data by the index
-    P_data  = trace_P.data[p_phase_start_index : p_phase_end_index + 1]
-    SV_data = trace_SV.data[s_phase_start_index : s_phase_end_index + 1]
-    SH_data = trace_SH.data[s_phase_start_index : s_phase_end_index + 1]
-    P_noise = trace_P.data[noise_start_index : noise_end_index + 1]
-    SV_noise = trace_SV.data[noise_start_index : noise_end_index + 1]
-    SH_noise = trace_SH.data[noise_start_index : noise_end_index + 1]
+    P_data  = _slice(trace_P.data, p_phase_start_index, p_phase_end_index) 
+    SV_data = _slice(trace_SV.data, s_phase_start_index, s_phase_end_index)
+    SH_data = _slice(trace_SH.data, s_phase_start_index, s_phase_end_index)
+    P_noise = _slice(trace_P.data, noise_start_index, noise_end_index)
+    SV_noise = _slice(trace_SV.data, noise_start_index, noise_end_index)
+    SH_noise = _slice(trace_SH.data, noise_start_index, noise_end_index)
+
+    # Preprocess data, apply detrending, demean and taper.
+    for data in [P_data, SV_data, SH_data, P_noise, SV_noise, SH_noise]:
+        if len(data) > 0:
+            data[:] = detrend_simple(data)
+            data[:] = data - np.mean(data)
+            taper = windows.cosine(len(data))
+            data[:] = data * taper
+    
+    # Pad to consistent length
+    if CONFIG.wave.PAD_TO_UNIFORM_LENGTH: 
+        max_len = max(len(P_data), len(SV_data), len(SH_data), len(P_noise), len(SV_noise), len(SH_noise))
+        for data in [P_data, SV_data, SH_data, P_noise, SV_noise, SH_noise]:
+            if len(data) < max_len:
+                data[:] = np.pad(data, (0, max_len - len(data)), mode='constant')
+                data[:] = data - np.mean(data)
+                taper = windows.cosine(max_len)
+                data[:] = data * taper
 
     return P_data, SV_data, SH_data, P_noise, SV_noise, SH_noise
 
@@ -427,7 +473,7 @@ def calculate_moment_magnitude(
         except (ValueError, RuntimeError) as e:
             logger.warning(f"Earthquake_{source_id}: Failed to trim wave data from {station}: {e}.")
             continue
-
+        
         # Perform the instrument removal
         try:
             stream_displacement = instrument_remove(
