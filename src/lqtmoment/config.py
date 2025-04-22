@@ -30,7 +30,7 @@ Usage:
         snr_threshold = 1.25
         water_level = 20.0
         pre_filter = 0.1,0.15,100,125
-        apply_post_instrument_removal_filter = true
+        apply_post_instrument_removal_filter = True
         post_filter_f_min = 3
         post_filter_f_max = 60
         trim_method = dynamic
@@ -43,7 +43,7 @@ Usage:
         max_s_window = 20.0
         noise_duration = 0.5
         noise_padding = 0.2
-        pad_to_uniform_length = true
+        pad_to_uniform_length = True
 
         [Magnitude]
         r_pattern_p = 0.52
@@ -68,7 +68,7 @@ Usage:
         y_factor = 1
 
         [Performance]
-        use_parallel = false
+        use_parallel = False
         logging_level = INFO
     ```
 
