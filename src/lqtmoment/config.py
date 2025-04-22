@@ -115,6 +115,9 @@ class WaveConfig:
         TRIM_MODE (str): Method used for seismogram trimming. Defaults to dynamic, primarily using the coda information from the catalog.
         SEC_BF_P_ARR_TRIM (float): Time in seconds before P arrival as starting point of trimming.
         SEC_AF_P_ARR_TRIM (float): Time in seconds after P arrival as ending point of trimming.
+        PADDING_BEFORE_ARRIVAL (float): Padding before arrival in seconds (default: 0.1).
+        NOISE_DURATION (float): Noise window duration in seconds (default: 0.5).
+        NOISE_PADDING (float): Noise window padding in seconds (default: 0.2).
     """
     SNR_THRESHOLD: float = 1.75
     WATER_LEVEL: float = 60.0
@@ -124,7 +127,10 @@ class WaveConfig:
     POST_FILTER_F_MAX: float = 50.0
     TRIM_MODE: str = 'dynamic'
     SEC_BF_P_ARR_TRIM: float = 10.0
-    SEC_AF_P_ARR_TRIM: float = 50.0 
+    SEC_AF_P_ARR_TRIM: float = 50.0
+    PADDING_BEFORE_ARRIVAL: float = 0.1
+    NOISE_DURATION: float = 0.5
+    NOISE_PADDING: float = 0.2
 
     def __post_init__(self):
         self.PRE_FILTER = self.PRE_FILTER or [0.01, 0.02, 55, 60]
@@ -135,9 +141,6 @@ class MagnitudeConfig:
     Configuration for magnitude calculation parameters.
 
     Attributes:
-        PADDING_BEFORE_ARRIVAL (float): Padding before arrival in seconds (default: 0.1).
-        NOISE_DURATION (float): Noise window duration in seconds (default: 0.5).
-        NOISE_PADDING (float): Noise window padding in seconds (default: 0.2).
         R_PATTERN_P (float): Radiation pattern for P-waves (default: 0.52).
         R_PATTERN_S (float): Radiation pattern for S-waves (default: 0.63).
         FREE_SURFACE_FACTOR (float): Free surface amplification factor (default: 2.0).
@@ -150,9 +153,6 @@ class MagnitudeConfig:
         TAUP_MODEL (str): ObsPy 1-D Velocity model.
         VELOCITY_MODEL_FILE (str): Path to a JSON file defining the velocity model (default: "", uses built-in model).
     """
-    PADDING_BEFORE_ARRIVAL: float = 0.1
-    NOISE_DURATION: float = 0.5
-    NOISE_PADDING: float = 0.2
     R_PATTERN_P: float = 0.52
     R_PATTERN_S: float = 0.63
     FREE_SURFACE_FACTOR: float = 2.0
@@ -165,7 +165,6 @@ class MagnitudeConfig:
     MW_CONSTANT: float = 6.07
     TAUP_MODEL: str = 'iasp91'
     VELOCITY_MODEL_FILE: str = None
-    
 
     def __post_init__(self):
         self.LAYER_BOUNDARIES = self.LAYER_BOUNDARIES or [
@@ -422,6 +421,15 @@ class Config:
             sec_af_p_arr_trim = self._parse_float(wave_section, "sec_af_arr_trim", self.wave.SEC_AF_P_ARR_TRIM)
             if sec_af_p_arr_trim <= sec_bf_p_arr_trim:
                  raise ValueError("Time after P arrival for trimming must be greater than the time before.")
+            padding_before_arrival = self._parse_float(wave_section, "padding_before_arrival", self.wave.PADDING_BEFORE_ARRIVAL)
+            if padding_before_arrival < 0:
+                raise ValueError("padding_before_arrival must be non-negative")
+            noise_duration = self._parse_float(wave_section, "noise_duration", self.wave.NOISE_DURATION)
+            if noise_duration <= 0:
+                raise ValueError("noise_duration must be positive")
+            noise_padding = self._parse_float(wave_section, "noise_padding", self.wave.NOISE_PADDING)
+            if noise_padding < 0:
+                raise ValueError("noise_padding must be non-negative")
 
             # Reconstruct WaveConfig to trigger __post_init__
             self.wave = WaveConfig(
@@ -433,20 +441,15 @@ class Config:
                 POST_FILTER_F_MAX=post_filter_f_max,
                 TRIM_MODE=trim_mode,
                 SEC_BF_P_ARR_TRIM=sec_bf_p_arr_trim,
-                SEC_AF_P_ARR_TRIM=sec_af_p_arr_trim
+                SEC_AF_P_ARR_TRIM=sec_af_p_arr_trim,
+                PADDING_BEFORE_ARRIVAL=padding_before_arrival,
+                NOISE_DURATION=noise_duration,
+                NOISE_PADDING=noise_padding
             )
+            
         # Load magnitude config section
         if "Magnitude" in config:
             mag_section = config["Magnitude"]
-            padding_before_arrival = self._parse_float(mag_section, "padding_before_arrival", self.magnitude.PADDING_BEFORE_ARRIVAL)
-            if padding_before_arrival < 0:
-                raise ValueError("padding_before_arrival must be non-negative")
-            noise_duration = self._parse_float(mag_section, "noise_duration", self.magnitude.NOISE_DURATION)
-            if noise_duration <= 0:
-                raise ValueError("noise_duration must be positive")
-            noise_padding = self._parse_float(mag_section, "noise_padding", self.magnitude.NOISE_PADDING)
-            if noise_padding < 0:
-                raise ValueError("noise_padding must be non-negative")
             r_pattern_p = self._parse_float(mag_section, "r_pattern_p", self.magnitude.R_PATTERN_P)
             r_pattern_s = self._parse_float(mag_section, "r_pattern_s", self.magnitude.R_PATTERN_S)
             free_surface_factor = self._parse_float(mag_section, "free_surface_factor", self.magnitude.FREE_SURFACE_FACTOR)
@@ -460,9 +463,6 @@ class Config:
             
             # Reconstruct MagnitudeConfig to trigger __post_init__
             self.magnitude = MagnitudeConfig(
-                PADDING_BEFORE_ARRIVAL=padding_before_arrival,
-                NOISE_DURATION=noise_duration,
-                NOISE_PADDING=noise_padding,
                 R_PATTERN_P=r_pattern_p,
                 R_PATTERN_S=r_pattern_s,
                 FREE_SURFACE_FACTOR=free_surface_factor,

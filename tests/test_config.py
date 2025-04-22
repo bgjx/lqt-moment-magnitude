@@ -14,6 +14,9 @@ def test_wave_params():
     expected_trim_mode = 'dynamic'
     expected_sec_bf_p = 10
     expected_sec_af_p = 50
+    expected_padding_bf_arrival = 0.1
+    expected_noise_duration = 0.5
+    expected_noise_padding = 0.2
     assert CONFIG.wave.SNR_THRESHOLD == expected_snr
     assert CONFIG.wave.WATER_LEVEL == expected_water_level
     assert CONFIG.wave.PRE_FILTER == expected_pre_filter
@@ -23,12 +26,12 @@ def test_wave_params():
     assert CONFIG.wave.TRIM_MODE == expected_trim_mode
     assert CONFIG.wave.SEC_BF_P_ARR_TRIM == expected_sec_bf_p
     assert CONFIG.wave.SEC_AF_P_ARR_TRIM == expected_sec_af_p
+    assert CONFIG.wave.PADDING_BEFORE_ARRIVAL == expected_padding_bf_arrival
+    assert CONFIG.wave.NOISE_DURATION == expected_noise_duration
+    assert CONFIG.wave.NOISE_PADDING == expected_noise_padding
 
 def test_magnitude_params():
     """ Check few default magnitude parameters in package default config.ini """
-    expected_padding_bf_arrival = 0.1
-    expected_noise_duration = 0.5
-    expected_noise_padding = 0.2
     expected_r_pattern_p = 0.52
     expected_r_pattern_s = 0.63
     expected_free_surface = 2.0
@@ -38,9 +41,6 @@ def test_magnitude_params():
     expected_taup_model  = 'iasp91'
     expected_velocity_vp = [2.68, 2.99, 3.95, 4.50]
     expected_velocity_vs = [1.60, 1.79, 2.37, 2.69]
-    assert CONFIG.magnitude.PADDING_BEFORE_ARRIVAL == expected_padding_bf_arrival
-    assert CONFIG.magnitude.NOISE_DURATION == expected_noise_duration
-    assert CONFIG.magnitude.NOISE_PADDING == expected_noise_padding
     assert CONFIG.magnitude.R_PATTERN_P == expected_r_pattern_p
     assert CONFIG.magnitude.R_PATTERN_S == expected_r_pattern_s
     assert CONFIG.magnitude.FREE_SURFACE_FACTOR == expected_free_surface

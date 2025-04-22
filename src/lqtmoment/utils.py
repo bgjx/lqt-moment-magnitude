@@ -55,9 +55,12 @@ REQUIRED_PICKING_COLUMNS = [
 REQUIRED_STATION_COLUMNS = ["network_code", "station_code", "lat", "lon", "elev_m"]
 
 REQUIRED_CONFIG = {
-    "magnitude": ["SNR_THRESHOLD", "WATER_LEVEL", "PRE_FILTER", "POST_FILTER_F_MIN",
-                  "POST_FILTER_F_MAX", "PADDING_BEFORE_ARRIVAL", "NOISE_DURATION",
-                  "NOISE_PADDING", "R_PATTERN_P", "R_PATTERN_S", "FREE_SURFACE_FACTOR",
+    "wave": ["SNR_THRESHOLD", "WATER_LEVEL", "PRE_FILTER",
+            "APPLY_POST_INSTRUMENT_REMOVAL_FILTER",
+            "POST_FILTER_F_MIN", "POST_FILTER_F_MAX",
+            "TRIM_MODE", "SEC_BF_P_ARR_TRIM", "SEC_AF_P_ARR_TRIM", 
+            "PADDING_BEFORE_ARRIVAL", "NOISE_DURATION", "NOISE_PADDING"],
+    "magnitude": ["R_PATTERN_P", "R_PATTERN_S", "FREE_SURFACE_FACTOR",
                   "K_P", "K_S", "TAUP_MODEL", "VELOCITY_MODEL_FILE", "MW_CONSTANT"],
     "spectral": ["F_MIN", "F_MAX", "OMEGA_0_RANGE_MIN", "OMEGA_0_RANGE_MAX",
                  "Q_RANGE_MIN", "Q_RANGE_MAX", "FC_RANGE_BUFFER", "DEFAULT_N_SAMPLES",
@@ -324,8 +327,8 @@ def instrument_remove (
             # Remove instrument response
             displacement_trace = trace.remove_response(
                                     inventory = inventory,
-                                    pre_filt = CONFIG.magnitude.PRE_FILTER,
-                                    water_level = CONFIG.magnitude.WATER_LEVEL,
+                                    pre_filt = CONFIG.wave.PRE_FILTER,
+                                    water_level = CONFIG.wave.WATER_LEVEL,
                                     output = 'DISP',
                                     zero_mean = True,
                                     taper = True,

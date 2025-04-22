@@ -128,12 +128,12 @@ def window_trace(
     time_after_pick_s = 2.25 * s_p_time
     
     # Find the data index for phase windowing
-    p_phase_start_index = int((p_arr_time - trace_P.stats.starttime - CONFIG.magnitude.PADDING_BEFORE_ARRIVAL)/trace_P.stats.delta)
+    p_phase_start_index = int((p_arr_time - trace_P.stats.starttime - CONFIG.wave.PADDING_BEFORE_ARRIVAL)/trace_P.stats.delta)
     p_phase_end_index = int((p_arr_time - trace_P.stats.starttime + time_after_pick_p )/trace_P.stats.delta)
-    s_phase_start_index = int((p_arr_time - trace_SV.stats.starttime - CONFIG.magnitude.PADDING_BEFORE_ARRIVAL)/trace_SV.stats.delta)
+    s_phase_start_index = int((p_arr_time - trace_SV.stats.starttime - CONFIG.wave.PADDING_BEFORE_ARRIVAL)/trace_SV.stats.delta)
     s_phase_end_index = int((p_arr_time - trace_SV.stats.starttime + time_after_pick_s )/trace_SV.stats.delta)
-    noise_start_index = int((p_arr_time - trace_P.stats.starttime - CONFIG.magnitude.NOISE_DURATION)/trace_P.stats.delta)                             
-    noise_end_index  = int((p_arr_time - trace_P.stats.starttime - CONFIG.magnitude.NOISE_PADDING )/trace_P.stats.delta)
+    noise_start_index = int((p_arr_time - trace_P.stats.starttime - CONFIG.wave.NOISE_DURATION)/trace_P.stats.delta)                             
+    noise_end_index  = int((p_arr_time - trace_P.stats.starttime - CONFIG.wave.NOISE_PADDING )/trace_P.stats.delta)
 
     # Window the data by the index
     P_data  = trace_P.data[p_phase_start_index : p_phase_end_index + 1]
@@ -298,15 +298,18 @@ def calculate_moment_magnitude(
     """ 
     # Validate all config parameter before doing calculation
     missing_config = []
+    for attr in REQUIRED_CONFIG['wave']:
+        if not hasattr(CONFIG.wave, attr):
+            missing_config.append(f"{attr} (missing in wave config)")
     for attr in REQUIRED_CONFIG['magnitude']:
         if not hasattr(CONFIG.magnitude, attr):
-            missing_config.append(f"{attr} (missing in magnitude)")
+            missing_config.append(f"{attr} (missing in magnitude config)")
     for attr in REQUIRED_CONFIG['spectral']:
         if not hasattr(CONFIG.spectral, attr):
-            missing_config.append(f"{attr} (missing in spectral)")
+            missing_config.append(f"{attr} (missing in spectral config)")
     for attr in REQUIRED_CONFIG['performance']:
         if not hasattr(CONFIG.performance, attr):
-            missing_config.append(f"{attr} (missing in performance)")
+            missing_config.append(f"{attr} (missing in performance config)")
     if missing_config:
         logger.error(f"Earthquake_{source_id}: Missing config attributes: {missing_config}")
         raise ValueError(f"Missing config attributes: {missing_config}")
@@ -407,7 +410,7 @@ def calculate_moment_magnitude(
 
         # Trimming the waveform prior to processing
         try:
-            if CONFIG.wave.TRIM_METHOD == 'dynamic':
+            if CONFIG.wave.TRIM_MODE == 'dynamic':
                 trimmed_stream = wave_trim(stream_copy, 
                                            p_arr_time, 
                                            s_arr_time, 
@@ -463,7 +466,7 @@ def calculate_moment_magnitude(
                                                                                                     lqt_mode=lqt_mode)
         
         # Check the data quality (SNR must be above or equal to 1)
-        if any(trace_snr(data, noise) <= CONFIG.magnitude.SNR_THRESHOLD for data, noise in zip ([p_window_data, sv_window_data, sh_window_data], [p_noise_data, sv_noise_data, sh_noise_data])):
+        if any(trace_snr(data, noise) <= CONFIG.wave.SNR_THRESHOLD for data, noise in zip ([p_window_data, sv_window_data, sh_window_data], [p_noise_data, sv_noise_data, sh_noise_data])):
             logger.warning(f"Earthquake_{source_id}: SNR below threshold for station {station} to calculate moment magnitude")
             continue
             
