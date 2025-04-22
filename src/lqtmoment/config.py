@@ -30,15 +30,20 @@ Usage:
         snr_threshold = 1.25
         water_level = 20.0
         pre_filter = 0.1,0.15,100,125
-        apply_post_instrument_removal_filter = yes
+        apply_post_instrument_removal_filter = true
         post_filter_f_min = 3
         post_filter_f_max = 60
         trim_method = dynamic
         sec_bf_p_arr_trim = 5
         sec_af_p_arr_trim = 25
         padding_before_arrival = 0.1
+        min_p_window = 1.0
+        max_p_window = 10.0
+        min_s_window = 2.0
+        max_s_window = 20.0
         noise_duration = 0.5
         noise_padding = 0.2
+        pad_to_uniform_length = true
 
         [Magnitude]
         r_pattern_p = 0.52
@@ -109,7 +114,7 @@ class WaveConfig:
         SNR_THRESHOLD (float): Minimum signal-to-noise ratio for trace acceptance (default: 1.5).
         WATER_LEVEL (int): Water level for deconvolution stabilization (default: 30).
         PRE_FILTER (List[float]): Bandpass filter corners [f1,f2,f3,f4] in Hz (default: placeholder, override in config.ini).
-        APPLY_POST_INSTRUMENT_REMOVAL_FILTER: If yes, post filter after instrument removal will be applied (default: 'yes').
+        APPLY_POST_INSTRUMENT_REMOVAL_FILTER (bool): If True, post filter after instrument removal will be applied (default: True).
         POST_FILTER_F_MIN (float): Minimum post-filter frequency in Hz (default: 0.1) after instrument removal.
         POST_FILTER_F_MAX (float): Maximum post-filter frequency in Hz (default: 50) after instrument removal.
         TRIM_MODE (str): Mode used for seismogram trimming. Defaults to dynamic, primarily using the coda information from the catalog.
@@ -126,14 +131,14 @@ class WaveConfig:
                                 (default: 20.0).
         NOISE_DURATION (float): Noise window duration in seconds (default: 0.5).
         NOISE_PADDING (float): Noise window padding in seconds (default: 0.2).
-        PAD_TO_UNIFORM_LENGTH (str): If 'yes' zero padding will be added to all phases window,
+        PAD_TO_UNIFORM_LENGTH (bool): If True zero padding will be added to all phases window,
                                     make sure all phases in the same length prior to FFT 
-                                    (default: 'yes').
+                                    (default: True).
     """
     SNR_THRESHOLD: float = 1.75
     WATER_LEVEL: float = 60.0
     PRE_FILTER: List[float] = None
-    APPLY_POST_INSTRUMENT_REMOVAL_FILTER: str = 'yes'
+    APPLY_POST_INSTRUMENT_REMOVAL_FILTER: bool = True
     POST_FILTER_F_MIN: float = 0.1
     POST_FILTER_F_MAX: float = 50.0
     TRIM_MODE: str = 'dynamic'
@@ -146,7 +151,7 @@ class WaveConfig:
     MAX_S_WINDOW: float = 20.0
     NOISE_DURATION: float = 0.5
     NOISE_PADDING: float = 0.2
-    PAD_TO_UNIFORM_LENGTH: str = 'yes'
+    PAD_TO_UNIFORM_LENGTH: bool = True
 
     def __post_init__(self):
         self.PRE_FILTER = self.PRE_FILTER or [0.01, 0.02, 55, 60]
@@ -393,9 +398,7 @@ class Config:
             pre_filter = self._parse_list(wave_section, "pre_filter", "0.01,0.02,55,60")
             if len(pre_filter) != 4 or any(f <=0 for f in pre_filter):
                 raise ValueError("pre_filter must be four positive frequencies (f1, f2, f3, f4)")
-            apply_post_instrument_removal_filter = wave_section.get("apply_post_instrument_removal_filter", fallback=self.wave.APPLY_POST_INSTRUMENT_REMOVAL_FILTER)
-            if apply_post_instrument_removal_filter.lower().strip() not in ['yes', 'no']:
-                raise ValueError("post filter statement must be either 'YES/yes' or 'NO/no'")
+            apply_post_instrument_removal_filter = wave_section.getboolean("apply_post_instrument_removal_filter", fallback=self.wave.APPLY_POST_INSTRUMENT_REMOVAL_FILTER)
             post_filter_f_min = self._parse_float(wave_section, "post_filter_f_min", self.wave.POST_FILTER_F_MIN)
             if post_filter_f_min < 0:
                 raise ValueError("post_filter_f_min must be non negative value")
@@ -432,9 +435,7 @@ class Config:
             noise_padding = self._parse_float(wave_section, "noise_padding", self.wave.NOISE_PADDING)
             if noise_padding < 0:
                 raise ValueError("noise_padding must be non-negative")
-            pad_to_uniform_length = wave_section.get("pad_to_uniform_length", self.wave.PAD_TO_UNIFORM_LENGTH)
-            if pad_to_uniform_length.lower().strip() not in ['yes', 'no']:
-                raise ValueError("uniform length statement must be either 'YES/yes' or 'NO/no'")
+            pad_to_uniform_length = wave_section.getboolean("pad_to_uniform_length", fallback=self.wave.PAD_TO_UNIFORM_LENGTH)
 
             # Reconstruct WaveConfig to trigger __post_init__
             self.wave = WaveConfig(
