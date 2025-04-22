@@ -109,15 +109,26 @@ class WaveConfig:
         SNR_THRESHOLD (float): Minimum signal-to-noise ratio for trace acceptance (default: 1.5).
         WATER_LEVEL (int): Water level for deconvolution stabilization (default: 30).
         PRE_FILTER (List[float]): Bandpass filter corners [f1,f2,f3,f4] in Hz (default: placeholder, override in config.ini).
-        APPLY_POST_INSTRUMENT_REMOVAL_FILTER: Statement to whether use post filter or not after instrument removal.
+        APPLY_POST_INSTRUMENT_REMOVAL_FILTER: If yes, post filter after instrument removal will be applied (default: 'yes').
         POST_FILTER_F_MIN (float): Minimum post-filter frequency in Hz (default: 0.1) after instrument removal.
         POST_FILTER_F_MAX (float): Maximum post-filter frequency in Hz (default: 50) after instrument removal.
-        TRIM_MODE (str): Method used for seismogram trimming. Defaults to dynamic, primarily using the coda information from the catalog.
-        SEC_BF_P_ARR_TRIM (float): Time in seconds before P arrival as starting point of trimming.
-        SEC_AF_P_ARR_TRIM (float): Time in seconds after P arrival as ending point of trimming.
+        TRIM_MODE (str): Mode used for seismogram trimming. Defaults to dynamic, primarily using the coda information from the catalog.
+        SEC_BF_P_ARR_TRIM (float): Time in seconds before P arrival as starting point of trimming (default: 10.0).
+        SEC_AF_P_ARR_TRIM (float): Time in seconds after P arrival as ending point of trimming (default: 50.0).
         PADDING_BEFORE_ARRIVAL (float): Padding before arrival in seconds (default: 0.1).
+        MIN_P_WINDOW (float): Minimum P phase window in second for calculating source spectra
+                                (default: 1.0).
+        MAX_P_WINDOW (float): Maximum P phase window in second for calculating source spectra.
+                                (default: 10.0).
+        MIN_S_WINDOW (float): Minimum S phase window in second for calculating source spectra.
+                                (default: 2.0).
+        MAX_S_WINDOW (float): Maximum S phase window in second for calculating source spectra.
+                                (default: 20.0).
         NOISE_DURATION (float): Noise window duration in seconds (default: 0.5).
         NOISE_PADDING (float): Noise window padding in seconds (default: 0.2).
+        PAD_TO_UNIFORM_LENGTH (str): If 'yes' zero padding will be added to all phases window,
+                                    make sure all phases in the same length prior to FFT 
+                                    (default: 'yes').
     """
     SNR_THRESHOLD: float = 1.75
     WATER_LEVEL: float = 60.0
@@ -129,8 +140,13 @@ class WaveConfig:
     SEC_BF_P_ARR_TRIM: float = 10.0
     SEC_AF_P_ARR_TRIM: float = 50.0
     PADDING_BEFORE_ARRIVAL: float = 0.1
+    MIN_P_WINDOW: float = 1.0
+    MAX_P_WINDOW: float = 10.0
+    MIN_S_WINDOW: float = 2.0
+    MAX_S_WINDOW: float = 20.0
     NOISE_DURATION: float = 0.5
     NOISE_PADDING: float = 0.2
+    PAD_TO_UNIFORM_LENGTH: str = 'yes'
 
     def __post_init__(self):
         self.PRE_FILTER = self.PRE_FILTER or [0.01, 0.02, 55, 60]
@@ -378,7 +394,7 @@ class Config:
             if len(pre_filter) != 4 or any(f <=0 for f in pre_filter):
                 raise ValueError("pre_filter must be four positive frequencies (f1, f2, f3, f4)")
             apply_post_instrument_removal_filter = wave_section.get("apply_post_instrument_removal_filter", fallback=self.wave.APPLY_POST_INSTRUMENT_REMOVAL_FILTER)
-            if apply_post_instrument_removal_filter.lower().strip() not in ('yes', 'no'):
+            if apply_post_instrument_removal_filter.lower().strip() not in ['yes', 'no']:
                 raise ValueError("post filter statement must be either 'YES/yes' or 'NO/no'")
             post_filter_f_min = self._parse_float(wave_section, "post_filter_f_min", self.wave.POST_FILTER_F_MIN)
             if post_filter_f_min < 0:
@@ -387,7 +403,7 @@ class Config:
             if post_filter_f_max <= post_filter_f_min:
                 raise ValueError("post_filter_f_max must be greater than post_filter_f_min")
             trim_mode = wave_section.get("trim_mode", fallback=self.wave.TRIM_MODE)
-            if trim_mode not in ('dynamic', 'static'):
+            if trim_mode not in ['dynamic', 'static']:
                 raise ValueError("trim method must be either 'dynamic' or 'static'")
             sec_bf_p_arr_trim = self._parse_float(wave_section, "sec_bf_arr_trim", self.wave.SEC_BF_P_ARR_TRIM)
             if sec_bf_p_arr_trim < 0:
@@ -398,12 +414,27 @@ class Config:
             padding_before_arrival = self._parse_float(wave_section, "padding_before_arrival", self.wave.PADDING_BEFORE_ARRIVAL)
             if padding_before_arrival < 0:
                 raise ValueError("padding_before_arrival must be non-negative")
+            min_p_window = self._parse_float(wave_section, "min_p_window", self.wave.MIN_P_WINDOW)
+            if min_p_window <= 0:
+                raise ValueError("min_p_window must be positive")
+            max_p_window = self._parse_float(wave_section, "max_p_window", self.wave.MAX_P_WINDOW)
+            if max_p_window < min_p_window:
+                raise ValueError("max_p_window must be greater than min_p_window")
+            min_s_window = self._parse_float(wave_section, "min_s_window", self.wave.MIN_S_WINDOW)
+            if min_s_window <= 0:
+                raise ValueError("min_s_window must be positive")
+            max_s_window = self._parse_float(wave_section, "max_s_window", self.wave.MAX_S_WINDOW)
+            if max_s_window < min_s_window:
+                raise ValueError("max_s_window must be greater than min_s_window")
             noise_duration = self._parse_float(wave_section, "noise_duration", self.wave.NOISE_DURATION)
             if noise_duration <= 0:
                 raise ValueError("noise_duration must be positive")
             noise_padding = self._parse_float(wave_section, "noise_padding", self.wave.NOISE_PADDING)
             if noise_padding < 0:
                 raise ValueError("noise_padding must be non-negative")
+            pad_to_uniform_length = wave_section.get("pad_to_uniform_length", self.wave.PAD_TO_UNIFORM_LENGTH)
+            if pad_to_uniform_length.lower().strip() not in ['yes', 'no']:
+                raise ValueError("uniform length statement must be either 'YES/yes' or 'NO/no'")
 
             # Reconstruct WaveConfig to trigger __post_init__
             self.wave = WaveConfig(
@@ -417,8 +448,13 @@ class Config:
                 SEC_BF_P_ARR_TRIM=sec_bf_p_arr_trim,
                 SEC_AF_P_ARR_TRIM=sec_af_p_arr_trim,
                 PADDING_BEFORE_ARRIVAL=padding_before_arrival,
+                MIN_P_WINDOW=min_p_window,
+                max_p_window=max_p_window,
+                MIN_S_WINDOW=min_s_window,
+                MAX_S_WINDOW=max_s_window,
                 NOISE_DURATION=noise_duration,
-                NOISE_PADDING=noise_padding
+                NOISE_PADDING=noise_padding,
+                PAD_TO_UNIFORM_LENGTH=pad_to_uniform_length
             )
             
         # Load magnitude config section
