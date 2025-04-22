@@ -17,13 +17,13 @@ Usage:
     configuration:
 
     ```python
-    from lqt_moment_magnitude.config import CONFIG
-    print(CONFIG.magnitude.SNR_THRESHOLD)  # Access magnitude configuration
-    print(CONFIG.spectral.F_MIN)          # Access spectral configuration
+        from lqt_moment_magnitude.config import CONFIG
+        print(CONFIG.wave.SNR_THRESHOLD)      # Access wave configuration
+        print(CONFIG.spectral.F_MIN)          # Access spectral configuration
     ```
 
-    To override the configuration, create a `config.ini` file in the parent directory with the
-    following structure:
+    To override the configuration, create a `config.ini` file in the parent working 
+    directory with the following structure:
 
     ```ini
         [Wave]
@@ -33,14 +33,14 @@ Usage:
         apply_post_instrument_removal_filter = yes
         post_filter_f_min = 3
         post_filter_f_max = 60
-        trim_mode = dynamic
+        trim_method = dynamic
         sec_bf_p_arr_trim = 5
         sec_af_p_arr_trim = 25
-
-        [Magnitude]
         padding_before_arrival = 0.1
         noise_duration = 0.5
         noise_padding = 0.2
+
+        [Magnitude]
         r_pattern_p = 0.52
         r_pattern_s = 0.63
         free_surface_factor = 2.0
@@ -71,18 +71,18 @@ Usage:
     following structure:
 
     ```json
-    {
-        "layer_boundaries": [[-3.00, -1.90], [-1.90, -0.59], [-0.59, 0.22], [0.22, 2.50]],
-        "velocity_vp": [2.68, 2.99, 3.95, 4.50],
-        "velocity_vs": [1.60, 1.79, 2.37, 2.69],
-        "density": [2700, 2700, 2700, 2700]
-    }
+        {
+            "layer_boundaries": [[-3.00, -1.90], [-1.90, -0.59], [-0.59, 0.22], [0.22, 2.50]],
+            "velocity_vp": [2.68, 2.99, 3.95, 4.50],
+            "velocity_vs": [1.60, 1.79, 2.37, 2.69],
+            "density": [2700, 2700, 2700, 2700]
+        }
     ```
 
     You can also reload the configuration from a custom file:
 
     ```python
-    CONFIG.reload(config_file="new_config.ini")
+        CONFIG.reload(config_file="new_config.ini")
     ```
 """
 
@@ -266,34 +266,8 @@ class Config:
     A config class for combines magnitude, spectral, and performance configurations with loading from INI file.
 
     The configuration is loaded from a `config.ini` file, with fallback to defaults if the file
-    or specific parameters are not found. The INI file should have the following structure:
+    or specific parameters are not found.
 
-    Example:
-        ```ini
-            [Magnitude]
-            snr_threshold = 2.0
-            pre_filter = 0.01,0.02,55,60
-            velocity_model_file = "data/config/velocity_model.json"
-
-            [Spectral]
-            f_min = 0.5
-            f_max = 40.0
-            default_n_samples = 2000
-
-            [Performance]
-            use_parallel = true
-            logging_level = "DEBUG"
-        ```
-    
-    The `velocity_model.json` file should have the following structure:
-    ```json
-    {
-        "layer_boundaries": [[-3.00, -1.90], [-1.90, -0.59], [-0.59, 0.22], [0.22, 2.50]],
-        "velocity_vp": [2.68, 2.99, 3.95, 4.50],
-        "velocity_vs": [1.60, 1.79, 2.37, 2.69],
-        "density": [2700, 2700, 2700, 2700]
-    }
-    ```    
     """
     def __init__(self):
         self.wave = WaveConfig()
