@@ -8,15 +8,20 @@ def test_wave_params():
     expected_snr = 1.75
     expected_water_level = 60
     expected_pre_filter = [0.01, 0.02, 55, 60]
-    expected_post_filter_statement = 'yes'
+    expected_post_filter_statement = True
     expected_post_filter_f_min = 0.1
     expected_post_filter_f_max = 50
     expected_trim_mode = 'dynamic'
     expected_sec_bf_p = 10
     expected_sec_af_p = 50
     expected_padding_bf_arrival = 0.1
+    expected_min_p_window = 1.0
+    expected_max_p_window = 10.0
+    expected_min_s_window = 2.0
+    expected_max_s_window = 20.0
     expected_noise_duration = 0.5
     expected_noise_padding = 0.2
+    expected_pad_uniform = True
     assert CONFIG.wave.SNR_THRESHOLD == expected_snr
     assert CONFIG.wave.WATER_LEVEL == expected_water_level
     assert CONFIG.wave.PRE_FILTER == expected_pre_filter
@@ -27,8 +32,13 @@ def test_wave_params():
     assert CONFIG.wave.SEC_BF_P_ARR_TRIM == expected_sec_bf_p
     assert CONFIG.wave.SEC_AF_P_ARR_TRIM == expected_sec_af_p
     assert CONFIG.wave.PADDING_BEFORE_ARRIVAL == expected_padding_bf_arrival
+    assert CONFIG.wave.MIN_P_WINDOW == expected_min_p_window
+    assert CONFIG.wave.MAX_P_WINDOW == expected_max_p_window
+    assert CONFIG.wave.MIN_S_WINDOW == expected_min_s_window
+    assert CONFIG.wave.MAX_S_WINDOW == expected_max_s_window
     assert CONFIG.wave.NOISE_DURATION == expected_noise_duration
     assert CONFIG.wave.NOISE_PADDING == expected_noise_padding
+    assert CONFIG.wave.PAD_TO_UNIFORM_LENGTH == expected_pad_uniform
 
 def test_magnitude_params():
     """ Check few default magnitude parameters in package default config.ini """

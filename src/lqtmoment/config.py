@@ -450,7 +450,7 @@ class Config:
                 SEC_AF_P_ARR_TRIM=sec_af_p_arr_trim,
                 PADDING_BEFORE_ARRIVAL=padding_before_arrival,
                 MIN_P_WINDOW=min_p_window,
-                max_p_window=max_p_window,
+                MAX_P_WINDOW=max_p_window,
                 MIN_S_WINDOW=min_s_window,
                 MAX_S_WINDOW=max_s_window,
                 NOISE_DURATION=noise_duration,
