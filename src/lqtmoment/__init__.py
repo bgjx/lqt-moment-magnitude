@@ -19,13 +19,13 @@ For programmatic use, import as `lqtmoment` (alias for `lqt_moment_magnitude`):
     >>> from lqtmoment import magnitude_estimator
     >>> import pandas as pd
     >>> catalog_df = pd.DataFrame({'event_id': [1], 'time': ['2023-01-01T00:00:00']})
-    >>> result_df, fitting_df = magnitude_estimator(
-    ...     wave_dir="data/waveforms",
-    ...     cal_dir="data/calibration",
-    ...     fig_dir="figures",
-    ...     catalog_df=catalog_df,
-    ...     config_file="config.ini"
-    ... )
+    >>> merged_catalog_df, result_df, fitting_df = magnitude_estimator(
+    ...                                             wave_dir="data/waveforms",
+    ...                                             cal_dir="data/calibration",
+    ...                                             fig_dir="figures",
+    ...                                             catalog_df=catalog_df,
+    ...                                             config_file="config.ini"
+    ...                                             )
 
 For CLI use, run:
     $ lqtmoment --help
