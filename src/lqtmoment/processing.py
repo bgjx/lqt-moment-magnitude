@@ -72,7 +72,6 @@ def calculate_seismic_spectra(
     # Zero pad to next power of 2 for FFT efficiency and resolution
     n_samples = len(trace_data_processed)
     nfft = _npts2nfft(n_samples)
-    logger.info(f"N_SAMPLES: {n_samples}, NFFFT: {nfft}")
     padded_data = np.pad(trace_data_processed, (0, nfft - n_samples), mode='constant')
 
     # Compute the FFT and single-sided spectrum
