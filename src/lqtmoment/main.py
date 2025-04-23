@@ -37,7 +37,7 @@ def main(args: Optional[List[str]] = None) -> None:
     calculation process.
 
     Args:
-        args (List[str], Optional): Command-line arguments. Defaults to sys.argv[1:] if None.
+        args (Optional[List[str]]): Command-line arguments. Defaults to sys.argv[1:] if None.
 
     Returns:
         None: This function saves results to Excel files and logs the process.
