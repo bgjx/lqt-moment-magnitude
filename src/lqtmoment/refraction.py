@@ -1,5 +1,5 @@
 """
-Functionality module for lqt-moment-magnitude package.
+Refraction module for lqt-moment-magnitude package.
 
 Version: 0.1.1
 

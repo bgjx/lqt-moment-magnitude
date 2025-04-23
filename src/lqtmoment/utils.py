@@ -1,5 +1,5 @@
 """
-Functionality module for lqt-moment-magnitude package.
+Utilities module for lqt-moment-magnitude package.
 
 Version: 0.1.1
 
