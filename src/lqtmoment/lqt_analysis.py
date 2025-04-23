@@ -16,7 +16,7 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go 
 import plotly.express as px
-from typing import Optional, List, Callable, Tuple, Dict
+from typing import Optional, Dict
 from scipy.stats import linregress
 from enum import Enum
 from datetime import datetime
@@ -270,7 +270,7 @@ class LqtAnalysis:
         self,
         column_name: str,
         bin_width: Optional[float] = None,
-        save_figure: Optional[bool] = False
+        save_figure: bool = False
         ) -> None:
         """
         Plot a histogram for the specific column.
@@ -279,7 +279,7 @@ class LqtAnalysis:
             column_name (str): Name of the column to plot the histogram for.
             bin_width (Optional[float]): Determine the bin width. Defaults to None,
                                         trigger automatic binning.
-            save_figure (Optional[bool]): If true, save the plot. Defaults to False.
+            save_figure (bool): If true, save the plot. Defaults to False.
         
         Returns:
             None
@@ -351,7 +351,7 @@ class LqtAnalysis:
         depth_column: str,
         color_by: Optional[str] = None ,
         size_by: Optional[str] = None,
-        save_figure: Optional[bool] = False
+        save_figure: bool = False
         ) -> None:
         """
         Create interactive 2D or 3D hypocenter plot.
@@ -364,7 +364,7 @@ class LqtAnalysis:
                                         use single color.
             size_by (Optional[str]): Name of the column to map size points by. If None,
                                         use default size.
-            save_figure (Optional[bool]): If True, save the plot.
+            save_figure (bool): If True, save the plot.
         
         Raises:
             KeyError: If any specified column does not exist in the DataFrame.
@@ -442,7 +442,7 @@ class LqtAnalysis:
         lon_column: str,
         color_by: Optional[str] = None ,
         size_by: Optional[str] = None,
-        save_figure: Optional[bool] = False
+        save_figure: bool = False
         ) -> None:
         """
         Create interactive 2D or 3D hypocenter plot.
@@ -454,7 +454,7 @@ class LqtAnalysis:
                                         use single color.
             size_by (Optional[str]): Name of the column to map size points by. If None,
                                         use default size.
-            save_figure (Optional[bool]): If True, save the plot.
+            save_figure (bool): If True, save the plot.
         
         Raises:
             KeyError: If any specified column does not exist in the DataFrame.
@@ -519,24 +519,24 @@ class LqtAnalysis:
 
     def gutenberg_richter(
         self,
-        column_name: Optional[str] = 'magnitude',
+        column_name: str = 'magnitude',
         min_magnitude: Optional[float] = None,
         bin_width: float = 0.1,
-        plot: Optional[bool] = True,
-        save_figure: Optional[bool] = False
+        plot: bool = True,
+        save_figure: bool = False
         ) -> Dict:
         """
         Compute Gutenberg-Richter magnitude-frequency analysis and estimate the b-value.
 
         Args:
-            column_name (Optional[str]): Name of the magnitude column. Defaults to 'magnitude'.
+            column_name (str): Name of the magnitude column. Defaults to 'magnitude'.
             min_magnitude (Optional[float]): Minimum magnitude threshold. If None, uses the
                                             minimum in the catalog.
-            bin_width (Optional[float]): Width of magnitudes bins (e.g., 0.1 for 0.1-unit bins).
+            bin_width (float): Width of magnitudes bins (e.g., 0.1 for 0.1-unit bins).
                                             Default is True.
-            plot(Optional[bool]): If True, display a plot of the Gutenberg-Richter relationship. 
+            plot(bool): If True, display a plot of the Gutenberg-Richter relationship. 
                                     Defaults is True.
-            save_figure (Optional[bool]): If true, save the plot. Defaults to False.
+            save_figure (bool): If true, save the plot. Defaults to False.
         
         Returns:
             dict object contains:
