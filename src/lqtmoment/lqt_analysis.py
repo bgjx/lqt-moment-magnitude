@@ -21,8 +21,8 @@ from scipy.stats import linregress
 from enum import Enum
 from datetime import datetime
 
-from .utils import load_data
 
+from .utils import load_data
 
 class Statistic(Enum):
     "Enumeration for statistical operations."

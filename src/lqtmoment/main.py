@@ -31,9 +31,7 @@ except ImportError as e:
     raise ImportError("Failed to import processing module. Ensure lqtmoment is installed correctly.") from e
 
 
-# Set up logging handler
 logger = setup_logging()
-
 
 def main(args: Optional[List[str]] = None) -> None:
     """ 

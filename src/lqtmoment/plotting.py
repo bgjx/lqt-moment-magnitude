@@ -21,6 +21,7 @@ import matplotlib.colors as mcolors
 
 from .config import CONFIG
 
+
 logger = logging.getLogger("lqtmoment")
 
 def plot_spectral_fitting(

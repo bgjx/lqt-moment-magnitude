@@ -24,6 +24,7 @@ from obspy import Stream, read, read_inventory, UTCDateTime
 
 from .config import CONFIG
 
+
 logger = logging.getLogger("lqtmoment")
 
 REQUIRED_CATALOG_COLUMNS = [

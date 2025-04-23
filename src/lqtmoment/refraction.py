@@ -27,8 +27,9 @@ from scipy.signal import welch
 from .plotting import plot_rays
 from .config import CONFIG
 
-# Set logging logger
+
 logger = logging.getLogger("lqtmoment")
+
 # Global parameters
 ANGLE_BOUNDS = (0.01, 89.99)
 
