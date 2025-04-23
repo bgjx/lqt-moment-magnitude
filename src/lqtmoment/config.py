@@ -16,7 +16,7 @@ Examples:
     The `CONFIG` object is automatically loaded when the module is imported. To use the default
     configuration:
 
-    ```python
+    ``` python
         from lqt_moment_magnitude.config import CONFIG
         print(CONFIG.wave.SNR_THRESHOLD)      # Access wave configuration
         print(CONFIG.spectral.F_MIN)          # Access spectral configuration
@@ -25,7 +25,7 @@ Examples:
     To override the configuration, create a `config.ini` file in the parent working 
     directory with the following structure:
 
-    ```ini
+    ``` ini
         [Wave]
         snr_threshold = 1.25
         water_level = 20.0
@@ -75,7 +75,7 @@ Examples:
     For custom velocity model, the "velocity_model.json" file should have the 
     following structure:
 
-    ```json
+    ``` json
         {
             "layer_boundaries": [[-3.00, -1.90], [-1.90, -0.59], [-0.59, 0.22], [0.22, 2.50]],
             "velocity_vp": [2.68, 2.99, 3.95, 4.50],
@@ -86,7 +86,7 @@ Examples:
 
     You can also reload the configuration from a custom file:
 
-    ```python
+    ``` python
         CONFIG.reload(config_file="new_config.ini")
     ```
 """
