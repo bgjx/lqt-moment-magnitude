@@ -32,7 +32,7 @@ from scipy.signal import windows
 from tqdm import tqdm
 
 from .config import CONFIG
-from .fitting_spectral import fit_spectrum_bayesian, fit_spectrum_grid_search, fit_spectrum_qmc
+from .fitting_spectral import fit_spectrum_qmc
 from .refraction import calculate_inc_angle
 from .plotting import plot_spectral_fitting
 from .utils import instrument_remove, read_waveforms, trace_snr, wave_trim, REQUIRED_CONFIG
