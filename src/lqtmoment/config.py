@@ -499,7 +499,7 @@ class Config:
         if "Spectral" in config:
             spec_section = config["Spectral"]
             self.spectral.SMOOTH_WINDOW_SIZE = self._parse_int(spec_section, "smooth_window_size", self.spectral.SMOOTH_WINDOW_SIZE)
-            if (self.spectral.SMOOTH_WINDOW_SIZE is not None and self.spectral.SMOOTH_WINDOW_SIZE % 2 == 0) or self.spectral.SMOOTH_WINDOW_SIZE < 0 :
+            if (self.spectral.SMOOTH_WINDOW_SIZE is not None and self.spectral.SMOOTH_WINDOW_SIZE % 2 == 0) or (self.spectral.SMOOTH_WINDOW_SIZE is not None and self.spectral.SMOOTH_WINDOW_SIZE < 0) :
                 raise ValueError("smooth_window_size must be odd positive value or None")
             self.spectral.F_MIN = self._parse_float(spec_section, "f_min", self.spectral.F_MIN)
             if self.spectral.F_MIN <= 0:
