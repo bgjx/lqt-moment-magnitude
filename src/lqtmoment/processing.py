@@ -45,6 +45,7 @@ def calculate_seismic_spectra(
     sampling_rate: float,
     freq_min: Optional[float] = None,
     freq_max: Optional[float] = None,
+    smooth_window_size: Optional[int] = None,
     ) -> Tuple[np.ndarray, np.ndarray]:
     """
     Calculates the single-sided displacement amplitude spectrum of a seismogram using FFT.
@@ -55,7 +56,8 @@ def calculate_seismic_spectra(
         sampling_rate (float): Sampling rate of the signal in Hz.
         freq_min (Optional[float]): Minimum frequency to include in output (Hz). Default to None.
         freq_max (Optional[float]): Maximum frequency to include in output (Hz). Default to None.
-
+        smooth_window_size (Optional[int]): Size of the moving average window for smoothing.
+                                          If None, no smoothing is applied. Must be odd.
     Returns:
         Tuple[np.ndarray, np.ndarray]: 
             - frequencies: Array of sample frequencies in Hz.
@@ -97,6 +99,11 @@ def calculate_seismic_spectra(
             mask &= frequencies <= freq_max
         frequencies = frequencies[mask]
         amplitudes = amplitudes[mask]
+    
+    # Apply moving average smoothing if specified
+    if smooth_window_size is not None:
+        smoothing_window = np.ones(smooth_window_size)/smooth_window_size
+        amplitudes = np.convolve(amplitudes, smoothing_window, mode='same')
 
     return frequencies, amplitudes
 
@@ -530,14 +537,14 @@ def calculate_moment_magnitude(
 
         try:
             # Calculate source spectra
-            freq_P , spec_P  = calculate_seismic_spectra(p_window_data, fs, freq_min=CONFIG.spectral.F_MIN, freq_max=CONFIG.spectral.F_MAX)
-            freq_SV, spec_SV = calculate_seismic_spectra(sv_window_data, fs, freq_min=CONFIG.spectral.F_MIN, freq_max=CONFIG.spectral.F_MAX)
-            freq_SH, spec_SH = calculate_seismic_spectra(sh_window_data, fs, freq_min=CONFIG.spectral.F_MIN, freq_max=CONFIG.spectral.F_MAX)
+            freq_P , spec_P  = calculate_seismic_spectra(p_window_data, fs, freq_min=CONFIG.spectral.F_MIN, freq_max=CONFIG.spectral.F_MAX, smooth_window_size=5)
+            freq_SV, spec_SV = calculate_seismic_spectra(sv_window_data, fs, freq_min=CONFIG.spectral.F_MIN, freq_max=CONFIG.spectral.F_MAX, smooth_window_size=5)
+            freq_SH, spec_SH = calculate_seismic_spectra(sh_window_data, fs, freq_min=CONFIG.spectral.F_MIN, freq_max=CONFIG.spectral.F_MAX, smooth_window_size=5)
             
             # Calculate the noise spectra
-            freq_N_P,  spec_N_P  = calculate_seismic_spectra(p_noise_data, fs, freq_min=CONFIG.spectral.F_MIN, freq_max=CONFIG.spectral.F_MAX)
-            freq_N_SV, spec_N_SV = calculate_seismic_spectra(sv_noise_data, fs, freq_min=CONFIG.spectral.F_MIN, freq_max=CONFIG.spectral.F_MAX)
-            freq_N_SH, spec_N_SH = calculate_seismic_spectra(sh_noise_data, fs, freq_min=CONFIG.spectral.F_MIN, freq_max=CONFIG.spectral.F_MAX)
+            freq_N_P,  spec_N_P  = calculate_seismic_spectra(p_noise_data, fs, freq_min=CONFIG.spectral.F_MIN, freq_max=CONFIG.spectral.F_MAX, smooth_window_size=5)
+            freq_N_SV, spec_N_SV = calculate_seismic_spectra(sv_noise_data, fs, freq_min=CONFIG.spectral.F_MIN, freq_max=CONFIG.spectral.F_MAX, smooth_window_size=5)
+            freq_N_SH, spec_N_SH = calculate_seismic_spectra(sh_noise_data, fs, freq_min=CONFIG.spectral.F_MIN, freq_max=CONFIG.spectral.F_MAX, smooth_window_size=5)
         except (ValueError, RuntimeError) as e:
             logger.warning(f"Earthquake_{source_id}: An error occurred during spectra calculation for station {station}, {e}.", exc_info=True)
             continue

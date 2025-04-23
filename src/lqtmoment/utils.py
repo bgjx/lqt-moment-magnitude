@@ -337,7 +337,7 @@ def instrument_remove (
                                     plot = plot_path
                                     )
             # Re-detrend the trace
-            displacement_trace.detrend("linear")
+            displacement_trace.detrend("demean")
             
             # Add the processed trace to the Stream
             displacement_stream+=displacement_trace
