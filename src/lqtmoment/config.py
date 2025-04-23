@@ -12,7 +12,7 @@ Default values are defined in the dataclasses, but users can override them by pr
 Dependencies:
     - See `pyproject.toml` or `pip install lqtmoment` for required packages.
 
-Usage:
+Examples:
     The `CONFIG` object is automatically loaded when the module is imported. To use the default
     configuration:
 

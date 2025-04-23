@@ -42,11 +42,13 @@ class LqtAnalysis:
         data (pd.DataFrame): The lqtmoment-formatted catalog data stored as pandas
                             DataFrame.   
 
-    Usage:
+    Examples:
+    ``` python
         >>> from lqtmoment.analysis import LqtAnalysis, load_catalog
         >>> lqt_data = load_catalog(r"tests/data/catalog/")
         >>> mw_average = lqt_data.average('magnitude')
-        >>> lqt_data.plot_histogram('magnitude') 
+        >>> lqt_data.plot_histogram('magnitude')
+    ``` 
     """
     def __init__(self, dataframe: Optional[pd.DataFrame] = None):
         """
@@ -136,11 +138,13 @@ class LqtAnalysis:
             KeyError: If column_name does not exist.
             ValueError: If data is invalid.
         
-        Usage:
+        Examples:
+        ``` python
             >>> df = pd.DataFrame({"magnitude": [1, 2, 3]})
             >>> lqt = LqtAnalysis(df)
             >>> lqt.compute_statistic("magnitude", Statistic.MEAN)
             2.0
+        ```
         """
         data = self._clean_column(column_name)
         statistic_function = {
@@ -172,7 +176,8 @@ class LqtAnalysis:
         Raises:
             ValueError: Unmatched string format input.
         
-        Usage:
+        Examples:
+        ``` python
             >>> df = pd.DataFrame({
             ...     "lat": [34.0, 34.1], "lon": [-118.0, -118.1],
             ...     "depth": [10, 12], "magnitude": [3.0, 3.5]
@@ -182,6 +187,7 @@ class LqtAnalysis:
             ...             min_tame = '2025-09-22 10:10:01',
             ...             max_time = '2025-09-25 10:10:01'
             ... )
+        ```
         """
         try:
             min_datetime = datetime.strptime(min_time, '%Y-%m-%d %H:%M:%S')
@@ -221,7 +227,8 @@ class LqtAnalysis:
         Raises:
             ValueError: Rectangle area outside the main DataFrame.
 
-        Usage:
+        Examples:
+        ``` python
             >>> df = pd.DataFrame({
             ...     "lat": [34.0, 34.1], "lon": [-118.0, -118.1],
             ...     "depth": [10, 12], "magnitude": [3.0, 3.5]
@@ -232,7 +239,8 @@ class LqtAnalysis:
             ...             max_latitude = 34.1,
             ...             min_longitude = -118.1,
             ...             max_longitude = -118.0,
-            ... )        
+            ... )
+        ```     
         """
         self._validate_geo_columns(min_latitude, min_longitude)
         self._validate_geo_columns(max_latitude, max_longitude)
@@ -280,10 +288,12 @@ class LqtAnalysis:
             KeyError: If the column_name does not exist in the DataFrame.
             ValueError: If no DataFrame is provided, the column is empty, or it contains no valid numeric data.
 
-        Usage:
+        Examples:
+        ``` python
             >>> df = pd.DataFrame({"magnitude": [1, 2, 2, 3]})
             >>> lqt = LqtAnalysis(df)
-            >>> lqt.plot_histogram("magnitude", bin_width=0.5)        
+            >>> lqt.plot_histogram("magnitude", bin_width=0.5)
+        ```       
         """
         data = self._clean_column(column_name).dropna()
 
@@ -360,13 +370,15 @@ class LqtAnalysis:
             KeyError: If any specified column does not exist in the DataFrame.
             ValueError: If no DataFrame is provided, columns are empty, or contain no valid numeric data.
 
-        Usage:
+        Examples:
+        ``` python
             >>> df = pd.DataFrame({
             ...     "lat": [34.0, 34.1], "lon": [-118.0, -118.1],
             ...     "depth": [10, 12], "magnitude": [3.0, 3.5]
             ... })
             >>> lqt = LqtAnalysis(df)
-            >>> lqt.plot_hypocenter_3d("lat", "lon", "depth", color_by="magnitude")      
+            >>> lqt.plot_hypocenter_3d("lat", "lon", "depth", color_by="magnitude")
+        ```    
         """
         if self.data is None:
             raise ValueError("No DataFrame provided")
@@ -448,8 +460,10 @@ class LqtAnalysis:
             KeyError: If any specified column does not exist in the DataFrame.
             ValueError: If no DataFrame is provided, columns are empty, or contain no valid numeric data.
 
-        Usage:
-            >>> lqt.plot_hypocenter_2d("lat", "lon", color_by="magnitude")    
+        Examples:
+        ``` python
+            >>> lqt.plot_hypocenter_2d("lat", "lon", color_by="magnitude")
+        ```  
         """
 
         if self.data is None:
@@ -537,11 +551,13 @@ class LqtAnalysis:
             ValueError: If no DataFrame is provided, the column is empty, contains no valid numeric data,
                     or insufficient data for fitting. 
 
-        Usage:
+        Examples:
+        ``` python
             >>> df = pd.DataFrame({"magnitude": [3.0, 3.5, 4.0, 4.5, 5.0]})
             >>> lqt = LqtAnalysis(df)
             >>> result = lqt.gutenberg_richter(bin_width=0.5)
-            >>> print(result['b_value'])    
+            >>> print(result['b_value'])
+        ```
         """
         if bin_width <= 0:
             raise ValueError("bind_width must be positive")

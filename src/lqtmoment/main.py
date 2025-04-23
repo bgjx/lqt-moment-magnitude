@@ -8,11 +8,6 @@ in the LQT component system.
 
 Dependencies:
     - See `pyproject.toml` or `pip install lqtmoment` for required packages.
-
-Usage:
-    $ lqtmoment --help
-    $ lqtmoment --wave-dir data/waveforms --catalog-file data/catalog/lqt_catalog.xlsx
-    $ lqtmoment --wave-dir data/waveforms --catalog-file data/catalog/lqt_catalog.xlsx --config data/new_config.ini
 """
 
 import sys
@@ -52,10 +47,12 @@ def main(args: Optional[List[str]] = None) -> None:
         PermissionError: If directories cannot be created.
         ValueError: If calculation output is invalid.
     
-    Example:
+    Examples:
+    ``` bash
+        $ lqtmoment --help
         $ lqtmoment --wave-dir data/waveforms --catalog-file data/catalog/lqt_catalog.xlsx
-        $ lqtmoment --wave-dir data/waveforms --catalog-file data/catalog/lqt_catalog.xlsx --config-file data/new_config.ini
-
+        $ lqtmoment --wave-dir data/waveforms --catalog-file data/catalog/lqt_catalog.xlsx --config data/new_config.ini
+    ```
     """
     parser = argparse.ArgumentParser(description="Calculate moment magnitude in full LQT component.")
     parser.add_argument(

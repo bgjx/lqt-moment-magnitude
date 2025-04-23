@@ -9,17 +9,6 @@ component system. Users can import and use these functions in their own Python s
 Dependencies:
     - See `pyproject.toml` or `pip install lqtmoment` for required packages.
 
-Usage:
-    >>> from lqtmoment import magnitude_estimator
-    >>> merged_catalog_df, result_df, fitting_df = magnitude_estimator(
-    ...                                             wave_dir = "data/waveforms",  
-    ...                                             cal_dir = "data/calibration"
-    ...                                             catalog_dir = "data/catalog/catalog.xlsx",
-    ...                                             config_file = "data/new_config.ini",
-    ...                                             generate_figure = True,
-    ...                                             fig_dir = "results/figures",
-    ... )
-
 Notes:
     - `catalog_df` should contain columns like 'source_id', 'source_lat' and so on... (see documentation for full schema).
     - See https://github.com/bgjx/lqt-moment-magnitude for detailed usage and configuration options.
@@ -86,6 +75,19 @@ def magnitude_estimator(
         FileNotFoundError: If input directories or config file do not exist.
         ValueError: If the catalog is empty or calculation fails.
         PermissionError: If output directories cannot be created.
+    
+    Examples:
+    ``` python
+        >>> from lqtmoment import magnitude_estimator
+        >>> merged_catalog_df, result_df, fitting_df = magnitude_estimator(
+        ...                                             wave_dir = "data/waveforms",  
+        ...                                             cal_dir = "data/calibration"
+        ...                                             catalog_dir = "data/catalog/catalog.xlsx",
+        ...                                             config_file = "data/new_config.ini",
+        ...                                             generate_figure = True,
+        ...                                             fig_dir = "results/figures",
+        ... )
+    ``` 
     """
     # Convert string paths to Path objects
     wave_dir = Path(wave_dir)

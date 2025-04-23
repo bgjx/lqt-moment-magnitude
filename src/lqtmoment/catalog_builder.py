@@ -38,6 +38,15 @@ def build_catalog(
 
     Returns:
         pd.DataFrame : Dataframe object of combined catalog.
+    
+    Examples:
+    ``` python
+        >>> catalog_df = build_catalog(
+        ...                 hypo_dir = "data\catalog\hypo_catalog.xlsx",
+        ...                 picks_dir = "data\catalog\picking_catalog.xlsx",
+        ...                 station_dir = "data\station\station.xlsx"
+        ... )
+    ```
 
     """
     # Convert string paths to Path objects
