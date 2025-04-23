@@ -280,8 +280,6 @@ def wave_trim(
     return stream
 
 
-
-
 def instrument_remove (
     stream: Stream, 
     calibration_path: Path, 
