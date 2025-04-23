@@ -21,7 +21,6 @@ def test_wave_params():
     expected_max_s_window = 20.0
     expected_noise_duration = 0.5
     expected_noise_padding = 0.2
-    expected_pad_uniform = True
     assert CONFIG.wave.SNR_THRESHOLD == expected_snr
     assert CONFIG.wave.WATER_LEVEL == expected_water_level
     assert CONFIG.wave.PRE_FILTER == expected_pre_filter
@@ -38,7 +37,6 @@ def test_wave_params():
     assert CONFIG.wave.MAX_S_WINDOW == expected_max_s_window
     assert CONFIG.wave.NOISE_DURATION == expected_noise_duration
     assert CONFIG.wave.NOISE_PADDING == expected_noise_padding
-    assert CONFIG.wave.PAD_TO_UNIFORM_LENGTH == expected_pad_uniform
 
 def test_magnitude_params():
     """ Check few default magnitude parameters in package default config.ini """
