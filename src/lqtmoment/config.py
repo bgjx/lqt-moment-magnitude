@@ -55,6 +55,7 @@ Examples:
         velocity_model_file = velocity_model.json
 
         [Spectral]
+        smooth_window_size = 3
         f_min = 1
         f_max = 50
         omega_0_range_min = 0.001
@@ -240,6 +241,8 @@ class SpectralConfig:
     Configuration for spectral fitting parameters.
     
     Attributes:
+        SMOOTH_WINDOW_SIZE (int): Size of the moving average window for smoothing,
+                                    must be odd positive, if None no smoothing applied (default: 3).
         F_MIN (float): Minimum frequency for fitting in Hz (default: 1.0).
         F_MAX (float): Maximum frequency for fitting in Hz (default: 45.0).
         OMEGA_0_RANGE_MIN (float): Minimum Omega_0 in nm/Hz (default: 0.01).
@@ -251,6 +254,7 @@ class SpectralConfig:
         N_FACTOR (int): Brune model n factor for spectral decay (default: 2).
         Y_FACTOR (int): Brune model y factor for spectral decay (default: 1).
     """
+    SMOOTH_WINDOW_SIZE: int = 3
     F_MIN: float = 0.1
     F_MAX: float = 45.0
     OMEGA_0_RANGE_MIN: float = 0.01
@@ -328,13 +332,16 @@ class Config:
             fallback: Fallback value if key is not found.
         
         Returns:
-            int: Parsed integer value.
+            int or None: Parsed integer value or None if specified.
         
         Raises:
             ValueError: If the value cannot be parsed as an integer.
         """
+        raw_value = config_section.get(key, fallback=str(fallback))
+        if raw_value is None or raw_value.strip().lower() in ['none', '']:
+            return None
         try:
-            value = config_section.getint(key, fallback=fallback)
+            value = int(raw_value)
             return value
         except ValueError as e:
             raise ValueError(f"Invalid int for {key} in config.ini: {e}")
@@ -491,6 +498,9 @@ class Config:
         # Load spectral config section
         if "Spectral" in config:
             spec_section = config["Spectral"]
+            self.spectral.SMOOTH_WINDOW_SIZE = self._parse_int(spec_section, "smooth_window_size", self.spectral.SMOOTH_WINDOW_SIZE)
+            if (self.spectral.SMOOTH_WINDOW_SIZE is not None and self.spectral.SMOOTH_WINDOW_SIZE % 2 == 0) or self.spectral.SMOOTH_WINDOW_SIZE < 0 :
+                raise ValueError("smooth_window_size must be odd positive value or None")
             self.spectral.F_MIN = self._parse_float(spec_section, "f_min", self.spectral.F_MIN)
             if self.spectral.F_MIN <= 0:
                 raise ValueError("f_min must be positive")

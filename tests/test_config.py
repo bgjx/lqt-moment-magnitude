@@ -61,6 +61,7 @@ def test_magnitude_params():
 
 def test_spectral_params():
     """ Check few default spectral parameters in package default config.ini """
+    expected_smooth_window = 3
     expected_f_min = 0.1
     expected_f_max = 45
     expected_omega_min = 0.01
@@ -69,6 +70,7 @@ def test_spectral_params():
     expected_q_max = 250
     expected_fc_buffer = 1
     expected_n_samples = 3000
+    assert CONFIG.spectral.SMOOTH_WINDOW_SIZE == expected_smooth_window
     assert CONFIG.spectral.F_MIN == expected_f_min
     assert CONFIG.spectral.F_MAX == expected_f_max
     assert CONFIG.spectral.OMEGA_0_RANGE_MIN == expected_omega_min

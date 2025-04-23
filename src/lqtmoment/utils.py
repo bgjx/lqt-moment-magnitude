@@ -15,7 +15,7 @@ import warnings
 import os
 import glob
 import sys
-from typing import Tuple, Callable, Optional
+from typing import Tuple, Callable, Optional, List
 from pathlib import Path
 
 import numpy as np
@@ -65,7 +65,7 @@ REQUIRED_CONFIG = {
             "NOISE_DURATION", "NOISE_PADDING"],
     "magnitude": ["R_PATTERN_P", "R_PATTERN_S", "FREE_SURFACE_FACTOR",
                   "K_P", "K_S", "TAUP_MODEL", "VELOCITY_MODEL_FILE", "MW_CONSTANT"],
-    "spectral": ["F_MIN", "F_MAX", "OMEGA_0_RANGE_MIN", "OMEGA_0_RANGE_MAX",
+    "spectral": ["SMOOTH_WINDOW_SIZE", "F_MIN", "F_MAX", "OMEGA_0_RANGE_MIN", "OMEGA_0_RANGE_MAX",
                  "Q_RANGE_MIN", "Q_RANGE_MAX", "FC_RANGE_BUFFER", "DEFAULT_N_SAMPLES",
                  "N_FACTOR", "Y_FACTOR"],
     "performance": ["USE_PARALLEL", "LOGGING_LEVEL"]
@@ -231,8 +231,8 @@ def wave_trim(
     stream: Stream,
     p_arrival: UTCDateTime,
     coda_time: Optional[UTCDateTime] = None,
-    padding_bf_p: float = CONFIG.wave.SEC_BF_P_ARR_TRIM,
-    padding_af_p: float = CONFIG.wave.SEC_AF_P_ARR_TRIM
+    padding_bf_p: float = 10.0,
+    padding_af_p: float = 50.0
     ) -> Stream:
     """
     Trim the seismogram to specific time window. 
@@ -283,8 +283,10 @@ def wave_trim(
 def instrument_remove (
     stream: Stream, 
     calibration_path: Path, 
-    figure_path: Path, 
+    figure_path: Path,
     network_code: Optional[str] = None,
+    pre_filter: Optional[List] = None,
+    water_level: Optional[float] = None,
     generate_figure : bool = False,
     ) -> Stream:
     """
@@ -295,6 +297,8 @@ def instrument_remove (
         calibration_path (Path): Path to the directory containing the calibration files in RESP format.
         figure_path (Path): Directory path where response removal plots will be saved. If None, plots are not saved.
         network_code (Optional[str]): Network code to use in the calibration file name. If None, attempts to use trace.stats.network.
+        pre_filter (Optional[str]): Bandpass filter corners [f1,f2,f3,f4] in Hz. Defaults to None.
+        water_level (Optional[str]): Water level for deconvolution stabilization. Defaults to None.
         generate_figure (bool): If True, saves plots of the response removal process. Defaults to False.
         
     Returns:
@@ -328,8 +332,8 @@ def instrument_remove (
             # Remove instrument response
             displacement_trace = trace.remove_response(
                                     inventory = inventory,
-                                    pre_filt = CONFIG.wave.PRE_FILTER,
-                                    water_level = CONFIG.wave.WATER_LEVEL,
+                                    pre_filt = pre_filter,
+                                    water_level = water_level,
                                     output = 'DISP',
                                     zero_mean = True,
                                     taper = True,
