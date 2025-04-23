@@ -51,7 +51,7 @@ def calculate_seismic_spectra(
     Args:
         trace_data (np.ndarray): Array of displacement signal (in meters).
         sampling_rate (float): Sampling rate of the signal in Hz.
-        apply_window (bool, optional): Apply a Hann window to reduce spectral leakage.
+        apply_window (bool): Apply a Hann window to reduce spectral leakage.
             Defaults to False (assumes window_trace function already applied a cosine taper).
 
     Returns:
@@ -93,7 +93,7 @@ def window_trace(
     streams: Stream,
     p_arr_time: UTCDateTime,
     s_arr_time: UTCDateTime,
-    lqt_mode: Optional[bool] = True
+    lqt_mode: bool = True
     ) -> Tuple[np.ndarray, ...]:
     """
     Windows seismic trace data around P, SV, and SH phase and extracts noise data.
@@ -103,7 +103,7 @@ def window_trace(
         streams (Stream): A stream object containing the seismic data.
         p_arr_time (UTCDateTime): Arrival time in UTCDateTime of the P phase.
         s_arr_time (UTCDateTime): Arrival time in UTCDateTime of the S phase.
-        lqt_mode (Optional[bool]): Use LQT components if True, ZRT if false. Default to True. 
+        lqt_mode (bool): Use LQT components if True, ZRT if false. Default to True. 
 
     Returns:
         Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]: 
@@ -652,8 +652,8 @@ def start_calculate(
     catalog_data: pd.DataFrame,
     id_start:Optional[int] = None,
     id_end: Optional[int] = None,
-    lqt_mode: Optional[bool] = True,
-    generate_figure : Optional[bool] = False,
+    lqt_mode: bool = True,
+    generate_figure : bool = False,
     figure_path: Optional[Path] = None,
     ) -> Tuple [pd.DataFrame, pd.DataFrame]:
     """
@@ -668,8 +668,8 @@ def start_calculate(
         catalog_data (pd.DataFrame): Catalog DataFrame in LQTMomentMag format.
         id_start (Optional[int]): Starting earthquake ID. If not provided, id_start set to min ID in catalog.
         id_end (Optional[int]): Ending earthquake ID. If not provided, id_end set to max ID in catalog.
-        lqt_mode (Optional[bool]): Use LQT rotation if True, ZRT otherwise. Defaults to True.
-        generate_figure (Optional[bool]): Generate and save figures if True. Defaults to False.
+        lqt_mode (bool): Use LQT rotation if True, ZRT otherwise. Defaults to True.
+        generate_figure (bool): Generate and save figures if True. Defaults to False.
         figure_path (Optional[Path]) : Path to the directory where spectral fitting figures will be saved.
                                         Defaults to None, then generate folder at current directory.      
 
