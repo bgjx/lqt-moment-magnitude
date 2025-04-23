@@ -42,7 +42,9 @@ logger = logging.getLogger("lqtmoment")
 
 def calculate_seismic_spectra(
     trace_data: np.ndarray,
-    sampling_rate: float
+    sampling_rate: float,
+    freq_min: Optional[float] = None,
+    freq_max: Optional[float] = None,
     ) -> Tuple[np.ndarray, np.ndarray]:
     """
     Calculates the single-sided displacement amplitude spectrum of a seismogram using FFT.
@@ -51,6 +53,8 @@ def calculate_seismic_spectra(
     Args:
         trace_data (np.ndarray): Array of displacement signal (in meters).
         sampling_rate (float): Sampling rate of the signal in Hz.
+        freq_min (Optional[float]): Minimum frequency to include in output (Hz). Default to None.
+        freq_max (Optional[float]): Maximum frequency to include in output (Hz). Default to None.
 
     Returns:
         Tuple[np.ndarray, np.ndarray]: 
@@ -77,9 +81,22 @@ def calculate_seismic_spectra(
     # Compute the FFT and single-sided spectrum
     fft_data = np.fft.rfft(padded_data)
     frequencies = np.fft.rfftfreq(nfft, d=1.0/sampling_rate)
+
+    # Scale amplitudes: 2.0 for negative frequencies, 1/nfft for FFT normalization, window_correction for Hann window
     amplitudes = np.abs(fft_data) * (2.0 / nfft) * window_correction
     
-    amplitudes *= 1e9  # Convert to nm (nanometers)
+    # Convert to nm (nanometers)
+    amplitudes *= 1e9
+
+    # Filters to specific frequency range
+    if freq_min is not None or freq_max is not None:
+        mask = np.ones_like(frequencies, dtype=bool)
+        if freq_min is not None:
+            mask &= frequencies >= freq_min
+        if freq_max is not None:
+            mask &= frequencies <= freq_max
+        frequencies = frequencies[mask]
+        amplitudes = amplitudes[mask]
 
     return frequencies, amplitudes
 
@@ -513,14 +530,14 @@ def calculate_moment_magnitude(
 
         try:
             # Calculate source spectra
-            freq_P , spec_P  = calculate_seismic_spectra(p_window_data, fs)
-            freq_SV, spec_SV = calculate_seismic_spectra(sv_window_data, fs)
-            freq_SH, spec_SH = calculate_seismic_spectra(sh_window_data, fs)
+            freq_P , spec_P  = calculate_seismic_spectra(p_window_data, fs, freq_min=CONFIG.spectral.F_MIN, freq_max=CONFIG.spectral.F_MAX)
+            freq_SV, spec_SV = calculate_seismic_spectra(sv_window_data, fs, freq_min=CONFIG.spectral.F_MIN, freq_max=CONFIG.spectral.F_MAX)
+            freq_SH, spec_SH = calculate_seismic_spectra(sh_window_data, fs, freq_min=CONFIG.spectral.F_MIN, freq_max=CONFIG.spectral.F_MAX)
             
             # Calculate the noise spectra
-            freq_N_P,  spec_N_P  = calculate_seismic_spectra(p_noise_data, fs)
-            freq_N_SV, spec_N_SV = calculate_seismic_spectra(sv_noise_data, fs)
-            freq_N_SH, spec_N_SH = calculate_seismic_spectra(sh_noise_data, fs)
+            freq_N_P,  spec_N_P  = calculate_seismic_spectra(p_noise_data, fs, freq_min=CONFIG.spectral.F_MIN, freq_max=CONFIG.spectral.F_MAX)
+            freq_N_SV, spec_N_SV = calculate_seismic_spectra(sv_noise_data, fs, freq_min=CONFIG.spectral.F_MIN, freq_max=CONFIG.spectral.F_MAX)
+            freq_N_SH, spec_N_SH = calculate_seismic_spectra(sh_noise_data, fs, freq_min=CONFIG.spectral.F_MIN, freq_max=CONFIG.spectral.F_MAX)
         except (ValueError, RuntimeError) as e:
             logger.warning(f"Earthquake_{source_id}: An error occurred during spectra calculation for station {station}, {e}.", exc_info=True)
             continue
