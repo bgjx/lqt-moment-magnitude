@@ -16,7 +16,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 from datetime import datetime
-from typing import Optional
+from typing import Optional,  List
 
 from obspy.geodetics import gps2dist_azimuth
 
@@ -173,12 +173,12 @@ def build_catalog(
     return pd.DataFrame(rows)
 
 
-def main(args=None):
+def main(args: Optional[List] = None):
     """
     Runs the catalog builder from command line.
 
     Args:
-        args (List[str], Optional): Command-line arguments. Defaults to sys.argv[1:] if None.
+        args (Optional[List]): Command-line arguments. Defaults to sys.argv[1:] if None.
 
     Returns:
         None: This function saves results to Excel files and logs the process.
