@@ -107,7 +107,7 @@ def plot_rays (hypo_depth_m: float,
                 critical_ref: Optional[Dict[str, List]] = None,
                 down_ref: Optional[Dict[str, List]] = None,
                 down_up_ref: Optional[Dict[str, List]] = None,
-                figure_path: Path = None
+                figure_path: Optional[Path] = None
                 ) -> None:
     """
     Plot the raw/base model, hypocenter, station, and the relative distance between the hypocenter and station
@@ -121,12 +121,20 @@ def plot_rays (hypo_depth_m: float,
         base_model (List[List[float]]): List of [top_m, thickness_m, velocity_m_s]
         up_model (List[List]): List of [top_m, thickness_m, velocity_m_s] from the 'upward_model' function.
         down_model (List[List]): List of [top_m, thickness_m, velocity_m_s] from the 'downward_model' function.
-        reached_up_ref (Dict[str, List]): A dictionary of {'refract_angles': [], 'distances': [], 'travel_times': []} from all direct upward refracted waves that reach the station.
-        critical_ref (Dict[str, List]): A dictionary of {'refract_angles': [], 'distances': [], 'travel_times': []} from all critically refracted waves.
-        down_ref (Dict[str, List]): A dictionary of {'refract_angles': [], 'distances': [], 'travel_times': []} from all downward segments of critically refracted waves.
-        down_up_ref (Dict[str, List]): A dictionary of {'refract_angles': [], 'distances': [], 'travel_times': []} from all upward segments of downward critically refracted waves.
+        reached_up_ref (Optional[Dict[str, List]]): A dictionary of 
+                                                    {'refract_angles': [], 'distances': [], 'travel_times': []} 
+                                                    from all direct upward refracted waves that reach the station.
+        critical_ref (Optional[Dict[str, List]]): A dictionary of
+                                                    {'refract_angles': [], 'distances': [], 'travel_times': []} 
+                                                    from all critically refracted waves.
+        down_ref (Optional[Dict[str, List]]): A dictionary of 
+                                                {'refract_angles': [], 'distances': [], 'travel_times': []}
+                                                from all downward segments of critically refracted waves.
+        down_up_ref (Optional[Dict[str, List]]): A dictionary of
+                                                {'refract_angles': [], 'distances': [], 'travel_times': []}
+                                                from all upward segments of downward critically refracted waves.
         
-        figure_path(Path): Directory to save the plot.
+        figure_path(Optional[Path]): Directory to save the plot. Defaults to None.
     """
     
     fig, axs = plt.subplots(figsize=(10,8))
