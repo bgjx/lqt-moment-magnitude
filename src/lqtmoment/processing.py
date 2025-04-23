@@ -49,7 +49,7 @@ def calculate_seismic_spectra(
     Calculates the displacement amplitude spectrum of a seismogram using FFT.
 
     Args:
-        trace_data (np.ndarray): Array of displacement signal ( in meters).
+        trace_data (np.ndarray): Array of displacement signal (in meters).
         sampling_rate (float): Sampling rate of the signal in Hz.
         apply_window (bool, optional): Apply a Hann window to reduce spectral leakage.
             Defaults to False (assumes window_trace function already applied a cosine taper).
