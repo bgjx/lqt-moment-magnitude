@@ -99,12 +99,12 @@ def load_data(data_dir: str) -> pd.DataFrame:
         raise ValueError(f"Unsupported data file format: {data_path.suffix}. Supported formats: .csv, .xlsx")
     
 
-def setup_logging(log_file: str = "lqt_runtime.log") -> logging.Logger:
+def setup_logging(log_file: Optional[str] = "lqt_runtime.log") -> logging.Logger:
     """
     Set up logging for lqtmoment package.
 
     Args:
-        log_file (str): The name of the log file. Defaults to 'lqt_runtime.log'
+        log_file (Optional[str]): The name of the log file. Defaults to 'lqt_runtime.log'
     
     Returns:
         logging.logger: A logger to be used in entire package.
@@ -231,7 +231,7 @@ def read_waveforms(path: Path, source_id: int, station:str) -> Stream:
 def wave_trim(
     stream: Stream,
     p_arrival: UTCDateTime,
-    coda_time: UTCDateTime = None,
+    coda_time: Optional[UTCDateTime] = None,
     padding_bf_p: float = CONFIG.wave.SEC_BF_P_ARR_TRIM,
     padding_af_p: float = CONFIG.wave.SEC_AF_P_ARR_TRIM
     ) -> Stream:
@@ -241,11 +241,11 @@ def wave_trim(
     Args:
         stream (Stream): A Stream object containing all the waveforms from specific earthquake id.
         p_arrival (UTCDateTime): P arrival time as initial reference for trimming start point.
-        coda_time (UTCDateTime): Coda time as primary reference for trimming end point.
+        coda_time (Optional[UTCDateTime]): Coda time as primary reference for trimming end point.
                                     Defaults to None, use static padding after P arrival 
                                     instead.
-        padding_bf_p (float): Time in seconds before P arrival for exact trimming start point.
-        padding_af_p (float): Time in seconds after P arrival for exact trimming end point.
+        padding_bf_p (Optional[float]): Time in seconds before P arrival for exact trimming start point.
+        padding_af_p (Optional[float]): Time in seconds after P arrival for exact trimming end point.
 
     Returns:
         Stream: A stream object containing all trimmed traces.

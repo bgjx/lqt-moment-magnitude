@@ -37,13 +37,13 @@ def magnitude_estimator(
     config_file: Optional[str] = None,
     id_start: Optional[int] = None,
     id_end: Optional[int] = None,
-    lqt_mode: Optional[bool] = True,
-    generate_figure : Optional[bool] = False,
-    fig_dir: Optional[str] = "figures",
-    save_output_file: Optional[bool] = False, 
-    output_dir: Optional[str] = "results/calculation",
-    output_format: Optional[str] = "excel",
-    result_file_prefix: Optional[str] = "lqt_magnitude"  
+    lqt_mode: bool = True,
+    generate_figure : bool = False,
+    fig_dir: str = "figures",
+    save_output_file: bool = False, 
+    output_dir: str = "results/calculation",
+    output_format: str = "excel",
+    result_file_prefix: str = "lqt_magnitude"  
     ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Calculate seismic moment magnitude in the LQT component system.
@@ -55,17 +55,17 @@ def magnitude_estimator(
         wave_dir (str): Path to the waveform directory.
         cal_dir (str): Path to the calibration directory.
         catalog_file (str): Path to the seismic catalog.
+        config_file (Optional[str]): Path to a custom config.ini file to reload. Defaults to None.
         id_start (Optional[int]): Starting earthquake ID. Defaults to min ID.
         id_end (Optional[int]): Ending earthquake ID. Defaults to max ID.
-        lqt_mode (Optional[bool]): Use LQT rotation if True, ZRT otherwise. Defaults to True.
-        config_file (Optional[str]): Path to a custom config.ini file to reload. Defaults to None.
-        generate_figure (Optional[bool]): Generate and save figures if True. Defaults to False.
-        fig_dir (Optional[str]): path to save figures.
-        save_output_file (Optional[bool]): If True, save the result DataFrames to files. Default
+        lqt_mode (bool): Use LQT rotation if True, ZRT otherwise. Defaults to True.
+        generate_figure (bool): Generate and save figures if True. Defaults to False.
+        fig_dir (str): path to save figures.
+        save_output_file (bool): If True, save the result DataFrames to files. Default
                                             to False.
-        output_dir (Optional[str]): Output directory for results. Defaults to "results".
-        output_format (Optional[str]): Format for saving results ("excel" or "csv"). Default to "excel".
-        result_file_prefix (Optional[str]): Prefix for result file names. Defaults to "lqt_magnitude"
+        output_dir (str): Output directory for results. Defaults to "results".
+        output_format (str): Format for saving results ("excel" or "csv"). Default to "excel".
+        result_file_prefix (str): Prefix for result file names. Defaults to "lqt_magnitude"
         
     Returns:
         Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]: A tuple containing the merged lqt catalog DataFrame,
