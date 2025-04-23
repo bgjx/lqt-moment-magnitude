@@ -368,7 +368,7 @@ class Config:
         Load configuration from an INI file, with fallback to defaults.
         
         Args:
-            config_file (str, optional): Path to configuration file.
+            config_file (Optional[str]): Path to configuration file.
             Defaults to 'config.ini' in parent directory.
         
         Raises:
@@ -535,7 +535,7 @@ class Config:
         Reload configuration from INI file, resetting to defaults first.
 
         Args:
-            config_file (str, optional): Path to the configuration file.
+            config_file (Optional[str]): Path to the configuration file.
         """
         self.__init__()
         self.load_from_file(config_file)
