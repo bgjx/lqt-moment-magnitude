@@ -99,12 +99,12 @@ def load_data(data_dir: str) -> pd.DataFrame:
         raise ValueError(f"Unsupported data file format: {data_path.suffix}. Supported formats: .csv, .xlsx")
     
 
-def setup_logging(log_file: Optional[str] = "lqt_runtime.log") -> logging.Logger:
+def setup_logging(log_file: str = "lqt_runtime.log") -> logging.Logger:
     """
     Set up logging for lqtmoment package.
 
     Args:
-        log_file (Optional[str]): The name of the log file. Defaults to 'lqt_runtime.log'
+        log_file (str): The name of the log file. Defaults to 'lqt_runtime.log'
     
     Returns:
         logging.logger: A logger to be used in entire package.
@@ -244,8 +244,8 @@ def wave_trim(
         coda_time (Optional[UTCDateTime]): Coda time as primary reference for trimming end point.
                                     Defaults to None, use static padding after P arrival 
                                     instead.
-        padding_bf_p (Optional[float]): Time in seconds before P arrival for exact trimming start point.
-        padding_af_p (Optional[float]): Time in seconds after P arrival for exact trimming end point.
+        padding_bf_p (float): Time in seconds before P arrival for exact trimming start point.
+        padding_af_p (float): Time in seconds after P arrival for exact trimming end point.
 
     Returns:
         Stream: A stream object containing all trimmed traces.
