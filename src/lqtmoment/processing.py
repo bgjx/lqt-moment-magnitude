@@ -756,7 +756,6 @@ def start_calculate(
                                                     "p_arr_time", "s_arr_time",
                                                     "s_p_lag_time_sec"]].drop_duplicates()
             
-            
             # Check for  empty data frame
             if source_data.empty or pick_data.empty:
                 logger.warning(f"Earthquake_{source_id}: No data for earthquake {source_id}")
