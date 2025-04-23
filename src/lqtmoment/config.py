@@ -290,8 +290,8 @@ class Config:
         self.magnitude = MagnitudeConfig()
         self.spectral = SpectralConfig()
         self.performance = PerformanceConfig()
-    
 
+    
     def _parse_float(self, config_section, key, fallback):
         """
         Parsing method for float values from config with validation.
@@ -302,13 +302,17 @@ class Config:
             fallback: Fallback value if key is not found.
         
         Returns: 
-            float: Parsed float value.
+            float or None: Parsed float value or None if specified.
         
         Raises:
             ValueError: If the value cannot be parsed as a float.     
         """
+        raw_value = config_section.get(key, fallback=str(fallback))
+        if raw_value is None or raw_value.strip().lower() in ['none', '']:
+            return None
+        
         try:
-            value = config_section.getfloat(key, fallback=fallback)
+            value = float(raw_value)
             return value
         except ValueError as e:
             raise ValueError(f"Invalid float for {key} in config.ini: {e}")
@@ -388,8 +392,8 @@ class Config:
             if snr_threshold <= 0:
                 raise ValueError("snr_threshold must be positive")
             water_level = self._parse_float(wave_section, "water_level", self.wave.WATER_LEVEL)
-            if water_level < 0:
-                raise ValueError("water_level must be non negative, otherwise mathematically meaningless")
+            if water_level is not None and water_level < 0:
+                raise ValueError("water_level must be non negative or None, otherwise mathematically meaningless")
             pre_filter = self._parse_list(wave_section, "pre_filter", "0.01,0.02,55,60")
             if len(pre_filter) != 4 or any(f <=0 for f in pre_filter):
                 raise ValueError("pre_filter must be four positive frequencies (f1, f2, f3, f4)")
