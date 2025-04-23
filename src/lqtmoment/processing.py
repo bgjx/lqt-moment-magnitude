@@ -42,17 +42,15 @@ logger = logging.getLogger("lqtmoment")
 
 def calculate_seismic_spectra(
     trace_data: np.ndarray,
-    sampling_rate: float,
-    apply_window: bool = False
+    sampling_rate: float
     ) -> Tuple[np.ndarray, np.ndarray]:
     """
-    Calculates the displacement amplitude spectrum of a seismogram using FFT.
+    Calculates the single-sided displacement amplitude spectrum of a seismogram using FFT.
+    Always applies a Hann Window to reduce spectral leakage.
 
     Args:
         trace_data (np.ndarray): Array of displacement signal (in meters).
         sampling_rate (float): Sampling rate of the signal in Hz.
-        apply_window (bool): Apply a Hann window to reduce spectral leakage.
-            Defaults to False (assumes window_trace function already applied a cosine taper).
 
     Returns:
         Tuple[np.ndarray, np.ndarray]: 
@@ -64,25 +62,23 @@ def calculate_seismic_spectra(
     if not trace_data.size or sampling_rate <= 0:
         raise ValueError("Trace data cannot be empty and sampling rate must be positive")
     
-    # Apply Hann window only if explicitly requested (window_trace already tapers)
-    if apply_window:
-        logger.warning("Hann window applied in calculate_seismic_spectra; window_trace already applies a cosine taper")
-        window = windows.hann(len(trace_data))
-        trace_data_processed = trace_data * window
-        window_correction = np.sqrt(8.0/3.0)
-    else:
-        trace_data_processed = trace_data
-        window_correction = 1.0
-    
+    # Apply Hann window
+    window = windows.hann(len(trace_data))
+    trace_data_processed = trace_data * window
+
+    # Hann window correction 
+    window_correction = np.sqrt(8.0/3.0)
+
     # Zero pad to next power of 2 for FFT efficiency and resolution
     n_samples = len(trace_data_processed)
     nfft = _npts2nfft(n_samples)
+    logger.info(f"N_SAMPLES: {n_samples}, NFFFT: {nfft}")
     padded_data = np.pad(trace_data_processed, (0, nfft - n_samples), mode='constant')
 
     # Compute the FFT and single-sided spectrum
     fft_data = np.fft.rfft(padded_data)
     frequencies = np.fft.rfftfreq(nfft, d=1.0/sampling_rate)
-    amplitudes = np.abs(fft_data) * (2.0 / (nfft * sampling_rate)) * window_correction
+    amplitudes = np.abs(fft_data) * (2.0 / nfft) * window_correction
     
     amplitudes *= 1e9  # Convert to nm (nanometers)
 
@@ -171,23 +167,21 @@ def window_trace(
     SV_noise = _slice(trace_SV.data, noise_start_index, noise_end_index)
     SH_noise = _slice(trace_SH.data, noise_start_index, noise_end_index)
 
-    # Preprocess data, apply detrending, demean and taper.
-    for data in [P_data, SV_data, SH_data, P_noise, SV_noise, SH_noise]:
-        if len(data) > 0:
-            data[:] = detrend_simple(data)
-            data[:] = data - np.mean(data)
-            taper = windows.cosine(len(data))
-            data[:] = data * taper
+    # Preprocess data, apply detrending, demean, and taper.
+    def _preprocess_data(data: np.ndarray) -> np.ndarray:
+        """ Helper function to preprocess data, apply detrending, demean, and taper. """
+        if len(data) == 0:
+            return data
+        data = detrend_simple(data)
+        data = data - np.mean(data)
+        return data
     
-    # Pad to consistent length
-    if CONFIG.wave.PAD_TO_UNIFORM_LENGTH: 
-        max_len = max(len(P_data), len(SV_data), len(SH_data), len(P_noise), len(SV_noise), len(SH_noise))
-        for data in [P_data, SV_data, SH_data, P_noise, SV_noise, SH_noise]:
-            if len(data) < max_len:
-                data[:] = np.pad(data, (0, max_len - len(data)), mode='constant')
-                data[:] = data - np.mean(data)
-                taper = windows.cosine(max_len)
-                data[:] = data * taper
+    P_data = _preprocess_data(P_data)
+    SV_data = _preprocess_data(SV_data)
+    SH_data = _preprocess_data(SH_data)
+    P_noise = _preprocess_data(P_noise)
+    SV_noise = _preprocess_data(SV_noise)
+    SH_noise = _preprocess_data(SH_noise)
 
     return P_data, SV_data, SH_data, P_noise, SV_noise, SH_noise
 
@@ -434,7 +428,7 @@ def calculate_moment_magnitude(
         station_lat, station_lon, station_elev_m = station_info.station_lat, station_info.station_lon, station_info.station_elev_m
         p_arr_time = UTCDateTime(station_info.p_arr_time)
         s_arr_time = UTCDateTime(station_info.s_arr_time)
-        if not station_info.coda_time.isna():
+        if not np.isnan(station_info.coda_time):
             coda_time = UTCDateTime(station_info.coda_time)
         else:
             coda_time = None
@@ -459,14 +453,12 @@ def calculate_moment_magnitude(
             if CONFIG.wave.TRIM_MODE == 'dynamic':
                 trimmed_stream = wave_trim(stream_copy, 
                                            p_arr_time, 
-                                           s_arr_time, 
                                            coda_time,
                                            CONFIG.wave.SEC_BF_P_ARR_TRIM,
                                            CONFIG.wave.SEC_AF_P_ARR_TRIM)
             else:
                 trimmed_stream = wave_trim(stream_copy,
                                            p_arr_time,
-                                           s_arr_time,
                                            CONFIG.wave.SEC_BF_P_ARR_TRIM,
                                            CONFIG.wave.SEC_AF_P_ARR_TRIM)
                 
@@ -485,7 +477,7 @@ def calculate_moment_magnitude(
         except Exception as e:
             logger.warning(f"Earthquake_{source_id}: An error occurred when correcting instrument for station {station}: {e}", exc_info=True)
             continue
-
+        
         # Perform post instrument removal if specified by the User
         if CONFIG.wave.APPLY_POST_INSTRUMENT_REMOVAL_FILTER:
             stream_displacement.filter("bandpass", freqmin=CONFIG.wave.POST_FILTER_F_MIN, freqmax=CONFIG.wave.POST_FILTER_F_MAX, corners=4, zerophase=True)
@@ -504,18 +496,19 @@ def calculate_moment_magnitude(
         except (ValueError, RuntimeError) as e:
             logger.warning(f"Earthquake_{source_id}: Failed to rotate components for station {station}: {e}.", exc_info=True)
             continue
-
+        
         # Window the trace
         p_window_data, sv_window_data, sh_window_data, p_noise_data, sv_noise_data, sh_noise_data = window_trace(
                                                                                                     rotated_stream, 
-                                                                                                    p_arr_time, s_arr_time,
+                                                                                                    p_arr_time,
+                                                                                                    s_arr_time,
                                                                                                     lqt_mode=lqt_mode)
         
         # Check the data quality (SNR must be above or equal to 1)
         if any(trace_snr(data, noise) <= CONFIG.wave.SNR_THRESHOLD for data, noise in zip ([p_window_data, sv_window_data, sh_window_data], [p_noise_data, sv_noise_data, sh_noise_data])):
             logger.warning(f"Earthquake_{source_id}: SNR below threshold for station {station} to calculate moment magnitude")
             continue
-            
+
         # check sampling rate
         fs = 1 / rotated_stream[0].stats.delta
 
@@ -754,7 +747,8 @@ def start_calculate(
             pick_data = catalog_data[["network_code", "station_code", "station_lat",
                                                     "station_lon", "station_elev_m",
                                                     "p_arr_time", "s_arr_time",
-                                                    "s_p_lag_time_sec"]].drop_duplicates()
+                                                    "s_p_lag_time_sec",
+                                                    "coda_time"]].drop_duplicates()
             
             # Check for  empty data frame
             if source_data.empty or pick_data.empty:

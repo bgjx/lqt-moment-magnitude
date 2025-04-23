@@ -43,7 +43,6 @@ Examples:
         max_s_window = 20.0
         noise_duration = 0.5
         noise_padding = 0.2
-        pad_to_uniform_length = True
 
         [Magnitude]
         r_pattern_p = 0.52
@@ -112,7 +111,7 @@ class WaveConfig:
 
     Attributes:
         SNR_THRESHOLD (float): Minimum signal-to-noise ratio for trace acceptance (default: 1.5).
-        WATER_LEVEL (int): Water level for deconvolution stabilization (default: 30).
+        WATER_LEVEL (float): Water level for deconvolution stabilization (default: 30).
         PRE_FILTER (List[float]): Bandpass filter corners [f1,f2,f3,f4] in Hz (default: placeholder, override in config.ini).
         APPLY_POST_INSTRUMENT_REMOVAL_FILTER (bool): If True, post filter after instrument removal will be applied (default: True).
         POST_FILTER_F_MIN (float): Minimum post-filter frequency in Hz (default: 0.1) after instrument removal.
@@ -131,9 +130,6 @@ class WaveConfig:
                                 (default: 20.0).
         NOISE_DURATION (float): Noise window duration in seconds (default: 0.5).
         NOISE_PADDING (float): Noise window padding in seconds (default: 0.2).
-        PAD_TO_UNIFORM_LENGTH (bool): If True zero padding will be added to all phases window,
-                                    make sure all phases in the same length prior to FFT 
-                                    (default: True).
     """
     SNR_THRESHOLD: float = 1.75
     WATER_LEVEL: float = 60.0
@@ -151,7 +147,6 @@ class WaveConfig:
     MAX_S_WINDOW: float = 20.0
     NOISE_DURATION: float = 0.5
     NOISE_PADDING: float = 0.2
-    PAD_TO_UNIFORM_LENGTH: bool = True
 
     def __post_init__(self):
         self.PRE_FILTER = self.PRE_FILTER or [0.01, 0.02, 55, 60]
@@ -392,7 +387,7 @@ class Config:
             snr_threshold = self._parse_float(wave_section, "snr_threshold", self.wave.SNR_THRESHOLD)
             if snr_threshold <= 0:
                 raise ValueError("snr_threshold must be positive")
-            water_level = self._parse_int(wave_section, "water_level", self.wave.WATER_LEVEL)
+            water_level = self._parse_float(wave_section, "water_level", self.wave.WATER_LEVEL)
             if water_level < 0:
                 raise ValueError("water_level must be non negative, otherwise mathematically meaningless")
             pre_filter = self._parse_list(wave_section, "pre_filter", "0.01,0.02,55,60")
@@ -435,7 +430,6 @@ class Config:
             noise_padding = self._parse_float(wave_section, "noise_padding", self.wave.NOISE_PADDING)
             if noise_padding < 0:
                 raise ValueError("noise_padding must be non-negative")
-            pad_to_uniform_length = wave_section.getboolean("pad_to_uniform_length", fallback=self.wave.PAD_TO_UNIFORM_LENGTH)
 
             # Reconstruct WaveConfig to trigger __post_init__
             self.wave = WaveConfig(
@@ -454,8 +448,7 @@ class Config:
                 MIN_S_WINDOW=min_s_window,
                 MAX_S_WINDOW=max_s_window,
                 NOISE_DURATION=noise_duration,
-                NOISE_PADDING=noise_padding,
-                PAD_TO_UNIFORM_LENGTH=pad_to_uniform_length
+                NOISE_PADDING=noise_padding
             )
             
         # Load magnitude config section
