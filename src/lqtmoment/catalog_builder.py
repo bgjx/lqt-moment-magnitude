@@ -34,7 +34,7 @@ def build_catalog(
         hypo_dir: str,
         picks_dir: str,
         station_dir: str
-        ) -> pd.DataFrame:
+    ) -> pd.DataFrame :
     """
     Build a combined catalog from separate hypocenter, pick, and station file.
 
@@ -85,7 +85,7 @@ def build_catalog(
         
     rows = []
     for source_id in hypo_df.get('source_id'):
-        pick_data = picking_df[picking_df['source_id'] == id]
+        pick_data = picking_df[picking_df['source_id'] == source_id]
         if pick_data.empty:
             continue
         hypo_info = hypo_df[hypo_df.source_id == source_id].iloc[0]
@@ -118,7 +118,7 @@ def build_catalog(
                 continue
             pick_info = pick_data_subset.iloc[0]
             year, month, day = pick_info.year, pick_info.month, pick_info.day
-            hour_p, minute_p, second_p = pick_info.hour_p, pick_info.minute_p, pick_info.p_arr_sec, pick_info.p_polarity, pick_info.p_onset
+            hour_p, minute_p, second_p = pick_info.hour_p, pick_info.minute_p, pick_info.p_arr_sec
             hour_s, minute_s, second_s = pick_info.hour_s, pick_info.minute_s, pick_info.s_arr_sec
             hour_coda, minute_coda, second_coda = pick_info.hour_coda, pick_info.minute_coda, pick_info.sec_coda
             
@@ -173,13 +173,13 @@ def build_catalog(
             row.update(
                 {key: hypo_info.get(key, np.nan) for key in OPTIONAL_HYPO_COLUMNS}
             )
-            
+
             rows.append(row)
 
     # Create dataframe
     df = pd.DataFrame(rows)
 
-    return df[[COMPLETE_CATALOG_ORDER_COLUMNS]]
+    return df[COMPLETE_CATALOG_ORDER_COLUMNS]
 
 
 def main(args: Optional[List] = None):
