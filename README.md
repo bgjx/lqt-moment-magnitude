@@ -41,7 +41,8 @@ By leveraging vectorized computing and advanced statistical methods—such as in
                                                                 lqt_mode=True,
                                                                 generate_figure=False
                                                                 )
-
+```
+``` bash
     Processing earthquakes: 100%|███████| 796/796 [07:31<00:00,  1.76it/s, Failed=0]
     Finished. Proceed 796 earthquakes successfully,0 failed. Check lqt_runtime.log for details. 
 
