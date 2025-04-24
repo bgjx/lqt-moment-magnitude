@@ -54,7 +54,6 @@ def build_catalog(
         ...                 station_dir = "data\station\station.xlsx"
         ... )
     ```
-
     """
     # Convert string paths to Path objects
     hypo_dir = Path(hypo_dir)
@@ -146,6 +145,8 @@ def build_catalog(
             s_travel_time = s_travel_time.seconds + (s_travel_time.microseconds * 1e-6)
             s_p_lag_time = s_arr_time - p_arr_time
             s_p_lag_time = s_p_lag_time.seconds + (s_p_lag_time.microseconds * 1e-6)
+
+            # Create row  object to store data 
             row = {
                 "source_id": id,
                 "source_lat": source_lat, 
@@ -174,7 +175,10 @@ def build_catalog(
             )
             
             rows.append(row)
+
+    # Create dataframe
     df = pd.DataFrame(rows)
+
     return df[[COMPLETE_CATALOG_ORDER_COLUMNS]]
 
 
@@ -245,9 +249,9 @@ def main(args: Optional[List] = None):
     combined_dataframe = build_catalog(args.hypo_file, args.pick_file, args.station_file)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     output_file = f"{args.output_file}_{timestamp}"
-    if args.output_format.lower() == 'excel':
+    if args.output_format.strip().lower() == 'excel':
         combined_dataframe.to_excel(args.output_dir/f"{output_file}.xlsx", index=False)
-    elif args.output_format.lower() == 'csv':
+    elif args.output_format.strip().lower() == 'csv':
         combined_dataframe.to_csv(args.output_dir/f"{output_file}.csv", index=False)
     else:
         raise ValueError(f"Unsupported output format: {args.output_format}. Use 'excel' or 'csv'.")
