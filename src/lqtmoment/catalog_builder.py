@@ -20,7 +20,14 @@ from typing import Optional,  List
 
 from obspy.geodetics import gps2dist_azimuth
 
-from .utils import load_data, REQUIRED_HYPO_COLUMNS, OPTIONAL_HYPO_COLUMNS, REQUIRED_PICKING_COLUMNS, OPTIONAL_PICKING_COLUMNS, REQUIRED_STATION_COLUMNS
+from .utils import (load_data, 
+                    REQUIRED_HYPO_COLUMNS,
+                    OPTIONAL_HYPO_COLUMNS,
+                    REQUIRED_PICKING_COLUMNS,
+                    OPTIONAL_PICKING_COLUMNS,
+                    REQUIRED_STATION_COLUMNS,
+                    COMPLETE_CATALOG_ORDER_COLUMNS
+                    )
 
 
 def build_catalog(
@@ -167,7 +174,8 @@ def build_catalog(
             )
             
             rows.append(row)
-    return pd.DataFrame(rows)
+    df = pd.DataFrame(rows)
+    return df[[COMPLETE_CATALOG_ORDER_COLUMNS]]
 
 
 def main(args: Optional[List] = None):
