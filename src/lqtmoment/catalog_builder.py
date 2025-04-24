@@ -20,7 +20,7 @@ from typing import Optional,  List
 
 from obspy.geodetics import gps2dist_azimuth
 
-from .utils import load_data, REQUIRED_HYPO_COLUMNS, REQUIRED_PICKING_COLUMNS, REQUIRED_STATION_COLUMNS
+from .utils import load_data, REQUIRED_HYPO_COLUMNS, OPTIONAL_HYPO_COLUMNS, REQUIRED_PICKING_COLUMNS, OPTIONAL_PICKING_COLUMNS, REQUIRED_STATION_COLUMNS
 
 
 def build_catalog(
@@ -85,10 +85,8 @@ def build_catalog(
         hypo_info = hypo_df[hypo_df.id == id].iloc[0]
         source_lat, source_lon, source_depth_m = hypo_info.lat, hypo_info.lon, hypo_info.depth_m        
         year, month, day, hour, minute, t0 = hypo_info.year, hypo_info.month, hypo_info.day, hypo_info.hour, hypo_info.minute, hypo_info.t_0
-        source_err_rms_s, n_phases, gap_degree = hypo_info.source_err_rms_s, hypo_info.n_phases, hypo_info.gap_degree
-        x_horizontal_err_m, y_horizontal_err_m, z_depth_err_m = hypo_info.x_horizontal_err_m, hypo_info.y_horizontal_err_m, hypo_info.z_depth_err_m
-        hypo_remarks = hypo_info.remarks
 
+        # Create datetime object for source_origin_time
         int_t0 = int(t0)
         microsecond = int((t0 - int_t0)*1e6)
         source_origin_time =datetime(int(year), int(month), int(day), int(hour), int(minute), int_t0, microsecond)
@@ -114,7 +112,7 @@ def build_catalog(
                 continue
             pick_info = pick_data_subset.iloc[0]
             year, month, day = pick_info.year, pick_info.month, pick_info.day
-            hour_p, minute_p, second_p, p_polarity, p_onset = pick_info.hour_p, pick_info.minute_p, pick_info.p_arr_sec, pick_info.p_polarity, pick_info.p_onset
+            hour_p, minute_p, second_p = pick_info.hour_p, pick_info.minute_p, pick_info.p_arr_sec, pick_info.p_polarity, pick_info.p_onset
             hour_s, minute_s, second_s = pick_info.hour_s, pick_info.minute_s, pick_info.s_arr_sec
             hour_coda, minute_coda, second_coda = pick_info.hour_coda, pick_info.minute_coda, pick_info.sec_coda
             
@@ -154,21 +152,20 @@ def build_catalog(
                 "source_origin_time": source_origin_time,
                 "p_arr_time": p_arr_time,
                 "p_travel_time_sec": p_travel_time,
-                "p_polarity": p_polarity,
-                "p_onset": p_onset,
                 "s_arr_time": s_arr_time,
                 "s_travel_time_sec": s_travel_time,
                 "s_p_lag_time_sec": s_p_lag_time,
                 "coda_time": coda_time,
-                "source_err_rms_s": source_err_rms_s,
-                "n_phases": n_phases,
-                "gap_degree": gap_degree,
-                "x_horizontal_err_m": x_horizontal_err_m,
-                "y_horizontal_err_m": y_horizontal_err_m,
-                "z_depth_err_m": z_depth_err_m,
                 "earthquake_type": earthquake_type,
-                "remarks": hypo_remarks
             }
+
+            row.update(
+                {key: pick_info.get(key, np.nan) for key in OPTIONAL_PICKING_COLUMNS}
+            )
+            row.update(
+                {key: hypo_info.get(key, np.nan) for key in OPTIONAL_HYPO_COLUMNS}
+            )
+            
             rows.append(row)
     return pd.DataFrame(rows)
 

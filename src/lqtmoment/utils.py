@@ -36,7 +36,10 @@ REQUIRED_CATALOG_COLUMNS = [
 
 REQUIRED_HYPO_COLUMNS = [
     "id", "lat", "lon", "depth_m",
-    "year", "month", "day", "hour", "minute","t_0",
+    "year", "month", "day", "hour", "minute","t_0"
+    ]
+
+OPTIONAL_HYPO_COLUMNS = [
     "source_err_rms_s", "n_phases", "gap_degree",
     "x_horizontal_err_m", "y_horizontal_err_m", "z_depth_err_m",
     "remarks"
@@ -48,6 +51,10 @@ REQUIRED_PICKING_COLUMNS = [
     "hour_s", "minute_s", "s_arr_sec",
     "hour_coda", "minute_coda", "sec_coda"
     ]
+
+OPTIONAL_PICKING_COLUMNS = [
+    "p_polarity", "p_onset", 
+]
 
 REQUIRED_STATION_COLUMNS = ["network_code", "station_code", "lat", "lon", "elev_m"]
 
