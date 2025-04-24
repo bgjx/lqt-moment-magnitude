@@ -14,8 +14,10 @@
 
 By leveraging vectorized computing and advanced statistical methods—such as in implementing Shooting Snell’s Method for incidence angle estimation and Quasi-Monte Carlo techniques for spectral fitting—lqtmoment excels at calculating moment magnitudes for batches of earthquakes, handling hundreds to thousands of events in a single run.
 
-
+--------------
 **Speed Test with Actual Data**
+
+Below is the speed test using actual data, moment magnitudes for 700++ earthquakes were successfully calculated in `LQT ray systems`, with an average of 1.8 seconds per iteration. The seismogram data was recorded at 500 sps using a 3-component shallow borehole sensor.
 
 ``` python
 
@@ -48,6 +50,7 @@ By leveraging vectorized computing and advanced statistical methods—such as in
 
 ```
 
+--------------
 
 The **lqtmoment** includes modules for building input catalog format, performing moment magnitude calculation, visualizations, and simple data analysis.
 
