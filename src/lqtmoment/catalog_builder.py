@@ -78,17 +78,17 @@ def build_catalog(
             raise ValueError(f"{name} is empty")
     
     # Check for duplicates
-    if hypo_df['id'].duplicated().any():
-        raise ValueError("Duplicate 'id' found in hypocenter catalog")
+    if hypo_df['source_id'].duplicated().any():
+        raise ValueError("Duplicate 'source_id' found in hypocenter catalog")
     if station_df['station_code'].duplicated().any():
         raise ValueError("Duplicate 'station_code' found in station file")
         
     rows = []
-    for id in hypo_df.get("id"):
-        pick_data = picking_df[picking_df["id"] == id]
+    for source_id in hypo_df.get('source_id'):
+        pick_data = picking_df[picking_df['source_id'] == id]
         if pick_data.empty:
             continue
-        hypo_info = hypo_df[hypo_df.id == id].iloc[0]
+        hypo_info = hypo_df[hypo_df.source_id == source_id].iloc[0]
         source_lat, source_lon, source_depth_m = hypo_info.lat, hypo_info.lon, hypo_info.depth_m        
         year, month, day, hour, minute, t0 = hypo_info.year, hypo_info.month, hypo_info.day, hypo_info.hour, hypo_info.minute, hypo_info.t_0
 
@@ -148,7 +148,7 @@ def build_catalog(
 
             # Create row  object to store data 
             row = {
-                "source_id": id,
+                "source_id": source_id,
                 "source_lat": source_lat, 
                 "source_lon": source_lon,
                 "source_depth_m": source_depth_m,

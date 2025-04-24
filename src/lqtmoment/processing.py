@@ -445,6 +445,7 @@ def calculate_moment_magnitude(
     # Start spectrum fitting and magnitude estimation
     moments, corner_frequencies, source_radius = [],[],[]
     for station in pick_df.get("station_code").unique():
+        
         # Get the station coordinate
         station_info = pick_df[pick_df.station_code == station].iloc[0]
         network_code = station_info.network_code
