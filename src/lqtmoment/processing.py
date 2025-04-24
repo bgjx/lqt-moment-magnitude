@@ -796,14 +796,12 @@ def start_calculate(
                 pbar.update(1)
                 continue
 
-            source_data = catalog_data[["source_lat", "source_lon", 
-                                                    "source_depth_m", "source_origin_time", 
-                                                    "earthquake_type"]].drop_duplicates()
+            source_data = catalog_data[["source_lat", "source_lon", "source_depth_m",
+                                        "source_origin_time", "earthquake_type"]].drop_duplicates()
+            
             pick_data = catalog_data[["network_code", "station_code", "station_lat",
-                                                    "station_lon", "station_elev_m",
-                                                    "p_arr_time", "s_arr_time",
-                                                    "s_p_lag_time_sec",
-                                                    "coda_time"]].drop_duplicates()
+                                    "station_lon", "station_elev_m", "p_arr_time",
+                                    "s_arr_time", "s_p_lag_time_sec", "coda_time"]].drop_duplicates()
             
             # Check for  empty data frame
             if source_data.empty or pick_data.empty:
