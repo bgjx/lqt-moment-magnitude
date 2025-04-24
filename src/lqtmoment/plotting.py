@@ -50,7 +50,7 @@ def plot_spectral_fitting(
     """
     # Initiate plotting dimension
     num_stations = len(streams)
-    fig, axs = plt.subplots(num_stations*3, 2, figsize=(20, num_stations*15), squeeze=False)
+    fig, axs = plt.subplots(num_stations*3, 2, figsize=(30, num_stations*15), squeeze=False)
     plt.subplots_adjust(hspace=0.5)
     axs[0,0].set_title("Phase Window", fontsize=20)
     axs[0,1].set_title("Spectra Fitting Profile", fontsize=20)

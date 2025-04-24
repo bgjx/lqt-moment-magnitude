@@ -14,6 +14,40 @@
 
 By leveraging vectorized computing and advanced statistical methods—such as in implementing Shooting Snell’s Method for incidence angle estimation and Quasi-Monte Carlo techniques for spectral fitting—lqtmoment excels at calculating moment magnitudes for batches of earthquakes, handling hundreds to thousands of events in a single run.
 
+
+**Speed Test with Actual Data**
+
+``` python
+
+    # calculate the moment magntiude
+    from lqtmoment import magnitude_estimator
+    from pathlib import Path
+
+    # directory object
+    dirs = {"wave_dir": r"test\wave",
+            "calib_dir": r"test\calibration",
+            "catalog_file": r"lqt_catalog.csv",
+            "config_file": r"config.ini"    
+    }
+
+
+    merged_lqt_catalog, lqt_moment_result, lqt_fitting_result = magnitude_estimator(    
+                                                                wave_dir= dirs['wave_dir'],
+                                                                cal_dir= dirs['calib_dir'],
+                                                                catalog_file= dirs['catalog_file'],
+                                                                config_file= dirs['config_file'],
+                                                                id_start=2000,
+                                                                id_end=2795,
+                                                                lqt_mode=True,
+                                                                generate_figure=False
+                                                                )
+
+    Processing earthquakes: 100%|███████| 796/796 [07:31<00:00,  1.76it/s, Failed=0]
+    Finished. Proceed 796 earthquakes successfully,0 failed. Check lqt_runtime.log for details. 
+
+```
+
+
 The **lqtmoment** includes modules for building input catalog format, performing moment magnitude calculation, visualizations, and simple data analysis.
 
 Contact the developer: Arham Zakki Edelo (edelo.arham@gmail.com)
