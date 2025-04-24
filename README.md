@@ -8,20 +8,20 @@
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue?style=flat&logo=python)](https://www.python.org/)
 
 
-#### What is it?
+## What is it?
 
 **lqtmoment** is python package designed for moment magnitude calculations using pure P, SV, and SH components in the LQT ray coordinate system. It leverages rapid ray tracing to compute incidence angles for component rotation and employs fast spectral fitting to find optimal solution, ensuring high accuracy and efficient automated computation.
 
 By leveraging vectorized computing and advanced statistical methods—such as in implementing Shooting Snell’s Method for incidence angle estimation and Quasi-Monte Carlo techniques for spectral fitting—lqtmoment excels at calculating moment magnitudes for batches of earthquakes, handling hundreds to thousands of events in a single run.
 
 --------------
-**Speed Test with Actual Data**
+### **Lqtmoment Test with Actual Data**
 
-Below is the speed test using actual data, moment magnitudes for 700++ earthquakes were successfully calculated in `LQT ray systems`, with an average of 1.8 seconds per iteration. The seismogram data was recorded at 500 sps using a 3-component shallow borehole sensor.
+Below is the speed test using actual data, moment magnitudes for `700++ earthquakes` were successfully calculated in `LQT ray coordinate systems`, with an average of ~1.8 seconds per iteration. The seismogram data was recorded at `500 sps` using a 3-component shallow borehole sensor.
 
 ``` python
 
-    # calculate the moment magntiude
+    # lqtmoment test
     from lqtmoment import magnitude_estimator
     from pathlib import Path
 
@@ -31,7 +31,6 @@ Below is the speed test using actual data, moment magnitudes for 700++ earthquak
             "catalog_file": r"lqt_catalog.csv",
             "config_file": r"config.ini"    
     }
-
 
     merged_lqt_catalog, lqt_moment_result, lqt_fitting_result = magnitude_estimator(    
                                                                 wave_dir= dirs['wave_dir'],
