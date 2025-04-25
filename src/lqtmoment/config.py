@@ -397,7 +397,7 @@ class Config:
         if "Wave" in config:
             wave_section = config["Wave"]
             resample_data = self._parse_float(wave_section, "resample", self.wave.RESAMPLE_DATA)
-            if resample_data is not None or resample_data <= 0:
+            if resample_data is not None and resample_data <= 0:
                 raise ValueError("new sampling rate must be positive value or None.")
             snr_threshold = self._parse_float(wave_section, "snr_threshold", self.wave.SNR_THRESHOLD)
             if snr_threshold <= 0:
@@ -406,7 +406,7 @@ class Config:
             if len(pre_filter) != 4 or any(f <=0 for f in pre_filter):
                 raise ValueError("pre_filter must be four positive frequencies (f1, f2, f3, f4)")
             water_level = self._parse_float(wave_section, "water_level", self.wave.WATER_LEVEL)
-            if water_level is not None or water_level < 0:
+            if water_level is not None and water_level < 0:
                 raise ValueError("water_level must be non negative or None, otherwise mathematically meaningless")
             apply_post_instrument_removal_filter = wave_section.getboolean("apply_post_instrument_removal_filter", fallback=self.wave.APPLY_POST_INSTRUMENT_REMOVAL_FILTER)
             post_filter_f_min = self._parse_float(wave_section, "post_filter_f_min", self.wave.POST_FILTER_F_MIN)
