@@ -28,21 +28,21 @@ Examples:
     ``` ini
         [Wave]
         resample_data = None
-        snr_threshold = 1.25
-        water_level = 20.0
-        pre_filter = 0.1,0.15,100,125
+        snr_threshold = 2
+        pre_filter = 0.001,0.005,55,60
+        water_level = 60
         apply_post_instrument_removal_filter = True
-        post_filter_f_min = 3
-        post_filter_f_max = 60
+        post_filter_f_min = 0.01
+        post_filter_f_max = 30
         trim_method = dynamic
-        sec_bf_p_arr_trim = 5
-        sec_af_p_arr_trim = 25
-        padding_before_arrival = 0.1
+        sec_bf_p_arr_trim = 10
+        sec_af_p_arr_trim = 50
+        padding_before_arrival = 0.2
         min_p_window = 1.0
         max_p_window = 10.0
         min_s_window = 2.0
         max_s_window = 20.0
-        noise_duration = 0.5
+        noise_duration = 1.0
         noise_padding = 0.2
 
         [Magnitude]
@@ -57,13 +57,12 @@ Examples:
 
         [Spectral]
         smooth_window_size = 3
-        f_min = 1
-        f_max = 50
+        f_min = 0.01
+        f_max = 30
         omega_0_range_min = 0.001
-        omega_0_range_max = 1000
+        omega_0_range_max = 2000
         q_range_min = 50
-        q_range_max = 250
-        fc_range_buffer = 1
+        q_range_max = 300
         default_n_samples = 3000
         n_factor = 2
         y_factor = 1
@@ -114,8 +113,9 @@ class WaveConfig:
     Attributes:
         RESAMPLE_DATA (float): New sampling rate value to be applied to seismogram data (default: None).
         SNR_THRESHOLD (float): Minimum signal-to-noise ratio for trace acceptance (default: 1.5).
-        WATER_LEVEL (float): Water level for deconvolution stabilization (default: 30).
-        PRE_FILTER (List[float]): Bandpass filter corners [f1,f2,f3,f4] in Hz (default: placeholder, override in config.ini).
+        PRE_FILTER (List[float]): Bandpass filter corners [f1,f2,f3,f4] in Hz to be applied prior to 
+                                    instrument response removal process (default: 0.001, 0.005, 55, 60).
+        WATER_LEVEL (float): Water level for deconvolution stabilization during instrument removal (default: 30).
         APPLY_POST_INSTRUMENT_REMOVAL_FILTER (bool): If True, post filter after instrument removal will be applied (default: True).
         POST_FILTER_F_MIN (float): Minimum post-filter frequency in Hz (default: 0.1) after instrument removal.
         POST_FILTER_F_MAX (float): Maximum post-filter frequency in Hz (default: 50) after instrument removal.
@@ -135,25 +135,25 @@ class WaveConfig:
         NOISE_PADDING (float): Noise window padding in seconds (default: 0.2).
     """
     RESAMPLE_DATA : float = None
-    SNR_THRESHOLD: float = 1.75
-    WATER_LEVEL: float = 60.0
+    SNR_THRESHOLD: float = 2
     PRE_FILTER: List[float] = None
+    WATER_LEVEL: float = 60    
     APPLY_POST_INSTRUMENT_REMOVAL_FILTER: bool = True
-    POST_FILTER_F_MIN: float = 0.1
-    POST_FILTER_F_MAX: float = 50.0
+    POST_FILTER_F_MIN: float = 0.01
+    POST_FILTER_F_MAX: float = 30.0
     TRIM_MODE: str = 'dynamic'
     SEC_BF_P_ARR_TRIM: float = 10.0
     SEC_AF_P_ARR_TRIM: float = 50.0
-    PADDING_BEFORE_ARRIVAL: float = 0.1
+    PADDING_BEFORE_ARRIVAL: float = 0.2
     MIN_P_WINDOW: float = 1.0
     MAX_P_WINDOW: float = 10.0
     MIN_S_WINDOW: float = 2.0
     MAX_S_WINDOW: float = 20.0
-    NOISE_DURATION: float = 0.5
+    NOISE_DURATION: float = 1.0
     NOISE_PADDING: float = 0.2
 
     def __post_init__(self):
-        self.PRE_FILTER = self.PRE_FILTER or [0.01, 0.02, 55, 60]
+        self.PRE_FILTER = self.PRE_FILTER or [0.001, 0.005, 55, 60]
 
 @dataclass
 class MagnitudeConfig:
@@ -252,19 +252,17 @@ class SpectralConfig:
         OMEGA_0_RANGE_MAX (float): Maximum Omega_0 in nm/Hz (default: 2000.0).
         Q_RANGE_MIN (float): Minimum quality factor Q (default: 50.0).
         Q_RANGE_MAX (float): Maximum quality factor Q (default: 250.0).
-        FC_RANGE_BUFFER (float): Buffer factor for corner frequency range (default: 2.0).
         DEFAULT_N_SAMPLES (int): Default number for stochastic random sampling (default: 3000).
         N_FACTOR (int): Brune model n factor for spectral decay (default: 2).
         Y_FACTOR (int): Brune model y factor for spectral decay (default: 1).
     """
     SMOOTH_WINDOW_SIZE: int = 3
-    F_MIN: float = 0.1
-    F_MAX: float = 45.0
+    F_MIN: float = 0.01
+    F_MAX: float = 30
     OMEGA_0_RANGE_MIN: float = 0.01
     OMEGA_0_RANGE_MAX: float = 2000.0
     Q_RANGE_MIN: float = 50.0
-    Q_RANGE_MAX: float = 250.0
-    FC_RANGE_BUFFER: float = 1.0
+    Q_RANGE_MAX: float = 300.0
     DEFAULT_N_SAMPLES: int = 3000
     N_FACTOR: int = 2
     Y_FACTOR: int = 1
@@ -404,12 +402,12 @@ class Config:
             snr_threshold = self._parse_float(wave_section, "snr_threshold", self.wave.SNR_THRESHOLD)
             if snr_threshold <= 0:
                 raise ValueError("snr_threshold must be positive")
-            water_level = self._parse_float(wave_section, "water_level", self.wave.WATER_LEVEL)
-            if water_level is not None or water_level < 0:
-                raise ValueError("water_level must be non negative or None, otherwise mathematically meaningless")
             pre_filter = self._parse_list(wave_section, "pre_filter", "0.01,0.02,55,60")
             if len(pre_filter) != 4 or any(f <=0 for f in pre_filter):
                 raise ValueError("pre_filter must be four positive frequencies (f1, f2, f3, f4)")
+            water_level = self._parse_float(wave_section, "water_level", self.wave.WATER_LEVEL)
+            if water_level is not None or water_level < 0:
+                raise ValueError("water_level must be non negative or None, otherwise mathematically meaningless")
             apply_post_instrument_removal_filter = wave_section.getboolean("apply_post_instrument_removal_filter", fallback=self.wave.APPLY_POST_INSTRUMENT_REMOVAL_FILTER)
             post_filter_f_min = self._parse_float(wave_section, "post_filter_f_min", self.wave.POST_FILTER_F_MIN)
             if post_filter_f_min < 0:
@@ -452,8 +450,8 @@ class Config:
             self.wave = WaveConfig(
                 RESAMPLE_DATA=resample_data,
                 SNR_THRESHOLD=snr_threshold,
-                WATER_LEVEL=water_level,
                 PRE_FILTER=pre_filter,
+                WATER_LEVEL=water_level,
                 APPLY_POST_INSTRUMENT_REMOVAL_FILTER=apply_post_instrument_removal_filter,
                 POST_FILTER_F_MIN=post_filter_f_min,
                 POST_FILTER_F_MAX=post_filter_f_max,
@@ -526,9 +524,6 @@ class Config:
             self.spectral.Q_RANGE_MAX = self._parse_float(spec_section, "q_range_max", self.spectral.Q_RANGE_MAX)
             if self.spectral.Q_RANGE_MAX <= self.spectral.Q_RANGE_MIN:
                 raise ValueError("q_range_max must be greater than q_range_min")
-            self.spectral.FC_RANGE_BUFFER = self._parse_float(spec_section, "fc_range_buffer", self.spectral.FC_RANGE_BUFFER)
-            if self.spectral.FC_RANGE_BUFFER <= 0:
-                raise ValueError("fc_range_buffer must be positive")
             self.spectral.DEFAULT_N_SAMPLES = self._parse_int(spec_section, "default_n_samples", self.spectral.DEFAULT_N_SAMPLES)
             if self.spectral.DEFAULT_N_SAMPLES <= 0:
                 raise ValueError("default_n_samples must be positive")

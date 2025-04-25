@@ -144,7 +144,7 @@ def fit_spectrum_grid_search (
 
                     
     # calculate the fitted power spectral density from tuned parameter
-    x_tuned = np.linspace(max(CONFIG.spectral.FC_RANGE_BUFFER, f_min), f_max*1.75, 100)
+    x_tuned = np.linspace(f_min, f_max*1.75, 100)
     y_tuned = calculate_source_spectrum(x_tuned, omega_0_fit, q_factor_fit, f_c_fit, traveltime)
     return omega_0_fit, q_factor_fit, f_c_fit, best_rms_e, x_tuned, y_tuned
 
@@ -219,7 +219,7 @@ def fit_spectrum_qmc (
             raise ValueError("QMC fitting failed to converge")
         
         # generate fitted curve
-        x_tuned = np.linspace(max(CONFIG.spectral.FC_RANGE_BUFFER, f_min), f_max*1.75, 100)
+        x_tuned = np.linspace(f_min, f_max*1.75, 100)
         y_tuned = calculate_source_spectrum(x_tuned, omega_0_fit, q_factor_fit, f_c_fit, traveltime)
         return omega_0_fit, q_factor_fit, f_c_fit, best_rms_e, x_tuned, y_tuned
     
@@ -298,7 +298,7 @@ def fit_spectrum_bayesian(
             raise ValueError("Non-finite or infinite fitting parameters")
         
         # generate fitted curve
-        x_tuned = np.linspace(max(CONFIG.spectral.FC_RANGE_BUFFER, f_min), f_max*1.75, 100)
+        x_tuned = np.linspace(f_min, f_max*1.75, 100)
         y_tuned = calculate_source_spectrum(x_tuned, omega_0_fit, q_factor_fit, f_c_fit, traveltime)
         return omega_0_fit, q_factor_fit, f_c_fit, best_rms_e, x_tuned, y_tuned
         
