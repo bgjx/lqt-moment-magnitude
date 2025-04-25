@@ -490,6 +490,10 @@ def calculate_moment_magnitude(
             logger.warning(f"Earthquake_{source_id}: Failed to trim wave data from {station}: {e}.")
             continue
         
+        # Performing resampling if specified
+        if CONFIG.wave.RESAMPLE_DATA is not None:
+            trimmed_stream.resample(CONFIG.wave.RESAMPLE_DATA)
+
         # Perform the instrument removal
         try:
             stream_displacement = instrument_remove(
