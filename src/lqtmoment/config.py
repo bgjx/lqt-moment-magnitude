@@ -27,6 +27,7 @@ Examples:
 
     ``` ini
         [Wave]
+        resample_data = None
         snr_threshold = 1.25
         water_level = 20.0
         pre_filter = 0.1,0.15,100,125
@@ -111,6 +112,7 @@ class WaveConfig:
     Configuration for wave treatment parameters.
 
     Attributes:
+        RESAMPLE_DATA (float): New sampling rate value to be applied to seismogram data (default: None).
         SNR_THRESHOLD (float): Minimum signal-to-noise ratio for trace acceptance (default: 1.5).
         WATER_LEVEL (float): Water level for deconvolution stabilization (default: 30).
         PRE_FILTER (List[float]): Bandpass filter corners [f1,f2,f3,f4] in Hz (default: placeholder, override in config.ini).
@@ -132,7 +134,7 @@ class WaveConfig:
         NOISE_DURATION (float): Noise window duration in seconds (default: 0.5).
         NOISE_PADDING (float): Noise window padding in seconds (default: 0.2).
     """
-    RESAMPLE : float = None
+    RESAMPLE_DATA : float = None
     SNR_THRESHOLD: float = 1.75
     WATER_LEVEL: float = 60.0
     PRE_FILTER: List[float] = None
@@ -396,8 +398,8 @@ class Config:
         # Load wave config section
         if "Wave" in config:
             wave_section = config["Wave"]
-            resample = self._parse_float(wave_section, "resample", self.wave.RESAMPLE)
-            if resample is not None or resample <= 0:
+            resample_data = self._parse_float(wave_section, "resample", self.wave.RESAMPLE_DATA)
+            if resample_data is not None or resample_data <= 0:
                 raise ValueError("new sampling rate must be positive value or None.")
             snr_threshold = self._parse_float(wave_section, "snr_threshold", self.wave.SNR_THRESHOLD)
             if snr_threshold <= 0:
@@ -448,7 +450,7 @@ class Config:
 
             # Reconstruct WaveConfig to trigger __post_init__
             self.wave = WaveConfig(
-                RESAMPLE= resample,
+                RESAMPLE_DATA=resample_data,
                 SNR_THRESHOLD=snr_threshold,
                 WATER_LEVEL=water_level,
                 PRE_FILTER=pre_filter,
