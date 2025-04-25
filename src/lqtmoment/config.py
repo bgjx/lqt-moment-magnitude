@@ -112,17 +112,17 @@ class WaveConfig:
 
     Attributes:
         RESAMPLE_DATA (float): New sampling rate value to be applied to seismogram data (default: None).
-        SNR_THRESHOLD (float): Minimum signal-to-noise ratio for trace acceptance (default: 1.5).
+        SNR_THRESHOLD (float): Minimum signal-to-noise ratio for trace acceptance (default: 2).
         PRE_FILTER (List[float]): Bandpass filter corners [f1,f2,f3,f4] in Hz to be applied prior to 
                                     instrument response removal process (default: 0.001, 0.005, 55, 60).
-        WATER_LEVEL (float): Water level for deconvolution stabilization during instrument removal (default: 30).
+        WATER_LEVEL (float): Water level for deconvolution stabilization during instrument removal (default: 60).
         APPLY_POST_INSTRUMENT_REMOVAL_FILTER (bool): If True, post filter after instrument removal will be applied (default: True).
-        POST_FILTER_F_MIN (float): Minimum post-filter frequency in Hz (default: 0.1) after instrument removal.
-        POST_FILTER_F_MAX (float): Maximum post-filter frequency in Hz (default: 50) after instrument removal.
+        POST_FILTER_F_MIN (float): Minimum post-filter frequency in Hz (default: 0.01) after instrument removal.
+        POST_FILTER_F_MAX (float): Maximum post-filter frequency in Hz (default: 30) after instrument removal.
         TRIM_MODE (str): Mode used for seismogram trimming. Defaults to dynamic, primarily using the coda information from the catalog.
         SEC_BF_P_ARR_TRIM (float): Time in seconds before P arrival as starting point of trimming (default: 10.0).
         SEC_AF_P_ARR_TRIM (float): Time in seconds after P arrival as ending point of trimming (default: 50.0).
-        PADDING_BEFORE_ARRIVAL (float): Padding before arrival in seconds (default: 0.1).
+        PADDING_BEFORE_ARRIVAL (float): Padding before arrival in seconds (default: 0.2).
         MIN_P_WINDOW (float): Minimum P phase window in second for calculating source spectra
                                 (default: 1.0).
         MAX_P_WINDOW (float): Maximum P phase window in second for calculating source spectra
@@ -131,7 +131,7 @@ class WaveConfig:
                                 (default: 2.0).
         MAX_S_WINDOW (float): Maximum S phase window in second for calculating source spectra
                                 (default: 20.0).
-        NOISE_DURATION (float): Noise window duration in seconds (default: 0.5).
+        NOISE_DURATION (float): Noise window duration in seconds (default: 1.0).
         NOISE_PADDING (float): Noise window padding in seconds (default: 0.2).
     """
     RESAMPLE_DATA : float = None
@@ -246,12 +246,12 @@ class SpectralConfig:
     Attributes:
         SMOOTH_WINDOW_SIZE (int): Size of the moving average window for smoothing,
                                     must be odd positive, if None no smoothing applied (default: 3).
-        F_MIN (float): Minimum frequency for fitting in Hz (default: 1.0).
-        F_MAX (float): Maximum frequency for fitting in Hz (default: 45.0).
+        F_MIN (float): Minimum frequency for fitting in Hz (default: 0.01).
+        F_MAX (float): Maximum frequency for fitting in Hz (default: 30.0).
         OMEGA_0_RANGE_MIN (float): Minimum Omega_0 in nm/Hz (default: 0.01).
         OMEGA_0_RANGE_MAX (float): Maximum Omega_0 in nm/Hz (default: 2000.0).
         Q_RANGE_MIN (float): Minimum quality factor Q (default: 50.0).
-        Q_RANGE_MAX (float): Maximum quality factor Q (default: 250.0).
+        Q_RANGE_MAX (float): Maximum quality factor Q (default: 300.0).
         DEFAULT_N_SAMPLES (int): Default number for stochastic random sampling (default: 3000).
         N_FACTOR (int): Brune model n factor for spectral decay (default: 2).
         Y_FACTOR (int): Brune model y factor for spectral decay (default: 1).
