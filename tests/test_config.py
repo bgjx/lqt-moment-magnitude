@@ -5,21 +5,21 @@ from lqtmoment.config import CONFIG
 
 def test_wave_params():
     """ Check few default wave parameters in package default config.ini """
-    expected_snr = 1.75
+    expected_snr = 2
     expected_water_level = 60
-    expected_pre_filter = [0.01, 0.02, 55, 60]
+    expected_pre_filter = [0.001, 0.005, 55, 60]
     expected_post_filter_statement = True
-    expected_post_filter_f_min = 0.1
-    expected_post_filter_f_max = 50
+    expected_post_filter_f_min = 0.01
+    expected_post_filter_f_max = 30
     expected_trim_mode = 'dynamic'
     expected_sec_bf_p = 10
     expected_sec_af_p = 50
-    expected_padding_bf_arrival = 0.1
+    expected_padding_bf_arrival = 0.2
     expected_min_p_window = 1.0
     expected_max_p_window = 10.0
     expected_min_s_window = 2.0
     expected_max_s_window = 20.0
-    expected_noise_duration = 0.5
+    expected_noise_duration = 1.0
     expected_noise_padding = 0.2
     assert CONFIG.wave.SNR_THRESHOLD == expected_snr
     assert CONFIG.wave.WATER_LEVEL == expected_water_level
@@ -62,13 +62,12 @@ def test_magnitude_params():
 def test_spectral_params():
     """ Check few default spectral parameters in package default config.ini """
     expected_smooth_window = 3
-    expected_f_min = 0.1
-    expected_f_max = 45
+    expected_f_min = 0.01
+    expected_f_max = 30
     expected_omega_min = 0.01
     expected_omega_max = 2000
     expected_q_min = 50
-    expected_q_max = 250
-    expected_fc_buffer = 1
+    expected_q_max = 300
     expected_n_samples = 3000
     assert CONFIG.spectral.SMOOTH_WINDOW_SIZE == expected_smooth_window
     assert CONFIG.spectral.F_MIN == expected_f_min
@@ -77,7 +76,6 @@ def test_spectral_params():
     assert CONFIG.spectral.OMEGA_0_RANGE_MAX == expected_omega_max
     assert CONFIG.spectral.Q_RANGE_MIN == expected_q_min
     assert CONFIG.spectral.Q_RANGE_MAX == expected_q_max
-    assert CONFIG.spectral.FC_RANGE_BUFFER == expected_fc_buffer
     assert CONFIG.spectral.DEFAULT_N_SAMPLES == expected_n_samples
 
 def test_performance_params():
