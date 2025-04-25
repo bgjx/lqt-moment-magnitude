@@ -1,7 +1,7 @@
 """
 Fitting spectral module for lqt-moment-magnitude package.
 
-Version: 0.1.1
+Version: 0.2.0
 
 This module fits seismic displacement spectra to estimate Omega_0, corner frequency, and quality factor
 using Quasi-Monte Carlo (QMC) sampling, Bayesian optimization, and grid search, based on Abercrombie
