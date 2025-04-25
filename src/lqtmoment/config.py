@@ -132,6 +132,7 @@ class WaveConfig:
         NOISE_DURATION (float): Noise window duration in seconds (default: 0.5).
         NOISE_PADDING (float): Noise window padding in seconds (default: 0.2).
     """
+    RESAMPLE : float = None
     SNR_THRESHOLD: float = 1.75
     WATER_LEVEL: float = 60.0
     PRE_FILTER: List[float] = None
@@ -395,11 +396,14 @@ class Config:
         # Load wave config section
         if "Wave" in config:
             wave_section = config["Wave"]
+            resample = self._parse_float(wave_section, "resample", self.wave.RESAMPLE)
+            if resample is not None or resample <= 0:
+                raise ValueError("new sampling rate must be positive value or None.")
             snr_threshold = self._parse_float(wave_section, "snr_threshold", self.wave.SNR_THRESHOLD)
             if snr_threshold <= 0:
                 raise ValueError("snr_threshold must be positive")
             water_level = self._parse_float(wave_section, "water_level", self.wave.WATER_LEVEL)
-            if water_level is not None and water_level < 0:
+            if water_level is not None or water_level < 0:
                 raise ValueError("water_level must be non negative or None, otherwise mathematically meaningless")
             pre_filter = self._parse_list(wave_section, "pre_filter", "0.01,0.02,55,60")
             if len(pre_filter) != 4 or any(f <=0 for f in pre_filter):
@@ -444,6 +448,7 @@ class Config:
 
             # Reconstruct WaveConfig to trigger __post_init__
             self.wave = WaveConfig(
+                RESAMPLE= resample,
                 SNR_THRESHOLD=snr_threshold,
                 WATER_LEVEL=water_level,
                 PRE_FILTER=pre_filter,
