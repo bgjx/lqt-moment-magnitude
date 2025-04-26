@@ -854,6 +854,7 @@ def start_calculate(
         on='source_id',
         how='left'
     )
+
     # Rename column name 'mw_average' to just 'magnitude' for generalization.
     merged_catalog = merged_catalog.rename(columns={'mw_average':'magnitude'})
 
@@ -862,6 +863,9 @@ def start_calculate(
     columns_name.remove('magnitude')
     columns_name.insert(5, 'magnitude')
     merged_catalog = merged_catalog[columns_name]
+
+    # Remove unnecessary index in merged catalog
+    merged_catalog = merged_catalog.reset_index(drop=True)
 
     # Summary message
     sys.stdout.write(
