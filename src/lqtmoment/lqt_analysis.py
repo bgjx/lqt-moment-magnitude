@@ -109,6 +109,7 @@ class LqtAnalysis:
         if not lon.between(-180, 180).all():
             raise ValueError("Longitude must be between -180 and 180")
     
+
     def _render_figure(
         self,
         fig: go.Figure,
@@ -122,6 +123,25 @@ class LqtAnalysis:
         else:
             fig.show()
     
+
+    def head(self, row_number: int = 5):
+        """
+        Return the first ten rows of the input dataframe.
+
+        Args:
+            row_number (int): The number of how many rows should be display. Default to 5.
+        Returns:
+            First ten rows of the input dataframe.
+
+        Examples:
+        ``` python
+            >>> df = pd.DataFrame({"magnitude": [1, 2, 3]})
+            >>> lqt = LqtAnalysis(df)
+            >>> lqt.head()
+        ```
+        """
+        return self.data.head(row_number)
+
 
     def compute_statistic(self, column_name: str, statistic_op : Statistic) -> float:
         """
