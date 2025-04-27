@@ -335,7 +335,6 @@ class LqtAnalysis:
             raise TypeError("max_bin must be a numeric value")
         if min_bin is not None and max_bin is not None and min_bin >= max_bin:
             raise ValueError("min_bin must be greater than the max_bin")
-        
 
         # Compute bins
         if bin_width is None:
@@ -348,11 +347,10 @@ class LqtAnalysis:
         max_val = max_bin if max_bin is not None else np.ceil(data.max() / bin_width) * bin_width
 
         # Create bin edges
-        bin_edges = np.arange(min_val, max_val + bin_width, bin_width)
+        bin_edges = np.arange(min_val, (max_val + bin_width), bin_width)
 
-
-        # Calculate bin centers (midpoints of bins)
-        bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+        # Calculate bin centers
+        bin_centers = (bin_edges[:-1]  + bin_edges[1:]) /2
 
         # Populate data into bins (count occurrences in each bin)
         hist_counts, _ = np.histogram(data, bins = bin_edges)
@@ -367,7 +365,7 @@ class LqtAnalysis:
                 y=hist_counts,
                 width=bin_width,
                 name=column_name,
-                hovertemplate="Bin Center: %{x:.3f}<br>Count: %{y}<extra></extra>",
+                hovertemplate="Bin_center: %{x:.3f}<br>count: %{y}<extra></extra>",
                 marker= dict(color = 'skyblue')
             )
         )
@@ -378,8 +376,8 @@ class LqtAnalysis:
             xaxis_title = column_name,
             yaxis_title = "Count",
             showlegend = False,
-            bargap = 0.2,
-            template='plolty_white',
+            bargap = 0.25,
+            template='plotly_white',
             xaxis=dict(
                 tickmode = 'array',
                 tickvals=bin_centers,
