@@ -290,6 +290,8 @@ class LqtAnalysis:
         self,
         column_name: str,
         bin_width: Optional[float] = None,
+        min_bin: Optional[float] = None,
+        max_bin: Optional[float] = None,
         save_figure: bool = False
         ) -> None:
         """
@@ -299,6 +301,10 @@ class LqtAnalysis:
             column_name (str): Name of the column to plot the histogram for.
             bin_width (Optional[float]): Determine the bin width. Defaults to None,
                                         trigger automatic binning.
+            min_bin (float): Minimum bin edge. Default to None, min bin will be calculated
+                                automatically.
+            max_bin (float): Maximum bin edge. Default to None, max bin will be calculated
+                                automatically.
             save_figure (bool): If true, save the plot. Defaults to False.
         
         Returns:
@@ -307,6 +313,7 @@ class LqtAnalysis:
         Raises:
             KeyError: If the column_name does not exist in the DataFrame.
             ValueError: If no DataFrame is provided, the column is empty, or it contains no valid numeric data.
+            TypeError: If min_edge, max_edge, or bin_width are not numeric.
 
         Examples:
         ``` python
@@ -315,26 +322,42 @@ class LqtAnalysis:
             >>> lqt.plot_histogram("magnitude", bin_width=0.5)
         ```       
         """
-        data = self._clean_column(column_name).dropna()
 
+        # clean and validate the column data
+        data = self._clean_column(column_name).dropna()
         if data.empty:
             raise ValueError(f"No valid data available for plotting in column {column_name}")
+        
+        # Validate the min_bin and max_bin
+        if min_bin is not None and not isinstance(min_bin, (int, float)):
+            raise TypeError("min_bin must be a numeric value")
+        if max_bin is not None and not isinstance(max_bin, (int, float)):
+            raise TypeError("max_bin must be a numeric value")
+        if min_bin is not None and max_bin is not None and min_bin >= max_bin:
+            raise ValueError("min_bin must be greater than the max_bin")
+        
 
         # Compute bins
         if bin_width is not None:
-            min_val = np.floor(data.min() / bin_width) * bin_width
-            max_val = np.ceil(data.max() / bin_width) * bin_width
+            if not isinstance(bin_width, (int, float)) or bin_width <= 0:
+                raise ValueError("bin_width must be a positive numeric value")
+            
+            # Use user provided min_bin and max_bin, otherwise fall back to data min/max
+            min_val = min_bin if min_bin is not None else np.floor(data.min() / bin_width) * bin_width
+            max_val = max_bin if max_bin is not None else np.ceil(data.max() / bin_width) * bin_width
             bin_edges = np.arange(min_val, max_val + bin_width, bin_width)
             nbins = len(bin_edges) - 1
         else:
             nbins = None
             bin_edges = None
+            min_val = min_bin if min_bin is not None else None
+            max_val = max_bin if max_bin is not None else None
 
         # Plot the histogram
         fig = px.histogram(
             x = data,
             nbins= nbins,
-            range_x = [bin_edges[0], bin_edges[-1]] if bin_edges is not None else None,
+            range_x = [min_bin, max_bin] if min_bin is not None and max_bin is not None else None,
             title=f"Histogram of {column_name}",
             labels={'x': column_name, 'y': 'Count'},
             template='plotly_white'
@@ -347,15 +370,15 @@ class LqtAnalysis:
             showlegend=False,
             bargap=0.2,
             xaxis=dict(
-                tickmode='array',
-                tickvals=bin_edges[:-1] + bin_width/2 if bin_edges is not None else None,
+                tickmode='array' if bin_edges is not None else 'auto',
+                tickvals=(bin_edges[:-1] + bin_width/2) if bin_edges is not None else None,
                 ticktext=[f"{x:.3f}" for x in (bin_edges[:-1] + bin_width / 2)] if bin_edges is not None else None
             )
         )
         
         # Customize hover to show bin center
         if bin_width is not None:
-            fig.update_trace(
+            fig.update_traces(
                 hovertemplate="Bin Center: %{x:.3f}<br>Count: %{y}"
             )
         
