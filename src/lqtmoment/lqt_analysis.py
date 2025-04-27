@@ -434,8 +434,8 @@ class LqtAnalysis:
         lat = self._clean_column(lat_column)
         lon = self._clean_column(lon_column)
         depth = self._clean_column(depth_column) if depth_column else None
-        color = self._clean_column(color_by) if color_by else None
-        size = self._clean_column(size_by) if size_by else None
+        color = self._clean_column(color_by) if color_by else np.ones_like(lat)
+        size = self._clean_column(size_by) if size_by else np.ones_like(lat)
 
         # Validate the geographic coordinate
         self._validate_geo_columns(lat, lon)
@@ -446,8 +446,8 @@ class LqtAnalysis:
                 'lat': lat,
                 'lon': lon,
                 'depth': depth,
-                'color': color if color else np.ones_like(lat),
-                'size': size if size else np.ones_like(lat)
+                'color': color,
+                'size': size,
             }
         ).dropna()
 
@@ -519,8 +519,8 @@ class LqtAnalysis:
         # Get the data
         lat = self._clean_column(lat_column)
         lon = self._clean_column(lon_column)
-        color = self._clean_column(color_by) if color_by else None
-        size = self._clean_column(size_by) if size_by else None
+        color = self._clean_column(color_by) if color_by else np.ones_like(lat)
+        size = self._clean_column(size_by) if size_by else np.ones_like(lat)
 
         # Validate the geographic coordinate
         self._validate_geo_columns(lat, lon)
@@ -530,8 +530,8 @@ class LqtAnalysis:
             {
                 'lat': lat,
                 'lon': lon,
-                'color': color if color else np.ones_like(lat),
-                'size': size if size else np.ones_like(lat)
+                'color': color,
+                'size': size
             }
         ).dropna()
 
