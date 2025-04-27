@@ -16,6 +16,7 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go 
 import plotly.express as px
+
 from typing import Optional, Dict
 from scipy.stats import linregress
 from enum import Enum
