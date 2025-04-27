@@ -295,7 +295,7 @@ class LqtAnalysis:
         save_figure: bool = False
         ) -> None:
         """
-        Plot a histogram for the specific column.
+        Plot a histogram for the specific column with manual binning.
 
         Args:
             column_name (str): Name of the column to plot the histogram for.
@@ -338,49 +338,54 @@ class LqtAnalysis:
         
 
         # Compute bins
-        if bin_width is not None:
-            if not isinstance(bin_width, (int, float)) or bin_width <= 0:
-                raise ValueError("bin_width must be a positive numeric value")
+        if bin_width is None:
+            raise ValueError("bin_width must be provided for manual binning")
+        if not isinstance(bin_width, (int, float)) or bin_width <= 0:
+            raise ValueError("bin_width must be a positive numeric value")
             
-            # Use user provided min_bin and max_bin, otherwise fall back to data min/max
-            min_val = min_bin if min_bin is not None else np.floor(data.min() / bin_width) * bin_width
-            max_val = max_bin if max_bin is not None else np.ceil(data.max() / bin_width) * bin_width
-            bin_edges = np.arange(min_val, max_val + bin_width, bin_width)
-            nbins = len(bin_edges) - 1
-        else:
-            nbins = None
-            bin_edges = None
-            min_val = min_bin if min_bin is not None else None
-            max_val = max_bin if max_bin is not None else None
+        # Use user provided min_bin and max_bin, otherwise fall back to data min/max
+        min_val = min_bin if min_bin is not None else np.floor(data.min() / bin_width) * bin_width
+        max_val = max_bin if max_bin is not None else np.ceil(data.max() / bin_width) * bin_width
 
-        # Plot the histogram
-        fig = px.histogram(
-            x = data,
-            nbins= nbins,
-            range_x = [min_bin, max_bin] if min_bin is not None and max_bin is not None else None,
-            title=f"Histogram of {column_name}",
-            labels={'x': column_name, 'y': 'Count'},
-            template='plotly_white'
+        # Create bin edges
+        bin_edges = np.arange(min_val, max_val + bin_width, bin_width)
+
+
+        # Calculate bin centers (midpoints of bins)
+        bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+
+        # Populate data into bins (count occurrences in each bin)
+        hist_counts, _ = np.histogram(data, bins = bin_edges)
+
+        # Create plotly figure
+        fig = go.Figure()
+
+        # Add histogram bars using bin centers and counts
+        fig.add_trace(
+            go.Bar(
+                x=bin_centers,
+                y=hist_counts,
+                width=bin_width,
+                name=column_name,
+                hovertemplate="Bin Center: %{x:.3f}<br>Count: %{y}<extra></extra>",
+                marker= dict(color = 'skyblue')
+            )
         )
 
-        # Figure playout
+        # Figure layout
         fig.update_layout(
-            xaxis_title=column_name,
-            yaxis_title="Count",
-            showlegend=False,
-            bargap=0.2,
+            title = f"Histogram of {column_name}",
+            xaxis_title = column_name,
+            yaxis_title = "Count",
+            showlegend = False,
+            bargap = 0.2,
+            template='plolty_white',
             xaxis=dict(
-                tickmode='array' if bin_edges is not None else 'auto',
-                tickvals=(bin_edges[:-1] + bin_width/2) if bin_edges is not None else None,
-                ticktext=[f"{x:.3f}" for x in (bin_edges[:-1] + bin_width / 2)] if bin_edges is not None else None
+                tickmode = 'array',
+                tickvals=bin_centers,
+                ticktext=[f"{x:.3f}" for x in bin_centers]
             )
         )
-        
-        # Customize hover to show bin center
-        if bin_width is not None:
-            fig.update_traces(
-                hovertemplate="Bin Center: %{x:.3f}<br>Count: %{y}"
-            )
         
         self._render_figure(fig, f"histogram_{column_name}", save_figure)
 
