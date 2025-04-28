@@ -90,6 +90,23 @@ class LqtAnalysis:
         
         column_series = self.data[['source_id', column_name]].drop_duplicates(subset='source_id')[column_name] 
 
+        self._cache_cleaned_column[column_name] = column_series
+        return column_series
+    
+
+    def _clean_column_numeric(self, column_name: str) -> pd.Series:
+        """ Helper function to clean and make sure the column is numeric."""
+        # Check this column in cache first
+        if column_name in self._cache_cleaned_column:
+            return self._cache_cleaned_column[column_name]
+        
+        if self.data is None:
+            raise ValueError("No DataFrame provided")
+        if column_name not in self.data.columns:
+            raise KeyError(f"Column {column_name} does not exist in the DataFrame")
+        
+        column_series = self.data[['source_id', column_name]].drop_duplicates(subset='source_id')[column_name] 
+
         if not np.issubdtype(column_series.dtype, np.number):
             column_series = pd.to_numeric(column_series, errors='coerce')
 
@@ -167,7 +184,7 @@ class LqtAnalysis:
             2.0
         ```
         """
-        data = self._clean_column(column_name)
+        data = self._clean_column_numeric(column_name)
         statistic_function = {
             Statistic.MEAN: data.mean,
             Statistic.MEDIAN: data.median,
@@ -325,7 +342,7 @@ class LqtAnalysis:
         """
 
         # clean and validate the column data
-        data = self._clean_column(column_name).dropna()
+        data = self._clean_column_numeric(column_name).dropna()
         if data.empty:
             raise ValueError(f"No valid data available for plotting in column {column_name}")
         
@@ -431,11 +448,11 @@ class LqtAnalysis:
             raise ValueError("No DataFrame provided")
 
         # Get the data
-        lat = self._clean_column(lat_column)
-        lon = self._clean_column(lon_column)
-        depth = self._clean_column(depth_column) if depth_column else None
-        color = self._clean_column(color_by) if color_by else np.ones_like(lat)
-        size = self._clean_column(size_by) if size_by else np.ones_like(lat)
+        lat = self._clean_column_numeric(lat_column)
+        lon = self._clean_column_numeric(lon_column)
+        depth = self._clean_column_numeric(depth_column) if depth_column else None
+        color = self._clean_column_numeric(color_by) if color_by else np.ones_like(lat)
+        size = self._clean_column_numeric(size_by) if size_by else np.ones_like(lat)
 
         # Validate the geographic coordinate
         self._validate_geo_columns(lat, lon)
@@ -485,22 +502,12 @@ class LqtAnalysis:
 
     def plot_hypocenter_2d(
         self,
-        lat_column: str,
-        lon_column: str,
-        color_by: Optional[str] = None ,
-        size_by: Optional[str] = None,
         save_figure: bool = False
         ) -> None:
         """
         Create interactive 2D or 3D hypocenter plot.
 
         Args:
-            lat_column (str): Name of the latitude column.
-            lon_column (str): Nme of longitude column.
-            color_by (Optional[str]): Name of the column to map color points by. If None,
-                                        use single color.
-            size_by (Optional[str]): Name of the column to map size points by. If None,
-                                        use default size.
             save_figure (bool): If True, save the plot.
         
         Raises:
@@ -516,50 +523,111 @@ class LqtAnalysis:
         if self.data is None:
             raise ValueError("No DataFrame provided")
 
-        # Get the data
-        lat = self._clean_column(lat_column)
-        lon = self._clean_column(lon_column)
-        color = self._clean_column(color_by) if color_by else np.ones_like(lat)
-        size = self._clean_column(size_by) if size_by else np.ones_like(lat)
+        # Get the Hypocenter Detailed Info
+        source_id = self.data['source_id'].drop_duplicates()
+        source_lat = self._clean_column_numeric('source_lat')
+        source_lon = self._clean_column_numeric('source_lon')
+        source_depth = self._clean_column_numeric('source_depth_m')
+        source_magnitude = self._clean_column_numeric('magnitude') if  'magnitude' in self.data.columns else np.ones_like(source_lat)
 
-        # Validate the geographic coordinate
-        self._validate_geo_columns(lat, lon)
+        # Get the Station Detailed Info
+        sta_code = self._clean_column('station_code')
+        sta_lat = self._clean_column_numeric('station_lat')
+        sta_lon = self._clean_column_numeric('station_lon')
 
-        # Combine the data to a Dict object and drop NaN
-        data = pd.DataFrame(
+        # Validate the hypocenters geographic coordinate
+        self._validate_geo_columns(source_lat, source_lon)
+
+        # Validate the stations geographic coordinate
+        self._validate_geo_columns(source_lat, source_lon)
+
+        # Combine data and build hypocenters dataframe
+        hypo_data = pd.DataFrame(
             {
-                'lat': lat,
-                'lon': lon,
-                'color': color,
-                'size': size
+                'source_id': source_id,
+                'source_lat': source_lat,
+                'source_lon': source_lon,
+                'depth_m': source_depth,
+                'magnitude': source_magnitude
             }
         ).dropna()
 
-        if data.empty:
+        # Combine data and build stations dataframe
+        sta_data  = pd.DataFrame(
+            {
+                'sta_code': sta_code,
+                'sta_lat': sta_lat,
+                'sta_lon': sta_lon
+            }   
+        )
+
+        if hypo_data.empty:
             raise ValueError("No valid data available for plotting after removing NaN values")
-        
-        if size_by:
-            data['size'] = (data['size'] - data['size'].min()) / (data['size'].max() - data['size'].min() + 1e-10) * 10
+
+        # Normalize the magnitude sizing
+        if 'magnitude' in self.data.columns:
+            hypo_data['normalized_magnitude'] = (hypo_data['magnitude'] - hypo_data['magnitude'].min()) / (hypo_data['magnitude'].max() - hypo_data['magnitude'].min() + 1e-10) * 1
         
         # Plotting the Data
         fig = px.scatter(
-            data,
-            x='lon',
-            y='lat',
-            color= 'color' if color_by else None,
-            size = 'size' if size_by else None,
-            color_continuous_scale= 'Varidis',
-            hover_data = {'lat': ':.2f', 'lon': ':.2f', 'depth': ':.2f', 'color': ':.2f'},
+            hypo_data,
+            x='source_lon',
+            y='source_lat',
+            color= 'depth_m',
+            size = 'normalized_magnitude',
+            custom_data=['source_id', 'depth_m', 'magnitude'],
+            color_continuous_scale= 'Viridis',
             title= 'Earthquake Locations (2D)'
         )
 
+        fig.update_traces(
+            hovertemplate =
+                "<b>Earthquake: %{customdata[0]}</b><br>" +
+                "Source Lon: %{x:.3f}<br>" +
+                "Source Lat: %{y:.3f}<br>" +
+                "Source Depth: %{customdata[1]:.3f}<br>" +
+                "Magnitude: %{customdata[2]:.3f}<br>" +
+                "<extra></extra>",        
+        )
+
+        fig.add_trace(
+            go.Scatter(
+                x=sta_data['sta_lon'],
+                y=sta_data['sta_lat'],
+                mode='markers+text',
+                marker = dict(
+                    size=16,
+                    symbol='triangle-down',
+                    color='red'
+                ),
+                name='Stations',
+                text= sta_data['sta_code'],
+                textposition='top center',
+                textfont=dict(
+                    size=12,
+                    color='lightgrey'
+                ),
+                hovertemplate='<b>%{text}</b><br>Lat: %{y:.2f}<br>Lon: %{x:.2f}<extra></extra>'
+            )
+        )
+
         fig.update_layout(
-            showlegend = bool(color_by),
-            coloraxis_colorbar_title = color_by if color_by else None,
+            showlegend = True,
+            coloraxis_colorbar_title = 'depth_m',
             template = 'plotly_white',
             xaxis_title="Longitude",
-            yaxis_title="Latitude"
+            yaxis_title="Latitude",
+            xaxis = dict(
+                scaleanchor="y",
+                scaleratio=1
+            ),
+
+            yaxis = dict(
+                scaleratio=1
+            )
         )
+
+
 
         self._render_figure(fig, "2d_plot_hypocenter", save_figure)
 
@@ -609,7 +677,7 @@ class LqtAnalysis:
         if bin_width <= 0:
             raise ValueError("bind_width must be positive")
         
-        valid_magnitudes = self._clean_column(column_name).dropna()
+        valid_magnitudes = self._clean_column_numeric(column_name).dropna()
         if len(valid_magnitudes) < 10:
             raise  ValueError("Insufficient valid data for Gutenberg-Richter analysis")
         
