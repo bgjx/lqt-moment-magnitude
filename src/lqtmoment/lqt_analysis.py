@@ -85,6 +85,7 @@ class LqtAnalysis:
         
         if self.data is None:
             raise ValueError("No DataFrame provided")
+        
         if column_name not in self.data.columns:
             raise KeyError(f"Column {column_name} does not exist in the DataFrame")
         
@@ -205,8 +206,8 @@ class LqtAnalysis:
         Subset DataFrame by specific date time range.
 
         Args:
-            min_time (str): A string following this format '%Y-%m-%d %H:%M:%S' as min time range.
-            max_time (str): A string following this format '%Y-%m-%d %H:%M:%S' as min time range.
+            min_time (str): A string following this format '%YYYY-%mm-%dd %HH:%MM:%SS' as min time range.
+            max_time (str): A string following this format '%YYYY-%mm-%dd %HH:%MM:%SS' as min time range.
         
         Returns:
             pd.DataFrame: A subset from main DataFrame after time windowing.
@@ -233,12 +234,14 @@ class LqtAnalysis:
         except ValueError as e:
             raise ValueError("Given time range follows unmatched format") from e
         
+        # Convert the source origin time to datetime objcect
+        source_origin_times = pd.to_datetime(self.data['source_origin_time'])
         if min_datetime > max_datetime:
             raise ValueError ("min_datetime must be earlier than max_datetime")
-        if min_datetime < self.data['source_origin_time'].min() or max_datetime > self.data['source_origin_time'].max():
+        if min_datetime < source_origin_times.min() or max_datetime > source_origin_times.max():
             raise ValueError("Given time ranges are outside catalog time range.")
 
-        subset_df = self.data[(self.data['source_origin_time'] >= min_datetime ) & (self.data['source_origin_time'] <= max_datetime)]
+        subset_df = self.data[(source_origin_times >= min_datetime ) & (source_origin_times <= max_datetime)]
 
         return subset_df
         
@@ -865,7 +868,82 @@ class LqtAnalysis:
 
             fig.show()
         return result
+    
+    def plot_intensity(self, interval: str = 'monthly'):
+        """
+        Calculate and plot histogram of earthquakes intensity in interval time defined by User.
 
+        Args:
+            interval (str): The time interval to calculate the earthquake intensity.
+                            It should be 'yearly', 'monthly', 'weekly', 'daily', or 'hourly'.
+        
+        Raises:
+
+        Returns: 
+            None   
+        """
+        if interval.strip().lower() not in ['yearly', 'monthly', 'weekly', 'daily', 'hourly']:
+            raise ValueError ("Your given interval is not valid, must be 'yearly', 'monthly', 'weekly', 'daily', or 'hourly'")
+        
+        interval = interval.strip().lower()
+
+        # get the source origin time data series
+        date_series = pd.to_datetime(self._clean_column('source_origin_time'))
+        
+        # start populate the origin time of data
+        if interval == 'yearly':
+            grouped = date_series.groupby(date_series.dt.year).size()
+            x_values = grouped.index.astype(str)
+            y_values = grouped.values
+            x_label = "Yearly Intensities"
+        elif interval == 'monthly':
+            grouped = date_series.groupby([date_series.dt.year, date_series.dt.month]).size()
+            x_values = [f"{year}_{month:02d}" for year, month in grouped.index]
+            y_values = grouped.values
+            x_label = "Monthly Intensities"
+        elif interval == 'weekly':
+            grouped = date_series.groupby([date_series.dt.isocalendar().year, date_series.dt.isocalendar().week]).size()
+            x_values = [f"{year}_{week:02d}" for year, week in grouped.index]
+            y_values = grouped.values
+            x_label = "Weekly Intensities"
+        elif interval == 'daily':
+            grouped = date_series.groupby([date_series.dt.year, date_series.dt.month, date_series.dt.day]).size()
+            x_values = [f"{year}_{month:02d}_{day:02d}" for year, month, day in grouped.index]
+            y_values = grouped.values
+            x_label = "Daily Intensities"
+        elif interval == 'hourly':
+            grouped = date_series.groupby([date_series.dt.year, date_series.dt.month, date_series.dt.day, date_series.dt.hour]).size()
+            x_values = [f"{year}_{month:02d}_{day:02d} : {hour:02d}:--:--" for year, month, day, hour in grouped.index]
+            y_values = grouped.values
+            x_label = "Hourly Intensities"
+        else:
+            pass 
+
+        # Create Plotly figure
+        fig = go.Figure()
+        fig.add_trace(
+            go.Bar(
+                x=x_values,
+                y=y_values,
+                marker_color = 'skyblue',
+            )
+        )
+
+        # Update layout
+        fig.update_layout(
+            title = f"Histogram of Earthquakes intensity ({interval.capitalize()})",
+            xaxis_title= x_label,
+            yaxis_title='Count',
+            xaxis_tickangle=45,
+            bargap = 0.2,
+            showlegend=False,
+            template = 'plotly_white'
+        )
+
+        fig.show()
+
+        return None
+    
 
 def load_catalog(catalog_file: str) -> LqtAnalysis:
     """
