@@ -867,21 +867,18 @@ class LqtAnalysis:
                 )
             )
 
-            # Find the break points for the trend line using grid search
-            fit_x = np.arange(mag_bins_cum.min(), mag_bins_cum.max() + bin_width, bin_width)
-
             # Parameters holder to find best parameters
             best_r_squared = 0
-            best_breakpoint = fit_x[0]
+            best_breakpoint = mag_bins_cum[0]
             best_slope = 0
             best_intercept = 0
             best_index = 0
 
             # Search best break points (only use 50% of the data to speed up calculation)
-            for i in range(1, len(fit_x)//2):
-                breakpoint = fit_x[i]
-                mask = fit_x >= breakpoint
-                x_subset = fit_x[mask]
+            for i in range(1, len(mag_bins_cum)//2):
+                breakpoint = mag_bins_cum[i]
+                mask = mag_bins_cum >= breakpoint
+                x_subset = mag_bins_cum[mask]
                 y_subset = log_cumulative_counts[mask]
 
                 if len(x_subset)< 2: 
@@ -898,43 +895,44 @@ class LqtAnalysis:
                     best_index = i
 
             # Fitted line
-            fit_y = (best_slope * fit_x) + best_intercept
+            fit_log_cumulative = (best_slope * mag_bins_cum) + best_intercept
 
             # Find the magnitude completeness 
-            mc = (best_breakpoint, fit_y[best_index])
+            mc = (best_breakpoint, fit_log_cumulative[best_index])
 
             # Plot the fitted line
             fig.add_trace(
                 go.Scatter(
-                    x = fit_x,
-                    y = fit_y,
+                    x = mag_bins_cum,
+                    y = fit_log_cumulative,
                     mode = 'lines',
-                    name = f"Fit: b={b_value:.2f}, R_square = {r_value**2:.2f}",
+                    name = f"Fit: b_val={b_value:.2f}, a_val = {a_value:.2f}, R^2 = {r_value**2:.2f}",
                     line = dict(
                         color='red'
                     )
                 )
             )
 
+            print(mc)
             # Plot the mc values
             fig.add_trace(
                 go.Scatter(
-                    x = mc[0],
-                    y = mc[1],
+                    x = [mc[0]],
+                    y = [mc[1]],
                     mode='markers+text',
                     marker = dict(
                         size=12,
                         symbol='triangle-down',
                         color='red'
                     ),
-                    name='Magnitude Completeness',
+                    name=f"Magnitude Completeness: {mc[0]}",
                     text= 'MC',
                     textposition='top center',
                     textfont=dict(
                         size=12,
                         color='#333333'
                     ),
-                    hovertemplate='<b>%{text}</b><br>Log10(N >= M): %{y:.2f}<br>Magnitude: %{x:.2f}<extra></extra>'
+                    hovertemplate='<b>Magnitude Completeness</b><br>Log10(N >= M): %{y:.2f}<br>Magnitude: %{x:.2f}<extra></extra>'
                     )
             )
 
