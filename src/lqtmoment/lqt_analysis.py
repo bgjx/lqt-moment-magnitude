@@ -313,8 +313,8 @@ class LqtAnalysis:
         bin_width: Optional[float] = None,
         min_bin: Optional[float] = None,
         max_bin: Optional[float] = None,
-        plot_width: int = 720,
-        plot_height: int = 1080,
+        plot_width: int = 960,
+        plot_height: int = 720,
         ) -> None:
         """
         Plot a histogram for the specific column with manual binning.
@@ -327,8 +327,8 @@ class LqtAnalysis:
                                 automatically.
             max_bin (float): Maximum bin edge. Default to None, max bin will be calculated
                                 automatically.
-            plot_width (int): The width of the plot. Default to 720.
-            plot_height (int): The height of the plot. Default to 1080.
+            plot_width (int): The width of the plot. Default to 960.
+            plot_height (int): The height of the plot. Default to 720.
         
         Returns:
             None
@@ -416,15 +416,15 @@ class LqtAnalysis:
 
     def plot_hypocenter_3d(
         self,
-        plot_width: int = 720,
-        plot_height: int = 1080,
+        plot_width: int = 960,
+        plot_height: int = 720,
         ) -> None:
         """
         Create interactive 2D or 3D hypocenter plot.
 
         Args:
-            plot_width (int): The width of the plot. Default to 720.
-            plot_height (int): The height of the plot. Default to 1080.
+            plot_width (int): The width of the plot. Default to 960.
+            plot_height (int): The height of the plot. Default to 720.
         
         Raises:
             KeyError: If any specified column does not exist in the DataFrame.
@@ -567,15 +567,15 @@ class LqtAnalysis:
 
     def plot_hypocenter_2d(
         self,
-        plot_width: int = 720,
-        plot_height: int = 1080,
+        plot_width: int = 960,
+        plot_height: int = 720,
         ) -> None:
         """
         Create interactive 2D or 3D hypocenter plot.
 
         Args:
-            plot_width (int): The width of the plot. Default to 720.
-            plot_height (int): The height of the plot. Default to 1080.
+            plot_width (int): The width of the plot. Default to 960.
+            plot_height (int): The height of the plot. Default to 720.
        
         Raises:
             KeyError: If any specified column does not exist in the DataFrame.
@@ -720,8 +720,8 @@ class LqtAnalysis:
         min_magnitude: Optional[float] = None,
         bin_width: float = 0.1,
         plot: bool = True,
-        plot_width: int = 720,
-        plot_height: int = 1080,
+        plot_width: int = 960,
+        plot_height: int = 720,
         ) -> Dict:
         """
         Compute Gutenberg-Richter magnitude-frequency analysis and estimate the b-value.
@@ -733,8 +733,8 @@ class LqtAnalysis:
                                             Default is True.
             plot(bool): If True, display a plot of the Gutenberg-Richter relationship. 
                                     Defaults is True.
-            plot_width (int): The width of the plot. Default to 720.
-            plot_height (int): The height of the plot. Default to 1080.
+            plot_width (int): The width of the plot. Default to 960.
+            plot_height (int): The height of the plot. Default to 720.
        
         
         Returns:
@@ -898,8 +898,8 @@ class LqtAnalysis:
     def plot_intensity(
         self,
         interval: str = 'monthly',
-        plot_width: int = 720,
-        plot_height: int = 1080,
+        plot_width: int = 960,
+        plot_height: int = 720,
         ) -> None:
         """
         Calculate and plot histogram of earthquakes intensity in interval time defined by User.
@@ -907,8 +907,8 @@ class LqtAnalysis:
         Args:
             interval (str): The time interval to calculate the earthquake intensity.
                             It should be 'yearly', 'monthly', 'weekly', 'daily', or 'hourly'.
-            plot_width (int): The width of the plot. Default to 720.
-            plot_height (int): The height of the plot. Default to 1080.
+            plot_width (int): The width of the plot. Default to 960.
+            plot_height (int): The height of the plot. Default to 720.
         
         Raises:
             ValueError: If the given interval not in acceptable time interval.
