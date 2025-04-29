@@ -878,6 +878,7 @@ class LqtAnalysis:
                             It should be 'yearly', 'monthly', 'weekly', 'daily', or 'hourly'.
         
         Raises:
+            ValueError: If the given interval not in acceptable time interval.
 
         Returns: 
             None   
@@ -890,7 +891,7 @@ class LqtAnalysis:
         # get the source origin time data series
         date_series = pd.to_datetime(self._clean_column('source_origin_time'))
         
-        # start populate the origin time of data
+        # start populate the origin time of data based on the given interval
         if interval == 'yearly':
             grouped = date_series.groupby(date_series.dt.year).size()
             x_values = grouped.index.astype(str)
