@@ -812,11 +812,6 @@ class LqtAnalysis:
         non_cumulative_counts = non_cumulative_counts[valid_count_indices_non_cum]
         log_non_cumulative_counts = np.log10(non_cumulative_counts)
 
-        # Linear fitting for b-value
-        slope, intercept, r_value, _, stderr = linregress(mag_bins_cum, log_cumulative_counts)
-        b_value = -slope
-        a_value = intercept
-
         # Result
         result_data = pd.DataFrame(
             {
@@ -831,19 +826,59 @@ class LqtAnalysis:
         result_data.loc[cum_indices_map, 'log_cumulative_count'] = log_cumulative_counts[cum_indices_map]
         result_data.loc[non_cum_indices_map, 'log_non_cumulative_count'] = log_non_cumulative_counts[non_cum_indices_map]
 
+        
+        # Fitting for determining b-value, a-value, and magnitude completeness
+        # Parameters holder to find best parameters
+        best_r_squared = 0
+        best_breakpoint = mag_bins_cum[0]
+        best_slope = 0
+        best_intercept = 0
+        best_index = 0
+        best_std_err = 0
+
+        # Search best break points (only use 50% of the data to speed up calculation)
+        for i in range(1, len(mag_bins_cum)//2):
+            breakpoint = mag_bins_cum[i]
+            mask = mag_bins_cum >= breakpoint
+            x_subset = mag_bins_cum[mask]
+            y_subset = log_cumulative_counts[mask]
+
+            if len(x_subset)< 2: 
+                continue
+
+            slope, intercept, r_value, _, std_err = linregress(x_subset, y_subset)
+            r_squared = r_value**2
+
+            if r_squared > best_r_squared:
+                best_r_squared = r_squared
+                best_breakpoint = breakpoint
+                best_slope = slope
+                best_intercept = intercept
+                best_index = i
+                best_std_err = std_err
+
+        # Fitted line
+        fit_log_cumulative = (best_slope * mag_bins_cum) + best_intercept
+
+        # Find the magnitude completeness, and set result dictionary
+        mc = (best_breakpoint, fit_log_cumulative[best_index])
+        b_value = -1 * best_slope
+        a_value = best_intercept
+        stderr = best_std_err
+        r_value = best_r_squared
+        
         result = {
             'b_value': b_value, 
             'a_value': a_value,
             'b_value_stderr': stderr, 
-            'r_squared': r_value**2,
-            'data': result_data
+            'r_squared': r_value**2
         }
 
         # Plotting
         if plot:
             fig = go.Figure()
 
-            # Cumulative plot
+            # Cumulative plot scatter (dots)
             fig.add_trace(
                 go.Scatter(
                     x = mag_bins_cum,
@@ -867,40 +902,7 @@ class LqtAnalysis:
                 )
             )
 
-            # Parameters holder to find best parameters
-            best_r_squared = 0
-            best_breakpoint = mag_bins_cum[0]
-            best_slope = 0
-            best_intercept = 0
-            best_index = 0
-
-            # Search best break points (only use 50% of the data to speed up calculation)
-            for i in range(1, len(mag_bins_cum)//2):
-                breakpoint = mag_bins_cum[i]
-                mask = mag_bins_cum >= breakpoint
-                x_subset = mag_bins_cum[mask]
-                y_subset = log_cumulative_counts[mask]
-
-                if len(x_subset)< 2: 
-                    continue
-
-                slope, intercept, r_value, p_value, std_err = linregress(x_subset, y_subset)
-                r_squared = r_value**2
-
-                if r_squared > best_r_squared:
-                    best_r_squared = r_squared
-                    best_breakpoint = breakpoint
-                    best_slope = slope
-                    best_intercept = intercept
-                    best_index = i
-
-            # Fitted line
-            fit_log_cumulative = (best_slope * mag_bins_cum) + best_intercept
-
-            # Find the magnitude completeness 
-            mc = (best_breakpoint, fit_log_cumulative[best_index])
-
-            # Plot the fitted line
+            # Plot the fitted line (lines)
             fig.add_trace(
                 go.Scatter(
                     x = mag_bins_cum,
@@ -913,8 +915,7 @@ class LqtAnalysis:
                 )
             )
 
-            print(mc)
-            # Plot the mc values
+            # Plot the mc values (dot)
             fig.add_trace(
                 go.Scatter(
                     x = [mc[0]],
