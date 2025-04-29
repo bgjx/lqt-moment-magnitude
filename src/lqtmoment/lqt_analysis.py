@@ -312,7 +312,9 @@ class LqtAnalysis:
         column_name: str,
         bin_width: Optional[float] = None,
         min_bin: Optional[float] = None,
-        max_bin: Optional[float] = None
+        max_bin: Optional[float] = None,
+        plot_width: int = 720,
+        plot_height: int = 1080,
         ) -> None:
         """
         Plot a histogram for the specific column with manual binning.
@@ -325,6 +327,8 @@ class LqtAnalysis:
                                 automatically.
             max_bin (float): Maximum bin edge. Default to None, max bin will be calculated
                                 automatically.
+            plot_width (int): The width of the plot. Default to 720.
+            plot_height (int): The height of the plot. Default to 1080.
         
         Returns:
             None
@@ -341,7 +345,6 @@ class LqtAnalysis:
             >>> lqt.plot_histogram("magnitude", bin_width=0.5)
         ```       
         """
-
         # clean and validate the column data
         data = self._clean_column_numeric(column_name).dropna()
         if data.empty:
@@ -391,6 +394,8 @@ class LqtAnalysis:
 
         # Figure layout
         fig.update_layout(
+            width = plot_width,
+            height = plot_height,
             title = f"Histogram of {column_name}",
             xaxis_title = column_name,
             yaxis_title = "Count",
@@ -409,9 +414,17 @@ class LqtAnalysis:
         return None
     
 
-    def plot_hypocenter_3d(self) -> None:
+    def plot_hypocenter_3d(
+        self,
+        plot_width: int = 720,
+        plot_height: int = 1080,
+        ) -> None:
         """
         Create interactive 2D or 3D hypocenter plot.
+
+        Args:
+            plot_width (int): The width of the plot. Default to 720.
+            plot_height (int): The height of the plot. Default to 1080.
         
         Raises:
             KeyError: If any specified column does not exist in the DataFrame.
@@ -482,12 +495,7 @@ class LqtAnalysis:
         # Normalize the magnitude sizing
         if 'magnitude' in self.data.columns:
             hypo_data['normalized_magnitude'] = (hypo_data['magnitude'] - hypo_data['magnitude'].min()) / (hypo_data['magnitude'].max() - hypo_data['magnitude'].min() + 1e-10) * 1
-        
-        # Find the center plot, and set zoom factor in (degrees)
-        lat_center = source_lat.mean()
-        lon_center = source_lon.mean()
-        depth_center = source_depth_m.mean()
-        
+                
         # Plotting the Data
         fig = px.scatter_3d(
             hypo_data,
@@ -533,13 +541,9 @@ class LqtAnalysis:
             )
         )
 
-        # fig.update_scenes(
-        #     xaxis_title = "Longitude",
-        #     yaxis_title = "Latitude",
-        #     zaxis_title = 'Depth (m)'
-        # )
-
         fig.update_layout(
+            width = plot_width,
+            height = plot_height,
             showlegend = True,
             coloraxis_colorbar_title = 'depth_m',
             template = 'plotly_white',
@@ -561,9 +565,17 @@ class LqtAnalysis:
         return None
 
 
-    def plot_hypocenter_2d(self) -> None:
+    def plot_hypocenter_2d(
+        self,
+        plot_width: int = 720,
+        plot_height: int = 1080,
+        ) -> None:
         """
         Create interactive 2D or 3D hypocenter plot.
+
+        Args:
+            plot_width (int): The width of the plot. Default to 720.
+            plot_height (int): The height of the plot. Default to 1080.
        
         Raises:
             KeyError: If any specified column does not exist in the DataFrame.
@@ -679,6 +691,8 @@ class LqtAnalysis:
         )
 
         fig.update_layout(
+            width = plot_width,
+            height = plot_height,
             showlegend = True,
             coloraxis_colorbar_title = 'depth_m',
             template = 'plotly_white',
@@ -697,30 +711,31 @@ class LqtAnalysis:
         )
 
         fig.show()
+
         return None
 
 
     def gutenberg_richter(
         self,
-        column_name: str = 'magnitude',
         min_magnitude: Optional[float] = None,
-        max_magnitude: Optional[float] = None,
         bin_width: float = 0.1,
         plot: bool = True,
+        plot_width: int = 720,
+        plot_height: int = 1080,
         ) -> Dict:
         """
         Compute Gutenberg-Richter magnitude-frequency analysis and estimate the b-value.
 
         Args:
-            column_name (str): Name of the magnitude column. Defaults to 'magnitude'.
             min_magnitude (Optional[float]): Minimum magnitude threshold. If None, uses the
                                             minimum in the catalog.
-            max_magnitude (Optional[float]): Maximum magnitude to be include in calculation.
-                                            If None, uses the maximum in the catalog.
             bin_width (float): Width of magnitudes bins (e.g., 0.1 for 0.1-unit bins).
                                             Default is True.
             plot(bool): If True, display a plot of the Gutenberg-Richter relationship. 
                                     Defaults is True.
+            plot_width (int): The width of the plot. Default to 720.
+            plot_height (int): The height of the plot. Default to 1080.
+       
         
         Returns:
             dict object contains:
@@ -746,7 +761,7 @@ class LqtAnalysis:
         if bin_width <= 0:
             raise ValueError("bind_width must be positive")
         
-        valid_magnitudes = self._clean_column_numeric(column_name).dropna()
+        valid_magnitudes = self._clean_column_numeric('magnitude').dropna()
         if len(valid_magnitudes) < 10:
             raise  ValueError("Insufficient valid data for Gutenberg-Richter analysis")
         
@@ -765,17 +780,16 @@ class LqtAnalysis:
             raise ValueError("Insufficient data above min_magnitude for analysis")
         
         # Set and check maximum magnitude integrity
-        if max_magnitude is None:
-            max_magnitude = np.ceil(filtered_magnitudes.max() / bin_width) * bin_width
-        
+        max_magnitude = np.ceil(filtered_magnitudes.max() / bin_width) * bin_width
+
         # Set the magnitude bins
         mag_bins = np.arange(min_magnitude, max_magnitude + bin_width, bin_width)
         
         # Compute the cumulative counts
-        cumulative_counts = [len(filtered_magnitudes[filtered_magnitudes >= m]) for m in mag_bins]
+        cumulative_counts = np.array([len(filtered_magnitudes[filtered_magnitudes >= m]) for m in mag_bins])
 
         # Compute non cumulative counts
-        non_cumulative_counts = np.histogram(filtered_magnitudes, bins=mag_bins)[0]
+        non_cumulative_counts, _ = np.histogram(filtered_magnitudes, bins=mag_bins)
 
         # Shift the non-cumulative bins to represent bin centers
         mag_bins_non_cum = mag_bins[:-1] + bin_width/2
@@ -856,7 +870,7 @@ class LqtAnalysis:
                 go.Scatter(
                     x = fit_x,
                     y = fit_y,
-                    mode = 'Lines',
+                    mode = 'lines',
                     name = f"Fit: b={b_value:.2f}, R_square = {r_value**2:.2f}",
                     line = dict(
                         color='red'
@@ -866,6 +880,8 @@ class LqtAnalysis:
 
             # Layout
             fig.update_layout(
+                width = plot_width,
+                height = plot_height,
                 title = f"Gutenberg-Richter Analysis (bin_width = {bin_width})",
                 xaxis_title = "Magnitude",
                 yaxis_title = "Log10(Count)",
@@ -875,16 +891,24 @@ class LqtAnalysis:
             )
 
             fig.show()
+
         return result
     
 
-    def plot_intensity(self, interval: str = 'monthly'):
+    def plot_intensity(
+        self,
+        interval: str = 'monthly',
+        plot_width: int = 720,
+        plot_height: int = 1080,
+        ) -> None:
         """
         Calculate and plot histogram of earthquakes intensity in interval time defined by User.
 
         Args:
             interval (str): The time interval to calculate the earthquake intensity.
                             It should be 'yearly', 'monthly', 'weekly', 'daily', or 'hourly'.
+            plot_width (int): The width of the plot. Default to 720.
+            plot_height (int): The height of the plot. Default to 1080.
         
         Raises:
             ValueError: If the given interval not in acceptable time interval.
@@ -941,6 +965,8 @@ class LqtAnalysis:
 
         # Update layout
         fig.update_layout(
+            width = plot_width,
+            height = plot_height,
             title = f"Histogram of Earthquakes intensity ({interval.capitalize()})",
             xaxis_title= x_label,
             yaxis_title='Count',
