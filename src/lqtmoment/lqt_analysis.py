@@ -925,7 +925,7 @@ class LqtAnalysis:
                         symbol='triangle-down',
                         color='red'
                     ),
-                    name=f"Magnitude Completeness: {mc[0]}",
+                    name=f"Magnitude Completeness: {mc[0]:.2f}",
                     text= 'MC',
                     textposition='top center',
                     textfont=dict(
