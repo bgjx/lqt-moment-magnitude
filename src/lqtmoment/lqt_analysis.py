@@ -704,6 +704,7 @@ class LqtAnalysis:
         self,
         column_name: str = 'magnitude',
         min_magnitude: Optional[float] = None,
+        max_magnitude: Optional[float] = None,
         bin_width: float = 0.1,
         plot: bool = True,
         ) -> Dict:
@@ -714,6 +715,8 @@ class LqtAnalysis:
             column_name (str): Name of the magnitude column. Defaults to 'magnitude'.
             min_magnitude (Optional[float]): Minimum magnitude threshold. If None, uses the
                                             minimum in the catalog.
+            max_magnitude (Optional[float]): Maximum magnitude to be include in calculation.
+                                            If None, uses the maximum in the catalog.
             bin_width (float): Width of magnitudes bins (e.g., 0.1 for 0.1-unit bins).
                                             Default is True.
             plot(bool): If True, display a plot of the Gutenberg-Richter relationship. 
@@ -751,6 +754,7 @@ class LqtAnalysis:
         if bin_width > data_range / 2:
             raise ValueError(f"bin width {bin_width} is too large for data range ({data_range})")
 
+        # set and check minimum magnitude integrity
         if min_magnitude is None:
             min_magnitude = np.floor(valid_magnitudes.min() / bin_width) *bin_width
         elif min_magnitude > valid_magnitudes.max():
@@ -760,7 +764,11 @@ class LqtAnalysis:
         if len(filtered_magnitudes) < 10:
             raise ValueError("Insufficient data above min_magnitude for analysis")
         
-        max_magnitude = np.ceil(filtered_magnitudes.max() / bin_width) * bin_width
+        # Set and check maximum magnitude integrity
+        if max_magnitude is None:
+            max_magnitude = np.ceil(filtered_magnitudes.max() / bin_width) * bin_width
+        
+        # Set the magnitude bins
         mag_bins = np.arange(min_magnitude, max_magnitude + bin_width, bin_width)
         
         # Compute the cumulative counts
@@ -869,6 +877,7 @@ class LqtAnalysis:
             fig.show()
         return result
     
+
     def plot_intensity(self, interval: str = 'monthly'):
         """
         Calculate and plot histogram of earthquakes intensity in interval time defined by User.
