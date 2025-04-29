@@ -19,6 +19,7 @@ import plotly.express as px
 
 from typing import Optional, Dict
 from scipy.stats import linregress
+from scipy.signal import find_peaks
 from enum import Enum
 from datetime import datetime
 
@@ -843,29 +844,66 @@ class LqtAnalysis:
             fig = go.Figure()
 
             # Cumulative plot
-            fig.add_trace(go.Scatter(
-                x = mag_bins_cum,
-                y = log_cumulative_counts,
-                mode = 'markers',
-                name = 'Cumulative (N >= M)',
-                marker = dict(symbol = 'circle', color= 'blue',  size=8),
-                hovertemplate = 'Magnitude: %{x:.3f}<br>Log10(Count): %{y:.2f}'
-            ))
+            fig.add_trace(
+                go.Scatter(
+                    x = mag_bins_cum,
+                    y = log_cumulative_counts,
+                    mode = 'markers',
+                    name = 'Cumulative (N >= M)',
+                    marker = dict(symbol = 'circle', color= 'blue',  size=8),
+                    hovertemplate = 'Magnitude: %{x:.3f}<br>Log10(Count): %{y:.2f}'
+                )
+            )
 
             # Non-cumulative scatter (triangles)
-            fig.add_trace(go.Scatter(
-                x = mag_bins_non_cum,
-                y = log_non_cumulative_counts,
-                mode= 'markers',
-                name= 'Non-Cumulative (per bin)',
-                marker = dict(symbol='triangle-up', color='green', size=8),
-                hovertemplate = 'Magnitude: %{x:.3f}<br>Log10(Count): %{y:.2f}'
+            fig.add_trace(
+                go.Scatter(
+                    x = mag_bins_non_cum,
+                    y = log_non_cumulative_counts,
+                    mode= 'markers',
+                    name= 'Non-Cumulative (per bin)',
+                    marker = dict(symbol='triangle-up', color='green', size=8),
+                    hovertemplate = 'Magnitude: %{x:.3f}<br>Log10(Count): %{y:.2f}'
+                )
+            )
 
-            ))
+            # Find the break points for the trend line using grid search
+            fit_x = np.arange(mag_bins_cum.min(), mag_bins_cum.max() + bin_width, bin_width)
+
+            # Parameters holder to find best parameters
+            best_r_squared = 0
+            best_breakpoint = fit_x[0]
+            best_slope = 0
+            best_intercept = 0
+            best_index = 0
+
+            # Search best break points (only use 50% of the data to speed up calculation)
+            for i in range(1, len(fit_x)//2):
+                breakpoint = fit_x[i]
+                mask = fit_x >= breakpoint
+                x_subset = fit_x[mask]
+                y_subset = log_cumulative_counts[mask]
+
+                if len(x_subset)< 2: 
+                    continue
+
+                slope, intercept, r_value, p_value, std_err = linregress(x_subset, y_subset)
+                r_squared = r_value**2
+
+                if r_squared > best_r_squared:
+                    best_r_squared = r_squared
+                    best_breakpoint = breakpoint
+                    best_slope = slope
+                    best_intercept = intercept
+                    best_index = i
 
             # Fitted line
-            fit_x = np.array([mag_bins_cum.min(), mag_bins_cum.max()])
-            fit_y = slope * mag_bins_cum + intercept
+            fit_y = (best_slope * fit_x) + best_intercept
+
+            # Find the magnitude completeness 
+            mc = (best_breakpoint, fit_y[best_index])
+
+            # Plot the fitted line
             fig.add_trace(
                 go.Scatter(
                     x = fit_x,
@@ -876,6 +914,28 @@ class LqtAnalysis:
                         color='red'
                     )
                 )
+            )
+
+            # Plot the mc values
+            fig.add_trace(
+                go.Scatter(
+                    x = mc[0],
+                    y = mc[1],
+                    mode='markers+text',
+                    marker = dict(
+                        size=12,
+                        symbol='triangle-down',
+                        color='red'
+                    ),
+                    name='Magnitude Completeness',
+                    text= 'MC',
+                    textposition='top center',
+                    textfont=dict(
+                        size=12,
+                        color='#333333'
+                    ),
+                    hovertemplate='<b>%{text}</b><br>Log10(N >= M): %{y:.2f}<br>Magnitude: %{x:.2f}<extra></extra>'
+                    )
             )
 
             # Layout
