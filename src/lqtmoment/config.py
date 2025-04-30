@@ -102,9 +102,9 @@ import json
 @contextmanager
 def _package_file(filename):
     """ Helper function to access package files using importlib.resources. """
-    file_path = files('lqtmoment.data')
-    with as_file(file_path) as f:
-        yield f
+    source = files("lqtmoment.data").joinpath(filename)
+    with as_file(source) as file_path:
+        yield file_path
 
 @dataclass
 class WaveConfig:
