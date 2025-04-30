@@ -20,8 +20,7 @@ dependencies = [
     "tqdm>=4.60.0",
     "configparser>=5.0.0",
     "openpyxl>=3.0.0",
-    "plotly>=5.20.0",
-    "kaleido>=0.2.0"
+    "plotly>=5.20.0"
 ]
 optional-dependencies.tests = ["pytest>=8.0.0"]
 requires-python = ">=3.9"
