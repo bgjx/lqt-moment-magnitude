@@ -30,7 +30,7 @@ requirements:
     - configparser >=5.0.0
     - openpyxl >=3.0.0
     - plotly >=5.20.0
-    - kaleido>=0.1.0
+    - kaleido>=0.2.0
 
 test: 
   imports:
