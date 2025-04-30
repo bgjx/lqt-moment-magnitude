@@ -1,7 +1,7 @@
 """
 Main entry point for the lqt-moment-magnitude package.
 
-Version: 0.2.0
+Version: 0.2.1
 
 This module provides complete automatic calculation for seismic moment magnitude
 in the LQT component system.

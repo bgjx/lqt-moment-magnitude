@@ -1,7 +1,7 @@
 """
 Core processing module for the lqt-moment-magnitude package.
 
-Version: 0.2.0
+Version: 0.2.1
 
 This module implements the seismic moment magnitude calculation using the LQT component system.
 It handles instrument response removal, waveform rotation (ZNE to LQT or ZRT), spectral fitting

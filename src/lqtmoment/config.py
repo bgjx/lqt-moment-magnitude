@@ -1,7 +1,7 @@
 """
 Configuration module for the lqt-moment-magnitude package.
 
-Version: 0.2.0
+Version: 0.2.1
 
 This module defines the `CONFIG` singleton, which provides configuration parameters for
 magnitude calculations, spectral fitting, and performance options. Configurations are
