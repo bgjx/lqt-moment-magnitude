@@ -973,7 +973,6 @@ class LqtAnalysis:
                 title = f"Gutenberg-Richter Analysis (bin_width = {bin_width})",
                 xaxis_title = "Magnitude",
                 yaxis_title = "Log10(Count)",
-                legend = dict(x=0.7, y=0.9),
                 showlegend = True,
                 template = 'plotly_white',
                 legend=dict(
@@ -1062,6 +1061,7 @@ class LqtAnalysis:
         fig = go.Figure()
         fig.add_trace(
             go.Bar(
+                name=f"Intensity",
                 x=x_values,
                 y=y_values,
                 marker_color = 'skyblue',
