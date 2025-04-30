@@ -515,7 +515,7 @@ class LqtAnalysis:
                 "<b>Earthquake: %{customdata[0]}</b><br>" +
                 "Source Lon: %{x:.3f}<br>" +
                 "Source Lat: %{y:.3f}<br>" +
-                "Source Depth (m): %{customdata[1]:.3f}<br>" +
+                "Source Elev (m): %{customdata[1]:.3f}<br>" +
                 "Magnitude: %{customdata[2]:.3f}<br>" +
                 "<extra></extra>",        
         )
@@ -551,7 +551,7 @@ class LqtAnalysis:
             scene = dict(
                 xaxis_title = "Longitude",
                 yaxis_title = "Latitude",
-                zaxis_title = 'Depth (m)',
+                zaxis_title = 'Elev (m)',
                 aspectmode='manual',
                 aspectratio=dict(x=1, y=1, z=1),
                 camera=dict(
