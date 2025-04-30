@@ -77,7 +77,8 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
         with:
           python-version: "3.12"
-          auto-update-conda: true 
+          auto-update-conda: true
+          channels: conda-forge,defaults
       
       - name: install conda-build and anaconda-client
         run: conda install conda-build anaconda-client
