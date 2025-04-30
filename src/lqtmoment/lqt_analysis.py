@@ -400,13 +400,21 @@ class LqtAnalysis:
             title = f"Histogram of {column_name}",
             xaxis_title = column_name,
             yaxis_title = "Count",
-            showlegend = False,
+            showlegend = True,
             bargap = 0.25,
             template='plotly_white',
             xaxis=dict(
                 tickmode = 'array',
                 tickvals=bin_centers,
                 ticktext=[f"{x:.3f}" for x in bin_centers]
+            ),
+            legend=dict(
+                yanchor = "top",
+                y = 0.99,
+                xanchor = "right",
+                x = 0.99,             
+                bgcolor="rgba(255,255,255,0.5)"
+                
             )
         )
         
@@ -558,6 +566,14 @@ class LqtAnalysis:
                     up=dict(x=0, y=0, z=1),
                     eye=dict(x=0.5, y=0.5, z=0.5)
                 )
+            ),
+            legend=dict(
+                yanchor = "top",
+                y = 0.99,
+                xanchor = "left",
+                x = 0.01,             
+                bgcolor="rgba(255,255,255,0.5)"
+                
             )
         )
 
@@ -713,6 +729,14 @@ class LqtAnalysis:
             yaxis = dict(
                 range = [lat_center - zoom_span / 2, lat_center + zoom_span / 2],
                 scaleratio=1
+            ),
+            legend=dict(
+                yanchor = "top",
+                y = 0.99,
+                xanchor = "left",
+                x = 0.01,             
+                bgcolor="rgba(255,255,255,0.5)"
+                
             )
         )
 
@@ -951,7 +975,14 @@ class LqtAnalysis:
                 yaxis_title = "Log10(Count)",
                 legend = dict(x=0.7, y=0.9),
                 showlegend = True,
-                template = 'plotly_white'
+                template = 'plotly_white',
+                legend=dict(
+                    yanchor = "top",
+                    y = 0.99,
+                    xanchor = "right",
+                    x = 0.99,             
+                    bgcolor="rgba(255,255,255,0.5)"
+                )
             )
 
             fig.show()
@@ -1046,8 +1077,16 @@ class LqtAnalysis:
             yaxis_title='Count',
             xaxis_tickangle=45,
             bargap = 0.2,
-            showlegend=False,
-            template = 'plotly_white'
+            showlegend=True,
+            template = 'plotly_white',
+            legend=dict(
+                yanchor = "top",
+                y = 0.99,
+                xanchor = "right",
+                x = 0.99,             
+                bgcolor="rgba(255,255,255,0.5)"
+                
+            )
         )
 
         fig.show()
