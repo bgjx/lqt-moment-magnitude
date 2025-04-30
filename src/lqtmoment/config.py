@@ -91,7 +91,7 @@ Examples:
     ```
 """
 
-from importlib.resources import path
+from importlib.resources import files, as_file
 from contextlib import contextmanager
 from dataclasses import dataclass
 from configparser import ConfigParser
@@ -102,8 +102,9 @@ import json
 @contextmanager
 def _package_file(filename):
     """ Helper function to access package files using importlib.resources. """
-    with path("lqtmoment.data", filename) as file_path:
-        yield file_path
+    file_path = files('lqtmoment.data')
+    with as_file(file_path) as f:
+        yield f
 
 @dataclass
 class WaveConfig:

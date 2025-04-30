@@ -31,9 +31,9 @@ from .utils import (load_data,
 
 
 def build_catalog(
-        hypo_dir: str,
-        picks_dir: str,
-        station_dir: str
+    hypo_dir: str,
+    picks_dir: str,
+    station_dir: str
     ) -> pd.DataFrame :
     """
     Build a combined catalog from separate hypocenter, pick, and station file.
@@ -49,9 +49,9 @@ def build_catalog(
     Examples:
     ``` python
         >>> catalog_df = build_catalog(
-        ...                 hypo_dir = "data\catalog\hypo_catalog.xlsx",
-        ...                 picks_dir = "data\catalog\picking_catalog.xlsx",
-        ...                 station_dir = "data\station\station.xlsx"
+        ...                 hypo_dir = r"data\catalog\hypo_catalog.xlsx",
+        ...                 picks_dir = r"data\catalog\picking_catalog.xlsx",
+        ...                 station_dir = r"data\station\station.xlsx"
         ... )
     ```
     """
