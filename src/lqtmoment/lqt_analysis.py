@@ -19,7 +19,6 @@ import plotly.express as px
 
 from typing import Optional, Dict
 from scipy.stats import linregress
-from scipy.signal import find_peaks
 from enum import Enum
 from datetime import datetime
 
@@ -52,7 +51,7 @@ class LqtAnalysis:
         >>> lqt_data.plot_histogram('magnitude')
     ``` 
     """
-    def __init__(self, dataframe: Optional[pd.DataFrame] = None):
+    def __init__(self, dataframe: Optional[pd.DataFrame] = None) -> None:
         """
         Initialized a lqtmoment data analysis object.
 
@@ -150,8 +149,9 @@ class LqtAnalysis:
 
         Args:
             row_number (int): The number of how many rows should be display. Default to 5.
+
         Returns:
-            First ten rows of the input dataframe.
+            User specified first number of rows to be displayed.
 
         Examples:
         ``` python
@@ -584,6 +584,11 @@ class LqtAnalysis:
 
         Examples:
         ``` python
+            >>> df = pd.DataFrame({
+            ...     "lat": [34.0, 34.1], "lon": [-118.0, -118.1],
+            ...     "depth": [10, 12], "magnitude": [3.0, 3.5]
+            ... })
+            >>> lqt = LqtAnalysis(df)
             >>> lqt.plot_hypocenter_2d()
         ```  
         """
@@ -973,7 +978,17 @@ class LqtAnalysis:
             ValueError: If the given interval not in acceptable time interval.
 
         Returns: 
-            None   
+            None
+        
+        Examples:
+        ``` python
+            >>> df = pd.DataFrame({
+            ...     "lat": [34.0, 34.1], "lon": [-118.0, -118.1],
+            ...     "depth": [10, 12], "magnitude": [3.0, 3.5]
+            ... })
+            >>> lqt = LqtAnalysis(df)
+            >>> lqt.plot_intensity()
+        ```  
         """
         if interval.strip().lower() not in ['yearly', 'monthly', 'weekly', 'daily', 'hourly']:
             raise ValueError ("Your given interval is not valid, must be 'yearly', 'monthly', 'weekly', 'daily', or 'hourly'")
@@ -1054,7 +1069,13 @@ def load_catalog(catalog_file: str) -> LqtAnalysis:
     Raises: 
         FileNotFoundError: If the catalog file does not exist or cannot be read. 
         TypeError: If 
-        ValueError: If the file format is unsupported 
+        ValueError: If the file format is unsupported
+    
+    Examples:
+    ``` python
+    >>> catalog_dir = r"lqt_catalog.csv"
+    >>> lqt_ready = load_catalog(catalog_dir)
+    >>> lqt_ready.head()
     """
     try:
         dataframe = load_data(catalog_file)
