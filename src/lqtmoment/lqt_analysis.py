@@ -546,7 +546,7 @@ class LqtAnalysis:
             width = plot_width,
             height = plot_height,
             showlegend = True,
-            coloraxis_colorbar_title = 'depth_m',
+            coloraxis_colorbar_title = 'elev_m',
             template = 'plotly_white',
             scene = dict(
                 xaxis_title = "Longitude",
