@@ -5,7 +5,7 @@
 [![GitHub Commits](https://img.shields.io/github/last-commit/bgjx/lqt-moment-magnitude?style=flat)](https://github.com/bgjx/lqt-moment-magnitude/commits/main/)
 [![PyPI](https://img.shields.io/pypi/v/lqtmoment?style=flat$logo=pypi)](https://pypi.org/project/lqtmoment/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat)](https://opensource.org/licenses/MIT)
-[![Python](https://img.shields.io/badge/Python-3.8%2B-blue?style=flat&logo=python)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/Python-3.9%2B-blue?style=flat&logo=python)](https://www.python.org/)
 
 
 ## What is it?
@@ -65,13 +65,13 @@ Contact the developer: Arham Zakki Edelo (edelo.arham@gmail.com)
 
 --------------
 ### Installation
-**lqtmoment** can be installed and run on multiple platforms, including macOS, Windows, and Linux, using Python versions 3.8 to 3.12. Choose one of the following installation methods:
+**lqtmoment** can be installed and run on multiple platforms, including macOS, Windows, and Linux, using Python versions 3.9 to 3.12. Choose one of the following installation methods:
 
 #### Option 1: Via Anaconda
 If you have Anaconda installed, create and activate a new environment (for clean installation), then install **lqtmoment** from the `bgjx` channel:
 
 ```bash
-    conda create -n lqtmoment python=3.8
+    conda create -n lqtmoment python=3.9
     conda activate lqtmoment
     conda install -c bgjx lqtmoment
 ```

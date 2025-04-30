@@ -24,10 +24,8 @@ dependencies = [
     "kaleido>=0.1.0"
 ]
 optional-dependencies.tests = ["pytest>=8.0.0"]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 classifiers = [
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
