@@ -284,8 +284,8 @@ class LqtAnalysis:
             ... )
         ```     
         """
-        self._validate_geo_columns(min_latitude, min_longitude)
-        self._validate_geo_columns(max_latitude, max_longitude)
+        self._validate_geo_columns(pd.Series([min_latitude]), pd.Series([min_longitude]))
+        self._validate_geo_columns(pd.Series([max_latitude]), pd.Series([max_longitude]))
 
         # Check if are rectangle outside the DataFrame
         if min_latitude > max_latitude: 
@@ -299,10 +299,10 @@ class LqtAnalysis:
             raise ValueError("Given longitude range are outside catalog area coverage")
 
         subset_df = self.data[
-            (self.data['latitude'] >= min_latitude) & 
-            (self.data['latitude'] <= max_latitude) & 
-            (self.data['longitude'] >= min_longitude) & 
-            (self.data['longitude'] <= max_longitude)
+            (self.data['source_lat'] >= min_latitude) & 
+            (self.data['source_lat'] <= max_latitude) & 
+            (self.data['source_lon'] >= min_longitude) & 
+            (self.data['source_lon'] <= max_longitude)
             ]
 
         return subset_df
