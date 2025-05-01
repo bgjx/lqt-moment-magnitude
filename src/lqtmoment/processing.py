@@ -243,7 +243,7 @@ def _rotate_stream(
     if source_type == 'very_local_earthquake' and not lqt_mode:
         stream_zrt = stream.copy()
         stream_zrt.rotate(method="NE->RT", back_azimuth=azimuth)
-        p_trace, sv_trace, sh_trace = stream_zrt.traces # Z, R, T components
+        sh_trace, sv_trace, p_trace = stream_zrt.traces # T, R, Z components
     elif source_type == 'very_local_earthquake' and lqt_mode:
         trace_Z = stream.select(component='Z')[0]
         _, _, incidence_angle_p, _, _, incidence_angle_s = calculate_inc_angle(
@@ -262,8 +262,8 @@ def _rotate_stream(
         stream_lqt_s = stream.copy()
         stream_lqt_p.rotate(method="ZNE->LQT", back_azimuth=azimuth, inclination=incidence_angle_p)
         stream_lqt_s.rotate(method="ZNE->LQT", back_azimuth=azimuth, inclination=incidence_angle_s)
-        p_trace, _, _ = stream_lqt_p.traces # L, Q, T components
-        _, sv_trace, sh_trace = stream_lqt_s.traces
+        _, _, p_trace = stream_lqt_p.traces # T, Q, L components
+        sh_trace, sv_trace, _ = stream_lqt_s.traces # T, Q, L components
     elif source_type == 'local_earthquake':
         trace_Z = stream.select(component='Z')[0]
         _, _, incidence_angle_p, _, _, incidence_angle_s = calculate_inc_angle(
@@ -282,8 +282,8 @@ def _rotate_stream(
         stream_lqt_s = stream.copy()
         stream_lqt_p.rotate(method="ZNE->LQT", back_azimuth=azimuth, inclination=incidence_angle_p)
         stream_lqt_s.rotate(method="ZNE->LQT", back_azimuth=azimuth, inclination=incidence_angle_s)
-        p_trace, _, _ = stream_lqt_p.traces # L, Q, T components
-        _, sv_trace, sh_trace = stream_lqt_s.traces
+        _, _, p_trace = stream_lqt_p.traces # T, Q, L components
+        sh_trace, sv_trace, _  = stream_lqt_s.traces # T, Q, L components
 
     else:
         model = TauPyModel(model=CONFIG.magnitude.TAUP_MODEL)
@@ -301,8 +301,8 @@ def _rotate_stream(
         stream_lqt_s = stream.copy()
         stream_lqt_p.rotate(method="ZNE->LQT", back_azimuth=azimuth, inclination=incidence_angle_p)
         stream_lqt_s.rotate(method="ZNE->LQT", back_azimuth=azimuth, inclination=incidence_angle_s)
-        p_trace, _, _ = stream_lqt_p.traces # L, Q, T components
-        _, sv_trace, sh_trace = stream_lqt_s.traces
+        _, _, p_trace = stream_lqt_p.traces # T, Q, L components
+        sh_trace, sv_trace, _  = stream_lqt_s.traces # T, Q, L components
     
     return Stream(traces=[p_trace, sv_trace, sh_trace])
 
