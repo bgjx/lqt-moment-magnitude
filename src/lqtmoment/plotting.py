@@ -33,6 +33,7 @@ def plot_spectral_fitting(
         specs: Dict[str, List],
         fits: Dict[str, list],
         stations: List[str],
+        lqt_mode: bool,
         figure_path: Path):
     """
     Plot phase windows and spectral fitting profiles for all stations in an event.
@@ -45,6 +46,7 @@ def plot_spectral_fitting(
         freqs (Dict[str,List]): A dictionary of frequency arrays for P, SV, SH, and noise per station.
         specs (Dict[str, List]): A dictionary of spectral arrays for P, SV, SH, and noise per station.
         stations (List[str]): List of station names.
+        lqt_mode (bool): Use LQT notation if True, ZRT if False.
         figure_path(Path): Directory to save the plot.
 
     """
@@ -61,8 +63,8 @@ def plot_spectral_fitting(
         s_p_time = float(s_time - p_time)    
         time_after_pick_p = 0.80 * s_p_time
         time_after_pick_s = 1.75 * s_p_time
-
-        for comp, label in zip(["L", "Q", "T"], ["P", "SV", "SH"]):
+        comp_notation = ["L", "Q", "T"] if lqt_mode is True else ["Z", "R", "T"]
+        for comp, label in zip(comp_notation, ["P", "SV", "SH"]):
             trace = stream.select(component=comp)[0]
             start_time = trace.stats.starttime
             trace.trim(start_time+(p_time - start_time) - 2.0, start_time+(s_time - start_time)+6.0)

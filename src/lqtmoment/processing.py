@@ -240,11 +240,11 @@ def _rotate_stream(
     Raises:
         ValueError: If rotation fails.  
     """
-    if source_type == 'very_local_earthquake' and not lqt_mode:
+    if source_type == 'very_local_earthquake' and lqt_mode is False:
         stream_zrt = stream.copy()
         stream_zrt.rotate(method="NE->RT", back_azimuth=azimuth)
         sh_trace, sv_trace, p_trace = stream_zrt.traces # T, R, Z components
-    elif source_type == 'very_local_earthquake' and lqt_mode:
+    elif source_type == 'very_local_earthquake' and lqt_mode is True:
         trace_Z = stream.select(component='Z')[0]
         _, _, incidence_angle_p, _, _, incidence_angle_s = calculate_inc_angle(
                                                             source_coordinate,
@@ -691,8 +691,16 @@ def calculate_moment_magnitude(
     if generate_figure and all_streams:
         try:
             plot_spectral_fitting(
-                source_id, all_streams, all_p_times, all_s_times, 
-                all_freqs, all_specs, all_fits, station_names, figure_path)
+                                source_id,
+                                all_streams,
+                                all_p_times,
+                                all_s_times, 
+                                all_freqs,
+                                all_specs,
+                                all_fits,
+                                station_names,
+                                lqt_mode,
+                                figure_path)
         except (ValueError, IOError) as e:
             logger.warning(f"Earthquake_{source_id}: Failed to create spectral fitting plot for event {source_id}, {e}.", exc_info=True)
     
