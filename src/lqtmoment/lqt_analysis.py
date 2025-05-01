@@ -900,7 +900,8 @@ class LqtAnalysis:
             'b_value': b_value, 
             'a_value': a_value,
             'b_value_stderr': stderr, 
-            'r_squared': r_value**2
+            'r_squared': r_value**2,
+            'result_data': result_data
         }
 
         # Plotting
