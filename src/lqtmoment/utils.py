@@ -69,7 +69,7 @@ OPTIONAL_PICKING_COLUMNS = [
 REQUIRED_STATION_COLUMNS = ["network_code", "station_code", "lat", "lon", "elev_m"]
 
 REQUIRED_CONFIG = {
-    "wave": ["SNR_THRESHOLD", "WATER_LEVEL", "PRE_FILTER",
+    "wave": ["RESAMPLE_DATA", "SNR_THRESHOLD", "PRE_FILTER", "WATER_LEVEL", 
             "APPLY_POST_INSTRUMENT_REMOVAL_FILTER",
             "POST_FILTER_F_MIN", "POST_FILTER_F_MAX",
             "TRIM_MODE", "SEC_BF_P_ARR_TRIM", "SEC_AF_P_ARR_TRIM", 
@@ -77,9 +77,9 @@ REQUIRED_CONFIG = {
             "MIN_P_WINDOW", "MAX_P_WINDOW", "MIN_P_WINDOW", "MAX_P_WINDOW", 
             "NOISE_DURATION", "NOISE_PADDING"],
     "magnitude": ["R_PATTERN_P", "R_PATTERN_S", "FREE_SURFACE_FACTOR",
-                  "K_P", "K_S", "TAUP_MODEL", "VELOCITY_MODEL_FILE", "MW_CONSTANT"],
+                  "K_P", "K_S", "MW_CONSTANT", "TAUP_MODEL", "VELOCITY_MODEL_FILE"],
     "spectral": ["SMOOTH_WINDOW_SIZE", "F_MIN", "F_MAX", "OMEGA_0_RANGE_MIN", "OMEGA_0_RANGE_MAX",
-                 "Q_RANGE_MIN", "Q_RANGE_MAX", "FC_RANGE_BUFFER", "DEFAULT_N_SAMPLES",
+                 "Q_RANGE_MIN", "Q_RANGE_MAX", "DEFAULT_N_SAMPLES",
                  "N_FACTOR", "Y_FACTOR"],
     "performance": ["USE_PARALLEL", "LOGGING_LEVEL"]
 }
