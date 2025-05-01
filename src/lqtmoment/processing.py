@@ -452,7 +452,7 @@ def calculate_moment_magnitude(
         station_lat, station_lon, station_elev_m = station_info.station_lat, station_info.station_lon, station_info.station_elev_m
         p_arr_time = UTCDateTime(station_info.p_arr_time)
         s_arr_time = UTCDateTime(station_info.s_arr_time)
-        if not np.isnan(station_info.coda_time):
+        if not pd.isna(station_info.coda_time):
             coda_time = UTCDateTime(station_info.coda_time)
         else:
             coda_time = None
