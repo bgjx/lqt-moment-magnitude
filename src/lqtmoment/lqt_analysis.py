@@ -371,7 +371,7 @@ class LqtAnalysis:
         )
 
         # Create boolean mask, only distance less then radius will be included in subset dataframe
-        mask = distances <= radius
+        mask = distances <= (radius*1000)
 
         # Create subset of dataframe
         subset_df = self.data[mask].copy()
