@@ -21,6 +21,7 @@ from typing import Optional, Dict
 from scipy.stats import linregress
 from enum import Enum
 from datetime import datetime
+from obspy.geodetics import gps2dist_azimuth
 
 
 from .utils import load_data
@@ -242,7 +243,7 @@ class LqtAnalysis:
         if min_datetime < source_origin_times.min() or max_datetime > source_origin_times.max():
             raise ValueError("Given time ranges are outside catalog time range.")
 
-        subset_df = self.data[(source_origin_times >= min_datetime ) & (source_origin_times <= max_datetime)]
+        subset_df = self.data[(source_origin_times >= min_datetime ) & (source_origin_times <= max_datetime)].copy()
 
         return subset_df
         
@@ -276,7 +277,7 @@ class LqtAnalysis:
             ...     "depth": [10, 12], "magnitude": [3.0, 3.5]
             ... })
             >>> lqt = LqtAnalysis(df)
-            >>> subset_df = lqt.window_time(
+            >>> subset_df = lqt.area_rectangle(
             ...             min_latitude = 34.0,
             ...             max_latitude = 34.1,
             ...             min_longitude = -118.1,
@@ -284,6 +285,7 @@ class LqtAnalysis:
             ... )
         ```     
         """
+        # Validate the given geographic coordinates
         self._validate_geo_columns(pd.Series([min_latitude]), pd.Series([min_longitude]))
         self._validate_geo_columns(pd.Series([max_latitude]), pd.Series([max_longitude]))
 
@@ -303,7 +305,76 @@ class LqtAnalysis:
             (self.data['source_lat'] <= max_latitude) & 
             (self.data['source_lon'] >= min_longitude) & 
             (self.data['source_lon'] <= max_longitude)
-            ]
+            ].copy()
+
+        return subset_df
+    
+
+    def area_circular(
+        self,
+        center_latitude: float,
+        center_longitude: float,
+        radius: float
+        ) -> pd.DataFrame:
+        """
+        Subset dataframe by specifying circular area.
+
+        Args:
+            center_latitude (float): Center point latitude of the area.
+            center_longitude (float): Center point longitude of the area.
+            radius (float): Radius of the circular area from its center point in km.
+        
+        Returns:
+            pd.DataFrame: A subset from main DataFrame based on circular area.
+        
+        Raises:
+            ValueError: 
+        
+        Examples:
+        ``` python
+            >>> df = pd.DataFrame({
+            ...     "lat": [34.0, 34.1], "lon": [-118.0, -118.1],
+            ...     "depth": [10, 12], "magnitude": [3.0, 3.5]
+            ... })
+            >>> lqt = LqtAnalysis(df)
+            >>> subset_df = lqt.area_circular(
+            ...             center_latitude = 34.0,
+            ...             center_longitude = -118.1,
+            ...             radius = 5
+            ... )
+        ```       
+        """
+        # Validate the given geographic coordinates
+        self._validate_geo_columns(pd.Series([center_latitude]), pd.Series([center_longitude]))
+
+        # Check if are rectangle outside the DataFrame
+        if center_latitude < self.data['source_lat'].min() or center_latitude > self.data['source_lat'].max():
+            raise ValueError("Given center latitude is outside catalog area coverage")
+        if center_longitude < self.data['source_lon'].min() or center_longitude > self.data['source_lon'].max():
+            raise ValueError("Given center longitude is outside catalog area coverage")
+
+        # Function to calculate distance between two points
+        def _geo_distance(
+            lat_data: float,
+            lon_data: float,
+            lat_point: float,
+            lon_point: float
+            )-> float:
+
+            epicentral_distance, _, _ = gps2dist_azimuth(lat_data, lon_data, lat_point, lon_point)
+
+            return epicentral_distance
+        
+        # Create distance pd.Series
+        distances = self.data.apply(
+            lambda row: _geo_distance(row['source_lat'], row['source_lon'], center_latitude, center_longitude) , axis=1
+        )
+
+        # Create boolean mask, only distance less then radius will be included in subset dataframe
+        mask = distances <= radius
+
+        # Create subset of dataframe
+        subset_df = self.data[mask].copy()
 
         return subset_df
     
