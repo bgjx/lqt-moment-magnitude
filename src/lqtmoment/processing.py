@@ -35,7 +35,7 @@ from .config import CONFIG
 from .fitting_spectral import fit_spectrum_qmc
 from .refraction import calculate_inc_angle
 from .plotting import plot_spectral_fitting
-from .utils import instrument_remove, read_waveforms, trace_snr, wave_trim, REQUIRED_CONFIG
+from .utils import instrument_remove, read_waveforms, trace_snr, wave_trim, REQUIRED_CONFIG, EARTHQUAKE_TYPE
 
 
 logger = logging.getLogger("lqtmoment")
@@ -409,6 +409,9 @@ def calculate_moment_magnitude(
     source_origin_time = UTCDateTime(source_info.source_origin_time)
     source_lat, source_lon , source_depth_m =  source_info.source_lat, source_info.source_lon, source_info.source_depth_m
     source_type = source_info.earthquake_type
+    if source_type not in EARTHQUAKE_TYPE:
+        logger.warning(f"Your earthquake type ({source_type}) is not in acceptable type (e.g., {EARTHQUAKE_TYPE})")
+        continue
 
     # Find the correct velocity and DENSITY value for the specific layer depth
     velocity_P, velocity_S, density_value = None, None, None

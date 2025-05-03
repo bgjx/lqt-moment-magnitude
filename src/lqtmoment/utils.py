@@ -84,6 +84,8 @@ REQUIRED_CONFIG = {
     "performance": ["USE_PARALLEL", "LOGGING_LEVEL"]
 }
 
+EARTHQUAKE_TYPE = ["very_local_earthquake", "local_earthquake", "regional_earthquake", "far_regional_earthquake", "teleseismic_earthquake"]
+
 
 def load_data(data_dir: str) -> pd.DataFrame:
     """
