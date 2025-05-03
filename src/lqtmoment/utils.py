@@ -234,7 +234,8 @@ def read_waveforms(path: Path, source_id: int, station:str) -> Stream:
         try:
             stread = read(w)
             stream += stread
-        except Exception as e:
+        except (ValueError, OSError) as e:
+            logger.warning(f"Failed to read wave data {w}: {e}.", exc_info=True)
             continue
             
     return stream

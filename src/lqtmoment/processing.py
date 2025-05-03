@@ -145,7 +145,7 @@ def window_trace(
     try:
         trace_P, trace_SV, trace_SH = [streams.select(component = comp)[0] for comp in components]
     except IndexError as e:
-        raise ValueError(f"Missing {components} components in stream")
+        raise ValueError (f"Missing {components} components in stream") from e
     
     # Verify trace starttime consistency
     ref_starttime = trace_P.stats.starttime
@@ -489,7 +489,7 @@ def calculate_moment_magnitude(
                                         water_level=CONFIG.wave.WATER_LEVEL,
                                         generate_figure=False)
         except Exception as e:
-            logger.warning(f"An error occurred when correcting instrument for station {station}: {e}", exc_info=True)
+            logger.warning(f"An error occurred when correcting instrument for station {station}: {e}.", exc_info=True)
             continue
         
         # Perform post instrument removal if specified by the User
