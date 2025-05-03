@@ -29,6 +29,8 @@ def plot_spectral_fitting(
         streams: List[Stream],
         p_arr_times: List[float],
         s_arr_times: List[float],
+        time_after_p: List[float],
+        time_after_s: List[float],
         freqs: Dict[str, List],
         specs: Dict[str, List],
         fits: Dict[str, list],
@@ -43,6 +45,8 @@ def plot_spectral_fitting(
         streams (Stream): A stream object containing the seismic data.
         p_arr_times (List[float]): List of all P arrival time for an event for each station.
         s_arr_times (List[float]): List of all S arrival time for an event for each station.
+        time_after_p (List[float]): List of all time after P arrival for an event for each station.
+        time_after_s (List[float]): List of all time after S arrival for an event for each station.
         freqs (Dict[str,List]): A dictionary of frequency arrays for P, SV, SH, and noise per station.
         specs (Dict[str, List]): A dictionary of spectral arrays for P, SV, SH, and noise per station.
         stations (List[str]): List of station names.
@@ -57,12 +61,9 @@ def plot_spectral_fitting(
     axs[0,0].set_title("Phase Window", fontsize=20)
     axs[0,1].set_title("Spectra Fitting Profile", fontsize=20)
 
-    for station_idx, (stream, p_time, s_time, station) in  enumerate(zip(streams, p_arr_times, s_arr_times, stations)):
+    for station_idx, (stream, p_time, s_time, after_p, after_s, station) in  enumerate(zip(streams, p_arr_times, s_arr_times, time_after_p, time_after_s, stations)):
         # Dinamic window parameter
         counter = station_idx*3
-        s_p_time = float(s_time - p_time)    
-        time_after_pick_p = 0.80 * s_p_time
-        time_after_pick_s = 1.75 * s_p_time
         comp_notation = ["L", "Q", "T"] if lqt_mode is True else ["Z", "R", "T"]
         for comp, label in zip(comp_notation, ["P", "SV", "SH"]):
             trace = stream.select(component=comp)[0]
@@ -74,7 +75,7 @@ def plot_spectral_fitting(
             ax.axvline(p_time - trace.stats.starttime, color='r', linestyle='-', label='P arrival')
             ax.axvline(s_time - trace.stats.starttime, color='b', linestyle='-', label='S arrival')
             ax.axvline((p_time if comp == "L" else s_time) - CONFIG.wave.PADDING_BEFORE_ARRIVAL - trace.stats.starttime, color='g', linestyle='--')
-            ax.axvline((p_time if comp == "L" else s_time) + (time_after_pick_p if comp == "L" else time_after_pick_s) - trace.stats.starttime, color='g', linestyle='--', label=f"{label} phase window")
+            ax.axvline((p_time if comp == "L" else s_time) + (after_p if comp == "L" else after_s) - trace.stats.starttime, color='g', linestyle='--', label=f"{label} phase window")
             ax.axvline(p_time - CONFIG.wave.NOISE_DURATION - trace.stats.starttime, color='gray', linestyle='--')
             ax.axvline(p_time - CONFIG.wave.NOISE_PADDING - trace.stats.starttime, color='gray', linestyle='--', label='Noise Window')
             ax.set_title(f"{station}_BH{comp}", loc='right', va='center')

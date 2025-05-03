@@ -162,10 +162,8 @@ def window_trace(
     p_phase_end_time = p_arr_time + time_after_pick_p
     s_phase_start_time = s_arr_time - CONFIG.wave.PADDING_BEFORE_ARRIVAL
     if p_phase_end_time > s_phase_start_time:
-        mid_time = p_arr_time + (s_p_time / 2)
-        time_after_pick_p = mid_time - p_arr_time
-        s_phase_start_time = mid_time
-        logger.info(f"Windows adjusted to prevent P/S overlap: P ends at {mid_time}, S starts at {mid_time}")
+        time_after_pick_p = s_phase_start_time - p_arr_time
+        logger.info(f"Windows adjusted to prevent P/S overlap: P ends at {p_arr_time + time_after_pick_p}, S starts at {s_phase_start_time}")
 
     # Find the data index for phase windowing
     p_phase_start_index = int((p_arr_time - trace_P.stats.starttime - CONFIG.wave.PADDING_BEFORE_ARRIVAL)/trace_P.stats.delta)
@@ -206,7 +204,7 @@ def window_trace(
     SV_noise = _preprocess_data(SV_noise)
     SH_noise = _preprocess_data(SH_noise)
 
-    return P_data, SV_data, SH_data, P_noise, SV_noise, SH_noise
+    return P_data, SV_data, SH_data, P_noise, SV_noise, SH_noise, time_after_pick_p, time_after_pick_s
 
 
 def _rotate_stream(
@@ -399,7 +397,9 @@ def calculate_moment_magnitude(
 
     # Create object collector for plotting
     if generate_figure:
-        all_streams, all_p_times, all_s_times = [], [], []
+        all_streams = [] 
+        all_p_arr_times, all_s_arr_times = [], []
+        all_time_after_p, all_time_after_s = [], []
         all_freqs = {
             "P": [],
             "SV":[],
@@ -528,11 +528,11 @@ def calculate_moment_magnitude(
             continue
         
         # Window the trace
-        p_window_data, sv_window_data, sh_window_data, p_noise_data, sv_noise_data, sh_noise_data = window_trace(
-                                                                                                    rotated_stream, 
-                                                                                                    p_arr_time,
-                                                                                                    s_arr_time,
-                                                                                                    lqt_mode=lqt_mode)
+        p_window_data, sv_window_data, sh_window_data, p_noise_data, sv_noise_data, sh_noise_data, time_after_p, time_after_s = window_trace(
+                                                                                                                                rotated_stream, 
+                                                                                                                                p_arr_time,
+                                                                                                                                s_arr_time,
+                                                                                                                                lqt_mode=lqt_mode)
         
         # Check the data quality (SNR must be above or equal to 1)
         if any(trace_snr(data, noise) <= CONFIG.wave.SNR_THRESHOLD for data, noise in zip ([p_window_data, sv_window_data, sh_window_data], [p_noise_data, sv_noise_data, sh_noise_data])):
@@ -649,8 +649,10 @@ def calculate_moment_magnitude(
         # Update fitting spectral object collector for plotting
         if generate_figure:
             all_streams.append(rotated_stream)
-            all_p_times.append(p_arr_time)
-            all_s_times.append(s_arr_time)
+            all_p_arr_times.append(p_arr_time)
+            all_s_arr_times.append(s_arr_time)
+            all_time_after_p.append(time_after_p)
+            all_time_after_s.append(time_after_s)
             all_freqs["P"].append(freq_P)
             all_freqs["SV"].append(freq_SV)
             all_freqs["SH"].append(freq_SH)
@@ -693,8 +695,10 @@ def calculate_moment_magnitude(
             plot_spectral_fitting(
                                 source_id,
                                 all_streams,
-                                all_p_times,
-                                all_s_times, 
+                                all_p_arr_times,
+                                all_s_arr_times,
+                                all_time_after_p,
+                                all_time_after_s,
                                 all_freqs,
                                 all_specs,
                                 all_fits,
