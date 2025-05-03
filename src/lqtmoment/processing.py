@@ -503,10 +503,16 @@ def calculate_moment_magnitude(
         logger.info(f"Rotating station {station} for {source_type}: {source_id} and LQT mode is {'ON' if lqt_mode else 'OFF'}.")
         try:
             rotated_stream = _rotate_stream(
-                            stream_displacement, source_type,
-                            source_coordinate, station_coordinate, azimuth,
-                            s_p_lag_time_sec, p_arr_time,s_arr_time,
-                            lqt_mode)
+                                stream_displacement,
+                                source_type,
+                                source_coordinate,
+                                station_coordinate,
+                                azimuth,
+                                s_p_lag_time_sec,
+                                p_arr_time,
+                                s_arr_time,
+                                lqt_mode
+                            )
         except (ValueError, RuntimeError) as e:
             logger.warning(f"Earthquake_{source_id}: Failed to rotate components for station {station}: {e}.", exc_info=True)
             continue
@@ -516,7 +522,8 @@ def calculate_moment_magnitude(
                                                                                                                                 rotated_stream, 
                                                                                                                                 p_arr_time,
                                                                                                                                 s_arr_time,
-                                                                                                                                lqt_mode=lqt_mode)
+                                                                                                                                lqt_mode=lqt_mode
+                                                                                                                                )
         
         # Check the data quality (SNR must be above or equal to 1)
         if any(trace_snr(data, noise) <= CONFIG.wave.SNR_THRESHOLD for data, noise in zip ([p_window_data, sv_window_data, sh_window_data], [p_noise_data, sv_noise_data, sh_noise_data])):
@@ -576,7 +583,7 @@ def calculate_moment_magnitude(
             fit_SV = fit_spectrum_qmc(freq_SV, spec_SV, abs(float(s_arr_time - source_origin_time)), CONFIG.spectral.F_MIN, CONFIG.spectral.F_MAX, CONFIG.spectral.DEFAULT_N_SAMPLES)
             fit_SH = fit_spectrum_qmc(freq_SH, spec_SH, abs(float(s_arr_time - source_origin_time)), CONFIG.spectral.F_MIN, CONFIG.spectral.F_MAX, CONFIG.spectral.DEFAULT_N_SAMPLES)
         except (ValueError, RuntimeError) as e:
-            logger.warning(f"Earthquake_{source_id}: Error during spectral fitting for event {source_id}, {e}.", exc_info=True)
+            logger.warning(f"Earthquake_{source_id}: Error during spectral fitting for station {station} data, {e}.", exc_info=True)
             continue
         if any(f is None for f in [fit_P, fit_SV, fit_SH]):
             continue
