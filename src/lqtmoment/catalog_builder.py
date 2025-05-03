@@ -52,7 +52,7 @@ def build_catalog(
         ...                 hypo_dir = r"data\catalog\hypo_catalog.xlsx",
         ...                 picks_dir = r"data\catalog\picking_catalog.xlsx",
         ...                 station_dir = r"data\station\station.xlsx"
-        ... )
+        ...                 )
     ```
     """
     # Convert string paths to Path objects
@@ -71,6 +71,7 @@ def build_catalog(
         (picking_df, 'picking_df', REQUIRED_PICKING_COLUMNS),
         (station_df, 'station_df', REQUIRED_STATION_COLUMNS)
         ] :
+        # Gather all missing columns if exist
         missing_columns = [col for col in required_cols if col not in df.columns]
         if missing_columns:
             raise ValueError(f"Missing required columns in {name}: {missing_columns}")
@@ -82,7 +83,8 @@ def build_catalog(
         raise ValueError("Duplicate 'source_id' found in hypocenter catalog")
     if station_df['station_code'].duplicated().any():
         raise ValueError("Duplicate 'station_code' found in station file")
-        
+    
+    # Start build the catalog loop
     rows = []
     for source_id in hypo_df.get('source_id'):
         pick_data = picking_df[picking_df['source_id'] == source_id]
@@ -132,7 +134,7 @@ def build_catalog(
             except ValueError as e:
                 raise ValueError ("Cannot convert P and S arrival time data to datetime object, check your catalog data format.")
             
-            if not np.isnan(hour_coda) and not np.isnan(minute_coda) and not np.isnan(second_coda):
+            if not pd.isna(hour_coda) and not pd.isna(minute_coda) and not pd.isna(second_coda):
                 int_coda_second = int(second_coda)
                 microsecond_coda = int((second_coda - int_coda_second)*1e6)
                 coda_time = datetime(year, month, day, hour_coda, minute_coda, int_coda_second, microsecond_coda)
