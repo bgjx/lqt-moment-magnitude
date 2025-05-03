@@ -353,7 +353,7 @@ def calculate_moment_magnitude(
         if not hasattr(CONFIG.performance, attr):
             missing_config.append(f"{attr} (missing in performance config)")
     if missing_config:
-        logger.error(f"Earthquake_{source_id}: Missing config attributes: {missing_config}")
+        logger.error(f"Missing config attributes: {missing_config}")
         raise ValueError(f"Missing config attributes: {missing_config}")
     
     # Create object collector for fitting result
@@ -420,7 +420,7 @@ def calculate_moment_magnitude(
             density_value = CONFIG.magnitude.DENSITY[layer_idx]
             break
     if velocity_P is None:
-        logger.warning(f"Earthquake_{source_id}: Hypocenter depth not within the defined layers.")
+        logger.warning(f"Hypocenter depth not within the defined layers.")
         return {}, fitting_result
     
     # Start spectrum fitting and magnitude estimation
@@ -452,8 +452,8 @@ def calculate_moment_magnitude(
         stream = read_waveforms(wave_path, source_id, station)
         stream_copy = stream.copy()
         if len(stream_copy) < 3:
-            logger.warning(f"Earthquake_{source_id}: Not all components available for station {station}"
-                           f"to calculate earthquake {source_id} moment magnitude")
+            logger.warning(f"Not all components are available for station {station}"
+                           f"to calculate moment magnitude")
             continue
 
         # Trimming the waveform prior to processing
@@ -471,7 +471,7 @@ def calculate_moment_magnitude(
                                            CONFIG.wave.SEC_AF_P_ARR_TRIM)
                 
         except (ValueError, RuntimeError) as e:
-            logger.warning(f"Earthquake_{source_id}: Failed to trim wave data from {station}: {e}.")
+            logger.warning(f"Failed to trim wave data from {station}: {e}.")
             continue
         
         # Performing resampling if specified
@@ -489,7 +489,7 @@ def calculate_moment_magnitude(
                                         water_level=CONFIG.wave.WATER_LEVEL,
                                         generate_figure=False)
         except Exception as e:
-            logger.warning(f"Earthquake_{source_id}: An error occurred when correcting instrument for station {station}: {e}", exc_info=True)
+            logger.warning(f"An error occurred when correcting instrument for station {station}: {e}", exc_info=True)
             continue
         
         # Perform post instrument removal if specified by the User
@@ -500,7 +500,7 @@ def calculate_moment_magnitude(
         source_coordinate = [source_lat, source_lon , -1*source_depth_m]  # depth must be in negative notation
         station_coordinate = [station_lat, station_lon, station_elev_m]
 
-        logger.info(f"Rotating station {station} for {source_type}: {source_id} and LQT mode is {'ON' if lqt_mode else 'OFF'}.")
+        logger.info(f"Station {station} wave data ({source_type}) has been rotated, and LQT mode is {'ON' if lqt_mode else 'OFF'}.")
         try:
             rotated_stream = _rotate_stream(
                                 stream_displacement,
@@ -514,7 +514,7 @@ def calculate_moment_magnitude(
                                 lqt_mode
                             )
         except (ValueError, RuntimeError) as e:
-            logger.warning(f"Earthquake_{source_id}: Failed to rotate components for station {station}: {e}.", exc_info=True)
+            logger.warning(f"Failed to rotate components for station {station}: {e}.", exc_info=True)
             continue
         
         # Window the trace
@@ -527,7 +527,7 @@ def calculate_moment_magnitude(
         
         # Check the data quality (SNR must be above or equal to 1)
         if any(trace_snr(data, noise) <= CONFIG.wave.SNR_THRESHOLD for data, noise in zip ([p_window_data, sv_window_data, sh_window_data], [p_noise_data, sv_noise_data, sh_noise_data])):
-            logger.warning(f"Earthquake_{source_id}: SNR below threshold for station {station} to calculate moment magnitude")
+            logger.warning(f"SNR below threshold for station {station} to calculate moment magnitude")
             continue
 
         # check sampling rate
@@ -574,7 +574,7 @@ def calculate_moment_magnitude(
                                                             smooth_window_size=CONFIG.spectral.SMOOTH_WINDOW_SIZE
                                                             )
         except (ValueError, RuntimeError) as e:
-            logger.warning(f"Earthquake_{source_id}: An error occurred during spectra calculation for station {station}, {e}.", exc_info=True)
+            logger.warning(f"An error occurred during spectra calculation for station {station}, {e}.", exc_info=True)
             continue
 
         # Fitting the spectrum, find the optimal value of Omega_O, corner frequency and Q using systematic/stochastic algorithm available
@@ -583,9 +583,10 @@ def calculate_moment_magnitude(
             fit_SV = fit_spectrum_qmc(freq_SV, spec_SV, abs(float(s_arr_time - source_origin_time)), CONFIG.spectral.F_MIN, CONFIG.spectral.F_MAX, CONFIG.spectral.DEFAULT_N_SAMPLES)
             fit_SH = fit_spectrum_qmc(freq_SH, spec_SH, abs(float(s_arr_time - source_origin_time)), CONFIG.spectral.F_MIN, CONFIG.spectral.F_MAX, CONFIG.spectral.DEFAULT_N_SAMPLES)
         except (ValueError, RuntimeError) as e:
-            logger.warning(f"Earthquake_{source_id}: Error during spectral fitting for station {station} data, {e}.", exc_info=True)
+            logger.warning(f"Error during spectral fitting for station {station} data, {e}.", exc_info=True)
             continue
         if any(f is None for f in [fit_P, fit_SV, fit_SH]):
+            logger.warning(f"One or more None values were returned from the spectral fitting process on Station {station}.")
             continue
 
         # Extract fitting spectrum output
@@ -634,7 +635,7 @@ def calculate_moment_magnitude(
             corner_frequencies.append((f_c_P + corner_freq_S)/2)
 
         except (ValueError, ZeroDivisionError) as e:
-            logger.warning(f" Earthquake_{source_id}: Failed to calculate seismic moment for earthquake {source_id}, {e}.", exc_info=True)
+            logger.warning(f"Failed to calculate seismic moment for station {station}, {e}.", exc_info=True)
             continue
         
         # Update fitting spectral object collector for plotting
@@ -697,7 +698,7 @@ def calculate_moment_magnitude(
                                 lqt_mode,
                                 figure_path)
         except (ValueError, IOError) as e:
-            logger.warning(f"Earthquake_{source_id}: Failed to create spectral fitting plot for event {source_id}, {e}.", exc_info=True)
+            logger.warning(f"Failed to create spectral fitting plot for event {source_id}, {e}.", exc_info=True)
     
     return results, fitting_result
 
@@ -798,7 +799,7 @@ def start_calculate(
             try:
                 catalog_data = grouped_data.get_group(source_id)
             except KeyError as e:
-                logger.warning(f"Earthquake_{source_id}: No data for earthquake ID {source_id}: {e}.", exc_info=True)
+                logger.warning(f"No data for earthquake ID {source_id}, please check your catalog data: {e}.", exc_info=True)
                 failed_events += 1
                 pbar.set_postfix({"Failed": failed_events})
                 pbar.update(1)
@@ -813,7 +814,7 @@ def start_calculate(
             
             # Check for  empty data frame
             if source_data.empty or pick_data.empty:
-                logger.warning(f"Earthquake_{source_id}: No data for earthquake {source_id}")
+                logger.warning(f"Detail hypocenter and picking data are not completely available, please check your catalog data.")
                 failed_events += 1
                 pbar.set_postfix({"Failed": failed_events})
                 pbar.update(1)
@@ -835,7 +836,7 @@ def start_calculate(
                 fitting_list.append(pd.DataFrame.from_dict(fitting_result))
             except (ValueError, IOError) as e:
                 logger.error(
-                    f"Earthquake_{source_id}: Calculation failed for earthquake id {source_id}: {e}",
+                    f"Calculation failed with error: {e}",
                     exc_info=True
                 )
                 failed_events += 1
