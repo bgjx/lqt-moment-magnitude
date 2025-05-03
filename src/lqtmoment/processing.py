@@ -410,8 +410,8 @@ def calculate_moment_magnitude(
     source_lat, source_lon , source_depth_m =  source_info.source_lat, source_info.source_lon, source_info.source_depth_m
     source_type = source_info.earthquake_type
     if source_type not in EARTHQUAKE_TYPE:
-        logger.warning(f"Your earthquake type ({source_type}) is not in acceptable type (e.g., {EARTHQUAKE_TYPE})")
-        continue
+        logger.warning(f"Your earthquake type ({source_type}) is not in acceptable type (e.g., {EARTHQUAKE_TYPE}).")
+        raise TypeError (f"Your earthquake type ({source_type}) is not in acceptable type (e.g., {EARTHQUAKE_TYPE}).")
 
     # Find the correct velocity and DENSITY value for the specific layer depth
     velocity_P, velocity_S, density_value = None, None, None
