@@ -69,7 +69,8 @@ def plot_spectral_fitting(
             trace = stream.select(component=comp)[0]
             start_time = trace.stats.starttime
             trace.trim(start_time+(p_time - start_time) - 2.0, start_time+(s_time - start_time)+6.0)
-
+            
+            # Plot the wave data
             ax = axs[counter, 0]
             ax.plot(trace.times(), trace.data, "k")
             ax.axvline(p_time - trace.stats.starttime, color='r', linestyle='-', label='P arrival')
@@ -83,6 +84,7 @@ def plot_spectral_fitting(
             ax.set_xlabel("Relative Time (s)")
             ax.set_ylabel("Amp (m)")
 
+            # Plot the spectrum data
             ax = axs[counter, 1]
             ax.loglog(freqs[label][station_idx], specs[label][station_idx], "k", label=f"{label} spectral")
             ax.loglog(freqs[f"N_{label}"][station_idx], specs[f"N_{label}"][station_idx], "gray", label="Noise Spectra")
