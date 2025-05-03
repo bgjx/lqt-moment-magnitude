@@ -86,7 +86,7 @@ def magnitude_estimator(
         ...                                             config_file = "data/new_config.ini",
         ...                                             generate_figure = True,
         ...                                             fig_dir = "results/figures",
-        ... )
+        ...                                             )
     ``` 
     """
     # Convert string paths to Path objects
