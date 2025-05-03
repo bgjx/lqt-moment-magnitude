@@ -66,7 +66,6 @@ def calculate_seismic_spectra(
         ValueError: If trace_data is empty or invalid sampling rate
     """
     if not trace_data.size or sampling_rate <= 0:
-        logger.error("Trace data cannot be empty and sampling rate must be positive")
         raise ValueError("Trace data cannot be empty and sampling rate must be positive")
     
     # Apply Hann window
@@ -146,7 +145,6 @@ def window_trace(
     try:
         trace_P, trace_SV, trace_SH = [streams.select(component = comp)[0] for comp in components]
     except IndexError as e:
-        logger.error(f"Missing {components} components in stream: {e}.", exc_info=True)
         raise ValueError (f"Missing {components} components in stream") from e
     
     # Verify trace starttime consistency
@@ -526,12 +524,16 @@ def calculate_moment_magnitude(
             continue
         
         # Window the trace
-        p_window_data, sv_window_data, sh_window_data, p_noise_data, sv_noise_data, sh_noise_data, time_after_p, time_after_s = window_trace(
-                                                                                                                                rotated_stream, 
-                                                                                                                                p_arr_time,
-                                                                                                                                s_arr_time,
-                                                                                                                                lqt_mode=lqt_mode
-                                                                                                                                )
+        try:
+            p_window_data, sv_window_data, sh_window_data, p_noise_data, sv_noise_data, sh_noise_data, time_after_p, time_after_s = window_trace(
+                                                                                                                                    rotated_stream, 
+                                                                                                                                    p_arr_time,
+                                                                                                                                    s_arr_time,
+                                                                                                                                    lqt_mode=lqt_mode
+                                                                                                                                    )
+        except ValueError as e:
+            logger.warning(f"Failed to perform phase windowing for station {station}: {e}.", exc_info=True)
+            continue
         
         # Check the data quality (SNR must be above or equal to 1)
         if any(trace_snr(data, noise) <= CONFIG.wave.SNR_THRESHOLD for data, noise in zip ([p_window_data, sv_window_data, sh_window_data], [p_noise_data, sv_noise_data, sh_noise_data])):
@@ -845,10 +847,7 @@ def start_calculate(
                 result_list.append(pd.DataFrame.from_dict(mw_results))
                 fitting_list.append(pd.DataFrame.from_dict(fitting_result))
             except (ValueError, OSError) as e:
-                logger.error(
-                    f"Calculation failed with error: {e}",
-                    exc_info=True
-                )
+                logger.error(f"Calculation failed with error: {e}", exc_info=True)
                 failed_events += 1
                 pbar.set_postfix({"Failed": failed_events})
                 pbar.update(1)
@@ -863,11 +862,11 @@ def start_calculate(
 
     # Merge the lqt catalog with the magnitude result
     merged_catalog = pd.merge(
-        catalog_data_copy,
-        df_result[['source_id', 'mw_average']],
-        on='source_id',
-        how='left'
-    )
+                        catalog_data_copy,
+                        df_result[['source_id', 'mw_average']],
+                        on='source_id',
+                        how='left'
+                        )
 
     # Rename column name 'mw_average' to just 'magnitude' for generalization.
     merged_catalog = merged_catalog.rename(columns={'mw_average':'magnitude'})
