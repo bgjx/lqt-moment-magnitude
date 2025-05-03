@@ -323,7 +323,7 @@ def instrument_remove (
     displacement_stream = Stream()
     for trace in stream:
         try:
-            # Construct the calibration filex
+            # Construct the calibration file
             station = trace.stats.station
             channel = trace.stats.channel
             trace_network = trace.stats.network if trace.stats.network else network_code
