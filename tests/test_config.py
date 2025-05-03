@@ -47,8 +47,8 @@ def test_magnitude_params():
     expected_k_s = 0.21
     expected_mw_constant = 6.07
     expected_taup_model  = 'iasp91'
-    expected_velocity_vp = [2.68, 2.99, 3.95, 4.50]
-    expected_velocity_vs = [1.60, 1.79, 2.37, 2.69]
+    expected_velocity_vp = [3.82, 4.50, 4.60, 6.20, 8.00]
+    expected_velocity_vs = [2.30, 2.53, 2.53, 3.44, 4.44]
     assert CONFIG.magnitude.R_PATTERN_P == expected_r_pattern_p
     assert CONFIG.magnitude.R_PATTERN_S == expected_r_pattern_s
     assert CONFIG.magnitude.FREE_SURFACE_FACTOR == expected_free_surface
