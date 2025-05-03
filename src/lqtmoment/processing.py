@@ -427,23 +427,26 @@ def calculate_moment_magnitude(
     moments, corner_frequencies, source_radius = [],[],[]
     for station in pick_df.get("station_code").unique():
         
-        # Get the station coordinate
+        # Get the station coordinate and network code
         station_info = pick_df[pick_df.station_code == station].iloc[0]
-        network_code = station_info.network_code
         station_lat, station_lon, station_elev_m = station_info.station_lat, station_info.station_lon, station_info.station_elev_m
+        network_code = station_info.network_code
+
+        # Get arrival times and S-P lag time info
         p_arr_time = UTCDateTime(station_info.p_arr_time)
         s_arr_time = UTCDateTime(station_info.s_arr_time)
         if not pd.isna(station_info.coda_time):
             coda_time = UTCDateTime(station_info.coda_time)
         else:
             coda_time = None
-
         s_p_lag_time_sec = station_info.s_p_lag_time_sec
         
         # Calculate the source distance and the azimuth (hypo to station azimuth)
         epicentral_distance, azimuth, _ = gps2dist_azimuth(source_lat, source_lon, station_lat, station_lon)
-        epicentral_distance_degrees = locations2degrees(source_lat, source_lon, station_lat, station_lon)
-        source_distance_m = np.sqrt(epicentral_distance**2 + ((source_depth_m + station_elev_m)**2))
+        if source_type == 'very_local_earthquake' or source_type == 'local_earthquake':
+            source_distance_m = np.sqrt(epicentral_distance**2 + ((source_depth_m + station_elev_m)**2))
+        else:
+            source_distance_m = epicentral_distance
             
         # Read the waveform 
         stream = read_waveforms(wave_path, source_id, station)
