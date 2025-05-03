@@ -66,6 +66,7 @@ def calculate_seismic_spectra(
         ValueError: If trace_data is empty or invalid sampling rate
     """
     if not trace_data.size or sampling_rate <= 0:
+        logger.error("Trace data cannot be empty and sampling rate must be positive")
         raise ValueError("Trace data cannot be empty and sampling rate must be positive")
     
     # Apply Hann window
@@ -145,6 +146,7 @@ def window_trace(
     try:
         trace_P, trace_SV, trace_SH = [streams.select(component = comp)[0] for comp in components]
     except IndexError as e:
+        logger.error(f"Missing {components} components in stream: {e}.", exc_info=True)
         raise ValueError (f"Missing {components} components in stream") from e
     
     # Verify trace starttime consistency
@@ -410,7 +412,7 @@ def calculate_moment_magnitude(
     source_lat, source_lon , source_depth_m =  source_info.source_lat, source_info.source_lon, source_info.source_depth_m
     source_type = source_info.earthquake_type
     if source_type not in EARTHQUAKE_TYPE:
-        logger.warning(f"Your earthquake type ({source_type}) is not in acceptable type (e.g., {EARTHQUAKE_TYPE}).")
+        logger.error(f"Your earthquake type ({source_type}) is not in acceptable type (e.g., {EARTHQUAKE_TYPE}).")
         raise TypeError (f"Your earthquake type ({source_type}) is not in acceptable type (e.g., {EARTHQUAKE_TYPE}).")
 
     # Find the correct velocity and DENSITY value for the specific layer depth
@@ -759,8 +761,10 @@ def start_calculate(
 
     # Validate ID range
     if not (isinstance(id_start, int) and isinstance(id_end, int) and id_start <= id_end):
+        logger.error(f"Invalid ID range: id_start={id_start}, id_end={id_end}")
         raise ValueError(f"Invalid ID range: id_start={id_start}, id_end={id_end}")
     if not (id_start in catalog_data["source_id"].values and id_end in catalog_data["source_id"].values):
+        logger.error(f"ID range {id_start} - {id_end} not found in catalog")
         raise ValueError(f"ID range {id_start} - {id_end} not found in catalog")
     
     # Initiate dataframe for magnitude calculation results
