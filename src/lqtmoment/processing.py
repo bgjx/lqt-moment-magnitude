@@ -192,7 +192,7 @@ def window_trace(
 
     # Preprocess data, apply detrending, demean, and taper.
     def _preprocess_data(data: np.ndarray) -> np.ndarray:
-        """ Helper function to preprocess data, apply detrending, demean, and taper. """
+        """ Helper function to preprocess data, apply de-trending, demean, and taper. """
         if len(data) == 0:
             return data
         data = detrend_simple(data)
