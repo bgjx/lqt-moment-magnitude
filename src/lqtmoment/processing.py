@@ -322,7 +322,7 @@ def calculate_moment_magnitude(
     
     Raises:
         ValueError: if source_df or pick_df are empty or wrong format.
-        IOError: If waveform or calibration files cannot be read.
+        OSError: If waveform or calibration files cannot be read.
     
     Notes:
         The whole process in this function following these steps:
@@ -697,7 +697,7 @@ def calculate_moment_magnitude(
                                 station_names,
                                 lqt_mode,
                                 figure_path)
-        except (ValueError, IOError) as e:
+        except (ValueError, OSError) as e:
             logger.warning(f"Failed to create spectral fitting plot for event {source_id}, {e}.", exc_info=True)
     
     return results, fitting_result
@@ -834,7 +834,7 @@ def start_calculate(
                                             )
                 result_list.append(pd.DataFrame.from_dict(mw_results))
                 fitting_list.append(pd.DataFrame.from_dict(fitting_result))
-            except (ValueError, IOError) as e:
+            except (ValueError, OSError) as e:
                 logger.error(
                     f"Calculation failed with error: {e}",
                     exc_info=True
