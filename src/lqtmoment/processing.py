@@ -470,8 +470,8 @@ def calculate_moment_magnitude(
                                            CONFIG.wave.SEC_BF_P_ARR_TRIM,
                                            CONFIG.wave.SEC_AF_P_ARR_TRIM)
                 
-        except (ValueError, RuntimeError) as e:
-            logger.warning(f"Failed to trim wave data from {station}: {e}.")
+        except ValueError as e:
+            logger.warning(f"Failed to trim wave data from {station}: {e}.", exc_info=True)
             continue
         
         # Performing resampling if specified

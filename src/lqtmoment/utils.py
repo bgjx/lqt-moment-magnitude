@@ -360,7 +360,7 @@ def instrument_remove (
             # Add the processed trace to the Stream
             displacement_stream+=displacement_trace
             
-        except (ValueError, FileNotFoundError) as e:
+        except (ValueError, OSError) as e:
             logger.warning(f"Failed to perform instrument removal: {e}.", exc_info=True)
             continue
             
