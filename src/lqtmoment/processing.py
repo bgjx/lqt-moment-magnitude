@@ -125,13 +125,15 @@ def window_trace(
         lqt_mode (bool): Use LQT components if True, ZRT if false. Default to True. 
 
     Returns:
-        Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]: 
+        Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, float, float]: 
             - P_data: The data windowed around the P phase in the L/Z component (displacement in meters).
             - SV_data: The data windowed around the S phase in the Q/R component (displacement in meters).
             - SH_data: The data windowed around the S phase in the T component (displacement in meters).
             - P_noise: The noise data before the P phase in the L/Z component (displacement in meters).
             - SV_noise: The noise data before the P phase in the Q/R component (displacement in meters).
             - SH_noise: The noise data before the P phase in the T component (displacement in meters).
+            - time_after_pick_p: Time after P arrival in seconds.
+            - time_after_pick_s: Time after S arrival in seconds.
 
     Raises:
         ValueError: If component traces are missing.
@@ -242,7 +244,7 @@ def _rotate_stream(
         stream_zrt = stream.copy()
         stream_zrt.rotate(method="NE->RT", back_azimuth=azimuth)
         sh_trace, sv_trace, p_trace = stream_zrt.traces # T, R, Z components
-    elif source_type == 'very_local_earthquake' and lqt_mode is True:
+    elif (source_type == 'very_local_earthquake' and lqt_mode is True) or source_type == 'local_earthquake':
         trace_Z = stream.select(component='Z')[0]
         _, _, incidence_angle_p, _, _, incidence_angle_s = calculate_inc_angle(
                                                             source_coordinate,
@@ -262,27 +264,6 @@ def _rotate_stream(
         stream_lqt_s.rotate(method="ZNE->LQT", back_azimuth=azimuth, inclination=incidence_angle_s)
         _, _, p_trace = stream_lqt_p.traces # T, Q, L components
         sh_trace, sv_trace, _ = stream_lqt_s.traces # T, Q, L components
-    elif source_type == 'local_earthquake':
-        trace_Z = stream.select(component='Z')[0]
-        _, _, incidence_angle_p, _, _, incidence_angle_s = calculate_inc_angle(
-                                                            source_coordinate,
-                                                            station_coordinate,
-                                                            CONFIG.magnitude.LAYER_BOUNDARIES,
-                                                            CONFIG.magnitude.VELOCITY_VP,
-                                                            CONFIG.magnitude.VELOCITY_VS,
-                                                            source_type,
-                                                            trace_Z,
-                                                            s_p_lag_time_sec,
-                                                            p_arr_time,
-                                                            s_arr_time                                                                    
-                                                            )
-        stream_lqt_p = stream.copy()
-        stream_lqt_s = stream.copy()
-        stream_lqt_p.rotate(method="ZNE->LQT", back_azimuth=azimuth, inclination=incidence_angle_p)
-        stream_lqt_s.rotate(method="ZNE->LQT", back_azimuth=azimuth, inclination=incidence_angle_s)
-        _, _, p_trace = stream_lqt_p.traces # T, Q, L components
-        sh_trace, sv_trace, _  = stream_lqt_s.traces # T, Q, L components
-
     else:
         model = TauPyModel(model=CONFIG.magnitude.TAUP_MODEL)
         arrivals = model.get_travel_times(
