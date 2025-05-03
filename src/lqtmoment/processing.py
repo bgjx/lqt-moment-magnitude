@@ -298,10 +298,10 @@ def calculate_moment_magnitude(
     ) -> Tuple[Dict[str, str], Dict[str,List]]:
     
     """
-    Processes moment magnitude calculation for an earthquake from given
-    hypocenter dataframe and picking dataframe. This function handle the waveform instrument 
-    response removal, seismogram rotation, spectral fitting, moment magnitude calculation, and
-    figure creation. It return two dictionary objects, magnitude and fitting result.      
+    Processes moment magnitude calculation for an earthquake from given hypocenter dataframe
+    and picking dataframe. This function handle the waveform instrument  response removal,
+    seismogram rotation, spectral fitting, moment magnitude calculation, and figure creation.
+    It return two dictionary objects, magnitude and fitting result.      
 
     Args:
         wave_path (Path): Path to the directory containing waveform files.
@@ -412,12 +412,12 @@ def calculate_moment_magnitude(
 
     # Find the correct velocity and DENSITY value for the specific layer depth
     velocity_P, velocity_S, density_value = None, None, None
-    for layer, (top, bottom) in enumerate(CONFIG.magnitude.LAYER_BOUNDARIES):
+    for layer_idx, (top, bottom) in enumerate(CONFIG.magnitude.LAYER_BOUNDARIES):
         top_m, bottom_m = top * 1000, bottom * 1000
         if top_m   <= source_depth_m <= bottom_m:
-            velocity_P = CONFIG.magnitude.VELOCITY_VP[layer]*1000
-            velocity_S = CONFIG.magnitude.VELOCITY_VS[layer]*1000
-            density_value = CONFIG.magnitude.DENSITY[layer]
+            velocity_P = CONFIG.magnitude.VELOCITY_VP[layer_idx]*1000
+            velocity_S = CONFIG.magnitude.VELOCITY_VS[layer_idx]*1000
+            density_value = CONFIG.magnitude.DENSITY[layer_idx]
             break
     if velocity_P is None:
         logger.warning(f"Earthquake_{source_id}: Hypocenter depth not within the defined layers.")
