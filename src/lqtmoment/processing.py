@@ -478,7 +478,7 @@ def calculate_moment_magnitude(
             logger.warning(f"Failed to trim wave data from {station}: {e}.", exc_info=True)
             continue
         
-        # Performing resampling if specified
+        # Performing resampling if specified by the User
         if CONFIG.wave.RESAMPLE_DATA is not None:
             logger.info(f"Resampling was applied to the data to {CONFIG.wave.RESAMPLE_DATA} samples per second (sps).")
             trimmed_stream.resample(CONFIG.wave.RESAMPLE_DATA)

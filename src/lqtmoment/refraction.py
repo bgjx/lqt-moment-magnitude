@@ -220,7 +220,7 @@ def up_refract(
         try:
             take_off = brentq(_distance_error, *ANGLE_BOUNDS)
         except ValueError as e:
-            raise ValueError("Failed to find take-off angle: {e}. Check velocity model and epicentral distance")
+            raise ValueError("Failed to find take-off angle: {e}. Check velocity model and epicentral distance") from e
     else:
         if not 0 <= take_off < 90:
             raise ValueError("The take_off angle must be between 0 and 90 degrees.")
@@ -394,7 +394,7 @@ def calculate_inc_angle(
     try:
         up_ref_p, final_take_off_p = up_refract(epicentral_distance, up_model_p)
     except (RuntimeError, ValueError) as e:
-        raise ValueError(f"Failed to compute upward-refracted ray (Pg): {str(e)}")
+        raise ValueError(f"Failed to compute upward-refracted ray (Pg): {str(e)}") from e
 
     try:
         down_ref_p, down_up_ref_p = down_refract(epicentral_distance, up_model_p, down_model_p)
@@ -443,7 +443,7 @@ def calculate_inc_angle(
     try:
         up_ref_s, final_take_off_s = up_refract(epicentral_distance, up_model_s)
     except (RuntimeError, ValueError) as e:
-        raise ValueError(f"Failed to compute upward-refracted S-wave (Sg): {str(e)}")
+        raise ValueError(f"Failed to compute upward-refracted S-wave (Sg): {str(e)}") from e
     
     if up_ref_s is not None:
         last_ray_s = up_ref_s[f"take_off_{final_take_off_s}"]
@@ -595,7 +595,7 @@ def calculate_inc_angle(
                 snr_pn = _compute_snr(trace_z, arrival_time_pn, window_length, 0.75*window_length)
             except (ValueError, RuntimeError) as e:
                 logger.info(f"Local earthquake, SNR computation failed at distance {epicentral_distance/1000:.1f} km ({str(e)}),"
-                            f"defaulting to Pg, P-Incidence Angle: {upward_incidence_angle_p:.2f}°, S-Incidence Angle: {upward_incidence_angle_s:.2f}°")
+                            f"defaulting to Pg, P-Incidence Angle: {upward_incidence_angle_p:.2f}°, S-Incidence Angle: {upward_incidence_angle_s:.2f}°", exc_info=True)
                 take_off_p = take_off_upward_refract_p
                 total_tt_p = upward_refract_tt_p
                 inc_angle_p = upward_incidence_angle_p
@@ -677,7 +677,7 @@ def calculate_inc_angle(
                     )
                 except ValueError as e:
                     logger.info(f"Local earthquake, Energy computation failed at distance {epicentral_distance/1000:.1f} km ({str(e)}), "
-                          f"defaulting to Pg, P-Incidence Angle: {upward_incidence_angle_p:.2f}°, S-Incidence Angle: {upward_incidence_angle_s:.2f}°")
+                          f"defaulting to Pg, P-Incidence Angle: {upward_incidence_angle_p:.2f}°, S-Incidence Angle: {upward_incidence_angle_s:.2f}°", exc_info=True)
                     take_off_p = take_off_upward_refract_p
                     total_tt_p = upward_refract_tt_p
                     inc_angle_p = upward_incidence_angle_p
