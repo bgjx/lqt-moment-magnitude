@@ -412,14 +412,14 @@ def calculate_moment_magnitude(
     source_lat, source_lon , source_depth_m =  source_info.source_lat, source_info.source_lon, source_info.source_depth_m
     source_type = source_info.earthquake_type
     if source_type not in EARTHQUAKE_TYPE:
-        logger.error(f"Your earthquake type ({source_type}) is not in acceptable type (e.g., {EARTHQUAKE_TYPE}).")
-        raise TypeError (f"Your earthquake type ({source_type}) is not in acceptable type (e.g., {EARTHQUAKE_TYPE}).")
+        logger.error(f"Your earthquake type ({source_type}) is not in acceptable types (e.g., {EARTHQUAKE_TYPE}).")
+        raise TypeError (f"Your earthquake type ({source_type}) is not in acceptable types (e.g., {EARTHQUAKE_TYPE}).")
 
     # Find the correct velocity and DENSITY value for the specific layer depth
     velocity_P, velocity_S, density_value = None, None, None
     for layer_idx, (top, bottom) in enumerate(CONFIG.magnitude.LAYER_BOUNDARIES):
         top_m, bottom_m = top * 1000, bottom * 1000
-        if top_m   <= source_depth_m < bottom_m:
+        if top_m <= source_depth_m < bottom_m:
             velocity_P = CONFIG.magnitude.VELOCITY_VP[layer_idx]*1000
             velocity_S = CONFIG.magnitude.VELOCITY_VS[layer_idx]*1000
             density_value = CONFIG.magnitude.DENSITY[layer_idx]
@@ -474,31 +474,34 @@ def calculate_moment_magnitude(
                                            p_arr_time,
                                            CONFIG.wave.SEC_BF_P_ARR_TRIM,
                                            CONFIG.wave.SEC_AF_P_ARR_TRIM)
-                
         except ValueError as e:
             logger.warning(f"Failed to trim wave data from {station}: {e}.", exc_info=True)
             continue
         
         # Performing resampling if specified
         if CONFIG.wave.RESAMPLE_DATA is not None:
+            logger.info(f"Resampling was applied to the data to {CONFIG.wave.RESAMPLE_DATA} samples per second (sps).")
             trimmed_stream.resample(CONFIG.wave.RESAMPLE_DATA)
 
         # Perform the instrument removal
         try:
             stream_displacement = instrument_remove(
-                                        trimmed_stream,
-                                        calibration_path,
-                                        figure_path,
-                                        network_code,
-                                        pre_filter=CONFIG.wave.PRE_FILTER,
-                                        water_level=CONFIG.wave.WATER_LEVEL,
-                                        generate_figure=False)
+                                    trimmed_stream,
+                                    calibration_path,
+                                    figure_path,
+                                    network_code,
+                                    pre_filter=CONFIG.wave.PRE_FILTER,
+                                    water_level=CONFIG.wave.WATER_LEVEL,
+                                    generate_figure=False
+                                    )
         except Exception as e:
             logger.warning(f"An error occurred when correcting instrument for station {station}: {e}.", exc_info=True)
             continue
         
         # Perform post instrument removal if specified by the User
         if CONFIG.wave.APPLY_POST_INSTRUMENT_REMOVAL_FILTER:
+            logger.info(f"Post instrument removal filtering was applied to the data with F_MIN:"
+                        f"{CONFIG.wave.POST_FILTER_F_MIN} Hz, F_MAX: {CONFIG.wave.POST_FILTER_F_MAX}")
             stream_displacement.filter("bandpass", freqmin=CONFIG.wave.POST_FILTER_F_MIN, freqmax=CONFIG.wave.POST_FILTER_F_MAX, corners=4, zerophase=True)
         
         # Perform station rotation form ZNE to LQT in earthquake type dependent
