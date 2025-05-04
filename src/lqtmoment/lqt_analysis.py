@@ -1,8 +1,6 @@
 """
 Data analysis module for the lqt-moment-magnitude package.
 
-Version: 0.1.0
-
 This module provides robust data analysis tools for lqt-moment-magnitude package. It uses
 lqtmoment-formatted catalog data as input, constructs a class object from the data, and perform comprehensive
 data analysis. Beyond statistical analysis capabilities, it also offers data visualization facilitated insights 

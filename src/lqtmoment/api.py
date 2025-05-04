@@ -1,8 +1,6 @@
 """
 A public API for the lqt-moment-magnitude package.
 
-Version: 0.1.0
-
 This module provides functions to calculate seismic moment magnitude in the LQT
 component system. Users can import and use these functions in their own Python scripts.
 
