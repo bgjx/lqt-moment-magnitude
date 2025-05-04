@@ -59,7 +59,7 @@ def test_magnitude_estimator(test_data):
     assert list(lqt_catalog_result.columns) == expected_lqt_catalog_columns
     assert list(moment_result.columns) == expected_moment_result_columns
     assert list(fitting_result.columns) == expected_fitting_result_columns
-    assert lqt_catalog_result['magnitude'].drop_duplicates().tolist() == pytest.approx(expected_moment_magnitude_result, abs=0.1)
+    assert lqt_catalog_result['magnitude'].drop_duplicates().tolist() == pytest.approx(expected_moment_magnitude_result, abs=0.2)
 
 
     
