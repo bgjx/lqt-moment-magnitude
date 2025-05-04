@@ -15,6 +15,7 @@ def test_data():
     return hypo_dir, pick_dir, sta_dir
 
 def test_catalog_builder(test_data):
+    """ Unit test for catalog builder function """
     hypo_path, pick_path, sta_path = test_data
     built_dataframe = build_catalog(hypo_path, pick_path, sta_path)
     assert isinstance(built_dataframe, pd.DataFrame)
