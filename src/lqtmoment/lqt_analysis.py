@@ -128,18 +128,18 @@ class LqtAnalysis:
             raise ValueError("Longitude must be between -180 and 180")
     
 
-    def _render_figure(
-        self,
-        fig: go.Figure,
-        filename: str,
-        save_figure: bool = False
-        )-> None:
-        """ Helper function for rendering and saving the figure """
-        if save_figure:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            fig.write_image(f"LqtAnalysis_figures/{filename}_{timestamp}.png")
-        else:
-            fig.show()
+    # def _render_figure(
+    #     self,
+    #     fig: go.Figure,
+    #     filename: str,
+    #     save_figure: bool = False
+    #     )-> None:
+    #     """ Helper function for rendering and saving the figure """
+    #     if save_figure:
+    #         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    #         fig.write_image(f"LqtAnalysis_figures/{filename}_{timestamp}.png")
+    #     else:
+    #         fig.show()
     
 
     def head(self, row_number: int = 5):
@@ -377,7 +377,7 @@ class LqtAnalysis:
         return subset_df
     
 
-    def plot_histogram(
+    def plot_bar(
         self,
         column_name: str,
         bin_width: Optional[float] = None,
@@ -387,10 +387,10 @@ class LqtAnalysis:
         plot_height: int = 720,
         ) -> None:
         """
-        Plot a histogram for the specific column with manual binning.
+        Plot a bar graph for the specific column with manual binning.
 
         Args:
-            column_name (str): Name of the column to plot the histogram for.
+            column_name (str): Name of the column to plot the bar graph for.
             bin_width (Optional[float]): Determine the bin width. Defaults to None,
                                         trigger automatic binning.
             min_bin (float): Minimum bin edge. Default to None, min bin will be calculated
@@ -412,7 +412,7 @@ class LqtAnalysis:
         ``` python
             >>> df = pd.DataFrame({"magnitude": [1, 2, 2, 3]})
             >>> lqt = LqtAnalysis(df)
-            >>> lqt.plot_histogram("magnitude", bin_width=0.5)
+            >>> lqt.plot_bar("magnitude", bin_width=0.25, min_bin=-1, max_bin=5)
         ```       
         """
         # clean and validate the column data
@@ -458,7 +458,10 @@ class LqtAnalysis:
                 width=bin_width,
                 name=column_name,
                 hovertemplate="Bin_center: %{x:.3f}<br>count: %{y}<extra></extra>",
-                marker= dict(color = 'skyblue')
+                marker= dict(
+                    color = '#1F77B4',
+                    opacity = 0.8
+                    )
             )
         )
 
@@ -466,7 +469,7 @@ class LqtAnalysis:
         fig.update_layout(
             width = plot_width,
             height = plot_height,
-            title = f"Histogram of {column_name}",
+            title = f"Bar graph of {column_name}",
             xaxis_title = column_name,
             yaxis_title = "Count",
             showlegend = True,
@@ -491,6 +494,81 @@ class LqtAnalysis:
 
         return None
     
+
+    def plot_histogram(
+        self,
+        column_name: str,
+        plot_width: int = 960,
+        plot_height: int = 720,
+        ) -> None:
+        """
+        Plot a histogram for the specific column from the data.
+
+        Args:
+            column_name (str): Name of the column to plot the histogram for.
+            plot_width (int): The width of the plot. Default to 960.
+            plot_height (int): The height of the plot. Default to 720.
+        
+        Returns:
+            None
+        
+        Raises:
+            KeyError: If the column_name does not exist in the DataFrame.
+            ValueError: If no DataFrame is provided, the column is empty, or it contains no valid numeric data.
+            TypeError: If min_edge, max_edge, or bin_width are not numeric.
+
+        Examples:
+        ``` python
+            >>> df = pd.DataFrame({"magnitude": [1, 2, 2, 3]})
+            >>> lqt = LqtAnalysis(df)
+            >>> lqt.plot_histogram("magnitude")
+        ```       
+        """
+        # clean and validate the column data
+        data = self._clean_column_numeric(column_name).dropna()
+        if data.empty:
+            raise ValueError(f"No valid data available for plotting in column {column_name}")
+
+        # Create plotly figure
+        fig = px.histogram(
+            data, 
+            x=column_name,
+            opacity=0.8,
+            color_discrete_sequence=['indianred']
+        )
+
+        # Crate outline 
+        fig.update_traces(
+            marker=dict(
+                line=dict(
+                    color='white',
+                    width=0.5
+                )
+            ),
+        )
+
+        # Figure layout
+        fig.update_layout(
+            width = plot_width,
+            height = plot_height,
+            title = f"Histogram of {column_name}",
+            xaxis_title = column_name,
+            yaxis_title = "Count",
+            showlegend = True,
+            template='plotly_white',
+            legend=dict(
+                yanchor = "top",
+                y = 0.99,
+                xanchor = "right",
+                x = 0.99,             
+                bgcolor="rgba(255,255,255,0.5)"
+            )
+        )
+        
+        fig.show()
+
+        return None
+
 
     def plot_hypocenter_3d(
         self,
@@ -853,7 +931,7 @@ class LqtAnalysis:
         ``` python
             >>> df = pd.DataFrame({"magnitude": [3.0, 3.5, 4.0, 4.5, 5.0]})
             >>> lqt = LqtAnalysis(df)
-            >>> result = lqt.gutenberg_richter(bin_width=0.5)
+            >>> result = lqt.gutenberg_richter(min_magnitude=0, bin_width=0.5, plot=True)
             >>> print(result['b_value'])
         ```
         """
@@ -1087,7 +1165,7 @@ class LqtAnalysis:
             ...     "depth": [10, 12], "magnitude": [3.0, 3.5]
             ... })
             >>> lqt = LqtAnalysis(df)
-            >>> lqt.plot_intensity()
+            >>> lqt.plot_intensity(interval='monthly')
         ```  
         """
         if interval.strip().lower() not in ['yearly', 'monthly', 'weekly', 'daily', 'hourly']:
@@ -1134,7 +1212,8 @@ class LqtAnalysis:
                 name=f"Intensity",
                 x=x_values,
                 y=y_values,
-                marker_color = 'skyblue',
+                marker_color = '#FF9900',
+                opacity=0.8
             )
         )
 
