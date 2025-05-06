@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lqtmoment"
-version = "0.1.2"
+version = "0.1.3"
 description = "Compute seismic moment in LQT systems with advanced spectral fitting"
 readme = "README.md"
 authors = [{name = "Arham Zakki Edelo", email = "edelo.arham@gmail.com"}]
