@@ -1155,7 +1155,6 @@ class LqtAnalysis:
                 xanchor = "right",
                 x = 0.99,             
                 bgcolor="rgba(255,255,255,0.5)"
-                
             )
         )
 
