@@ -61,7 +61,7 @@ def calculate_source_spectrum(
     traveltime: float
     ) -> np.ndarray:
     """
-    Calculate theoretical source spectrum using Abercrombie (1995) and Boatwright (1980) model.
+    Calculate theoretical source spectrum using Abercrombie (1995) originally from Brune (1970).
     
     Args:
         frequencies (np.ndarray): Array of frequency values.
@@ -75,7 +75,7 @@ def calculate_source_spectrum(
     
     Notes:
         Model: A(f) = Ω0 * exp(-π f t / Q) / (1 + (f/f_c)^(2n))^(1/y), where n and y are configurable
-        (default n=2, y=1 per Boatwright, 1980).
+        (default n=2, y=1).
     """
     n, y  = CONFIG.spectral.N_FACTOR, CONFIG.spectral.Y_FACTOR
     num = omega_0 * np.exp(-np.pi * frequencies * traveltime / q_factor)
