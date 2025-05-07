@@ -30,7 +30,7 @@ def main(args: Optional[List[str]] = None) -> None:
     """ 
     Calculate moment magnitude in the LQT component system.
 
-    This function serves as the entry point for the LQTMwCalc command-line tool.
+    This function serves as the entry point for the lqtmoment command-line tool.
     It parses arguments, loads the seismic catalog, and initiates the moment magnitude
     calculation process.
 
