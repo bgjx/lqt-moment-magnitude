@@ -184,6 +184,7 @@ This program relies on a robust scientific foundation, that refer to following r
 * Aki, K., & Richards, P. G. (2002). Quantitative Seismology (2nd ed.). University Science Books.
 * Boore, D.M. dan Boatwright, J. (1984), "Average Body-Wave Radiation Coefficients", Bulletin of the Seismological Society of America, Vol.74, No.5, hal. 1615–1621. http://doi.org/10.1785/BSSA0740051615.
 * Brune, J. N. (1970). Tectonic stress and the spectra of seismic shear waves from earthquakes. Journal of Geophysical Research, 75(26), 4997–5009. https://doi.org/10.1029/JB075i026p04997
+* Červený, V., 2005. Seismic ray theory, First paperback version. ed. Cambridge University Press, Cambridge New York Melbourne Madrid Cape Town Singapore Sa︠o Paulo.
 * Hanks, T.C. dan Kanamori, H. (1979), "A Moment Magnitude Scale", Journal of Geophysical Research: Solid Earth, Vol.84, No.B5, hal. 2348–2350. http://doi.org/10.1029/JB084iB05p02348.
 * Havskov, J. dan Alguacil, G. (2016), Instrumentation in Earthquake Seismology, Springer International Publishing, Cham. http://doi.org/10.1007/978-3-319-21314-9.
 * Havskov, J. dan Ottemoller, L. (2010), Routine Data Processing in Earthquake Seismology, Springer Netherlands, Dordrecht. http://doi.org/10.1007/978-90-481-8697-6.
