@@ -95,7 +95,7 @@ def build_catalog(
         # Create datetime object for source_origin_time
         int_t0 = int(t0)
         microsecond = int((t0 - int_t0)*1e6)
-        source_origin_time =datetime(int(year), int(month), int(day), int(hour), int(minute), int_t0, microsecond).isoformat()
+        source_origin_time =datetime(int(year), int(month), int(day), int(hour), int(minute), int_t0, microsecond)
         for station in pick_data.get("station_code"):
             station_data = station_df[station_df.station_code == station]
             if station_data.empty:
@@ -127,15 +127,15 @@ def build_catalog(
                 microsecond_p = int((second_p - int_p_second)*1e6)
                 int_s_second = int(second_s)
                 microsecond_s = int((second_s - int_s_second)*1e6)
-                p_arr_time = datetime(year, month, day, hour_p, minute_p, int_p_second, microsecond_p).isoformat()
-                s_arr_time = datetime(year, month, day, hour_s, minute_s, int_s_second, microsecond_s).isoformat()
+                p_arr_time = datetime(year, month, day, hour_p, minute_p, int_p_second, microsecond_p)
+                s_arr_time = datetime(year, month, day, hour_s, minute_s, int_s_second, microsecond_s)
             except ValueError as e:
                 raise ValueError ("Cannot convert P and S arrival time data to datetime object, check your catalog data format.")
             
             if not pd.isna(hour_coda) and not pd.isna(minute_coda) and not pd.isna(second_coda):
                 int_coda_second = int(second_coda)
                 microsecond_coda = int((second_coda - int_coda_second)*1e6)
-                coda_time = datetime(year, month, day, hour_coda, minute_coda, int_coda_second, microsecond_coda).isoformat()
+                coda_time = datetime(year, month, day, hour_coda, minute_coda, int_coda_second, microsecond_coda)
             else:
                 coda_time = np.nan
 
@@ -157,13 +157,13 @@ def build_catalog(
                 "station_lat": station_lat,
                 "station_lon": station_lon, 
                 "station_elev_m": station_elev,
-                "source_origin_time": source_origin_time,
-                "p_arr_time": p_arr_time,
+                "source_origin_time": source_origin_time.isoformat(),
+                "p_arr_time": p_arr_time.isoformat(),
                 "p_travel_time_sec": p_travel_time,
-                "s_arr_time": s_arr_time,
+                "s_arr_time": s_arr_time.isoformat(),
                 "s_travel_time_sec": s_travel_time,
                 "s_p_lag_time_sec": s_p_lag_time,
-                "coda_time": coda_time,
+                "coda_time": coda_time.isoformat(),
                 "earthquake_type": earthquake_type,
             }
 
