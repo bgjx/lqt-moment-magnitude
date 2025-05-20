@@ -144,7 +144,7 @@ class LqtAnalysis:
 
     def head(self, row_number: int = 5):
         """
-        Return the first ten rows of the input dataframe.
+        Return the first few rows of the input dataframe.
 
         Args:
             row_number (int): The number of how many rows should be display. Default to 5.
