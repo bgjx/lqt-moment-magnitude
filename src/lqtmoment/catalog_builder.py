@@ -89,7 +89,7 @@ def build_catalog(
         if pick_data.empty:
             continue
         hypo_info = hypo_df[hypo_df.source_id == source_id].iloc[0]
-        source_lat, source_lon, source_depth_m = hypo_info.lat, hypo_info.lon, hypo_info.depth_m        
+        source_lat, source_lon, source_depth_m = hypo_info.source_lat, hypo_info.source_lon, hypo_info.source_depth_m        
         year, month, day, hour, minute, t0 = hypo_info.year, hypo_info.month, hypo_info.day, hypo_info.hour, hypo_info.minute, hypo_info.t_0
 
         # Create datetime object for source_origin_time
@@ -102,7 +102,7 @@ def build_catalog(
                 continue
             station_info = station_data.iloc[0]
             network_code, station_code = station_info.network_code, station_info.station_code
-            station_lat, station_lon, station_elev = station_info.lat, station_info.lon, station_info.elev_m
+            station_lat, station_lon, station_elev = station_info.station_lat, station_info.station_lon, station_info.station_elev_m
             
             # cek earthquake distance to determine earthquake type
             epicentral_distance, _, _ = gps2dist_azimuth(source_lat, source_lon, station_lat, station_lon)

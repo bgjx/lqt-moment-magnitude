@@ -21,6 +21,7 @@ from enum import Enum
 from datetime import datetime
 from obspy.geodetics import gps2dist_azimuth
 
+
 from .utils import load_data
 
 class Statistic(Enum):
