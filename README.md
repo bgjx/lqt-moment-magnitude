@@ -62,6 +62,7 @@ Contact the developer: Arham Zakki Edelo (edelo.arham@gmail.com)
 * [References](#References)
 * [Contributing](#Contributing)
 * [Report Bugs](#Report-Bugs)
+* [Support](#Support)
 
 --------------
 ### Installation
