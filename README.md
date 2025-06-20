@@ -251,4 +251,4 @@ If you are willing to support this project, you also can donate using the follow
         <br>
     <div>
 
-For fiat donations, please use [GitHub Sponsors](https://github.com/sponsors/bgjx).
+- For fiat donations, please use [GitHub Sponsors](https://github.com/sponsors/bgjx).
