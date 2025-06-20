@@ -237,8 +237,11 @@ Your contributions is crucial for improving the tool!
 If you are willing to support this project, you also can donate using the following cryptocurrency addresses:
 
 - **Bitcoin (BTC)**: `bc1q57uun0dxct4lzk96p3htgcxumm5s97rk2xjdt2`
-![bitcoin-qr](docs/wallet_address/btc_qr_address.png)
+  <br>
+  <img src="docs/wallet_address/btc_qr_address.png" alt="Bitcoin QR Code" width="150" align="left">
+
 - **Ethereum (ETH)**: `0x341f9913d0A998bEFbd127823457977d70C0B201`
-![eth-qr](docs/wallet_address/eth_qr_address.png)
+  <br>
+  <img src="docs/wallet_address/eth_qr_address.png" alt="Ethereum QR Code" width="150" align="left">
 
 For fiat donations, please use [GitHub Sponsors](https://github.com/sponsors/bgjx).
