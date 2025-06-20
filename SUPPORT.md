@@ -1,6 +1,4 @@
-## Support
-
-# Support
+# Support 
 
 Thank you for supporting this project! You can donate using the following cryptocurrency addresses:
 
