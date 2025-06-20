@@ -243,7 +243,7 @@ If you are willing to support this project, you also can donate using the follow
 
 - **Ethereum (ETH)**: `0x341f9913d0A998bEFbd127823457977d70C0B201`
     <div align='left'>
-        <img src="docs/wallet_address/eth_qr_address.png" alt="Ethereum QR Code" width="150" align="left">
+        <img src="docs/wallet_address/eth_qr_address.png" alt="Ethereum QR Code" width="150">
     </div>
 
 - For fiat donations, please use [GitHub Sponsors](https://github.com/sponsors/bgjx).
