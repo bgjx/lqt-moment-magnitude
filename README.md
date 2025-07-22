@@ -10,9 +10,9 @@
 
 ## What is it?
 
-**lqtmoment** is python package designed for moment magnitude calculations using pure P, SV, and SH components in the LQT ray coordinate system. It leverages rapid ray tracing to compute incidence angles for component rotation and employs fast spectral fitting to find optimal solution, ensuring high accuracy and efficient automated computation.
+**lqtmoment** is a Python package designed for moment magnitude calculations using pure P, SV, and SH components in the LQT ray coordinate system. It leverages rapid ray tracing to compute incidence angles for component rotation and employs fast spectral fitting to find an optimal seismic moment solution, ensuring high accuracy and efficient automated computation.
 
-By leveraging vectorized computing and advanced statistical methods—such as in implementing Shooting Snell’s Method for incidence angle estimation and Quasi-Monte Carlo techniques for spectral fitting—lqtmoment excels at calculating moment magnitudes for batches of earthquakes, handling hundreds to thousands of events in a single run.
+By leveraging vectorized computing and advanced statistical methods, such as in implementing Shooting Snell’s Method for incidence angle estimation and Quasi-Monte Carlo techniques for spectral fitting, lqtmoment excels at calculating moment magnitudes for batches of earthquakes, handling hundreds to thousands of events in a single run.
 
 --------------
 ### **Lqtmoment Test with Real Data**
