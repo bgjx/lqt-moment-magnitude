@@ -23,6 +23,13 @@ dependencies = [
     "plotly>=5.20.0",
     "pydantic"
 ]
+
+[project.optional-dependencies]
+testing = [
+  "pytest",
+  "ruff"
+]
+
 optional-dependencies.tests = ["pytest>=8.0.0"]
 requires-python = ">=3.9"
 classifiers = [
