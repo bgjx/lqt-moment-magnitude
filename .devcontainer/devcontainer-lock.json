@@ -1,0 +1,9 @@
+{
+  "features": {
+    "ghcr.io/devcontainers-extra/features/starship:1": {
+      "version": "1.0.10",
+      "resolved": "ghcr.io/devcontainers-extra/features/starship@sha256:3184b569f58b9106a27fff1e76566f2ac7a03835c3bc01b0853566b8503b2b54",
+      "integrity": "sha256:3184b569f58b9106a27fff1e76566f2ac7a03835c3bc01b0853566b8503b2b54"
+    }
+  }
+}
