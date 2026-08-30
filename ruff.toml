@@ -1,0 +1,65 @@
+# Exclude ignored directories.
+exclude = [
+    ".eggs",
+    ".ipynb_checkpoints",
+    ".tox",
+    "build",
+    "dist",
+    "docs/conf.py",
+    "notebooks",
+    "__pycache__",
+    ".git",
+    "venv",
+    "env",
+    ".venv",
+    ".env",
+    "*.egg-info",
+]
+
+line-length = 88
+fix = true
+
+[lint]
+select = [
+    "F",     # Pyflakes
+    "E",     # pycodestyle errors
+    "W",     # pycodestyle warnings
+    "I",     # isort
+    "B",     # flake8-bugbear
+    "Q",     # flake8-quotes
+    "T10",   # flake8-debugger
+    "LOG",   # flake8-logging
+    "PL",    # PyLint
+    "PT",    # flake8-pytest-style
+    "PIE",   # flake8-pie
+    "TID",   # flake8-tidy-imports
+    "ISC",   # flake8-implicit-str-concat
+    "TCH",   # flake8-type-checking
+    "C4",    # flake8-comprehensions
+    "RUF",   # Ruff specific rules
+    "UP",    # pyupgrade
+    "PERF",  # Perflint performance anti-patterns
+    "SIM",   # flake8-simplify
+    "ARG",   # flake8-unused-arguments
+]
+
+ignore = [
+    # Intentional ignores
+    "ISC001", # Implicit string concatenation (handled by formatter)
+    "E501",   # Line length (handled by formatter)
+    "W292",   # Blank line at end of file
+    
+    # To be enabled in future
+    "PLR2004", # Magic value comparisons
+    "PLR0913", # Too many arguments
+    "PLR0911", # Too many return statements
+    "PLW1508", # Invalid environment variable default
+    "C901",    # Function complexity
+]
+
+[lint.per-file-ignores]
+# Allow print statements and assertions in notebooks
+"lqt-tutorials/*.ipynb" = ["T201", "T203"]
+# Allow magic numbers and additional complexity in tests
+"tests/*.py" = ["PLR2004", "PLR0913", "PLR0911", "E501"]
+
