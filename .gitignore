@@ -1,18 +1,62 @@
-# Development Environment
-.venv
-
-# Testing cache
-.pytest_cache/
+# Temporary and binary files
+*~
+*.py[cod]
+*.so
+*.cfg
+!setup.cfg
+*.orig
 *.log
+*.pot
+__pycache__/*
+.cache/*
+.*.swp
+*/.ipynb_checkpoints/*
+.DS_Store
 
-# python cache files
-__pycache__/
-*.pyc
+# Project files
+.ropeproject
+.project
+.pydevproject
+.settings
+.idea
+.vscode
+tags
 
-# Build and distribution files
-dist/
-build/
-*.egg-info/
+# Package files
+*.egg
+*.eggs/
+.installed.cfg
+*.egg-info
 
-# Pypi token
-.pypirc
+# Unittest and coverage
+htmlcov/*
+.coverage
+.coverage.*
+.tox
+junit*.xml
+coverage.xml
+.pytest_cache/
+.ruff_cache/
+
+# local env files
+.env
+.env.local
+.env.*.local
+
+# Build and docs folder/files
+build/*
+dist/*
+sdist/*
+docs/api/*
+docs/_rst/*
+docs/_build/*
+site/*
+cover/*
+MANIFEST
+
+# Per-project virtualenvs
+.venv*/
+.conda*/
+
+# PR review outputs
+.reviews/
