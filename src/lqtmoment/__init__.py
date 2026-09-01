@@ -1,9 +1,10 @@
 """
-lqtmoment: A Python package for calculating moment magnitude using full P, SV, and SH energy components.
+A Python package for calculating moment magnitude using full P, SV, and SH energy.
 
-This package computes moment magnitude using full P, SV, and SH energy components, with support for
-seismic data processing, ray tracing in a 1-D velocity model, and rapid spectral fitting via advanced
-stochastic methods. It is designed for seismologists and researchers analyzing earthquake data.
+This package computes moment magnitude using full P, SV, and SH energy components, with
+support for seismic data processing, ray tracing in a 1-D velocity model, and rapid
+spectral fitting via advanced stochastic methods. It is designed for seismologists and
+researchers analyzing earthquake data.
 
 Dependencies:
     - See `pyproject.toml` or `pip install lqtmoment` for required packages.
@@ -48,11 +49,12 @@ __all__ = [
     "main",
     "read_waveforms",
     "reload_configuration",
-    ]
+]
 
 # Package metadata
 try:
     from importlib.metadata import version
+
     __version__ = version("lqtmoment")
 except ImportError:
     __version__ = "0.1.0"
