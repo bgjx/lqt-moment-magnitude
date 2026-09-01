@@ -6,12 +6,16 @@ with open("README.md", encoding="utf-8") as fh:
 setup(
     name="lqtmoment",
     version="0.1.0",
-    author= "Arham Zakki Edelo",
-    author_email= "edelo.arham@gmail.com",
-    description= "Rapid seismic moment magnitude calculation using advanced stochastic spectral fitting method in LQT components for very-local to teleseismic earthquakes",
-    long_description= long_description,
+    author="Arham Zakki Edelo",
+    author_email="edelo.arham@gmail.com",
+    description=(
+        "Rapid seismic moment magnitude calculation using advanced "
+        "stochastic spectral fitting method in LQT components for very-local to "
+        "teleseismic earthquakes"
+    ),
+    long_description=long_description,
     long_description_content_type="text/markdown",
-    url = "https://github.com/bgjx/lqt-moment-magnitude",
+    url="https://github.com/bgjx/lqt-moment-magnitude",
     license="MIT",
     keywords="Seismology, Moment Magnitude, Spectral Fitting, LQT Component",
     packages=find_packages(where="src"),
@@ -33,10 +37,10 @@ setup(
     entry_points={
         "console_scripts": [
             "LQTMagnitude = lqt_moment_magnitude.main:main",
-            "LQTCatBuild = lqt_moment_magnitude.catalog_builder:main"
+            "LQTCatBuild = lqt_moment_magnitude.catalog_builder:main",
         ]
     },
-    python_requires = ">=3.8",
+    python_requires=">=3.8",
     classifiers=[
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.8",
@@ -48,7 +52,7 @@ setup(
         "Topic:: Scientific/Engineering :: Physics",
         "Topic:: Scientific/Engineering :: Geophysics",
         "Intended Audience :: Science/Research",
-        "Development Status :: 4 - Beta"
+        "Development Status :: 4 - Beta",
     ],
     include_package_data=True,
 )
