@@ -17,7 +17,7 @@ exclude = [
 ]
 
 line-length = 88
-fix = true
+fix = false
 
 [lint]
 select = [
@@ -46,15 +46,14 @@ select = [
 ignore = [
     # Intentional ignores
     "ISC001", # Implicit string concatenation (handled by formatter)
-    "E501",   # Line length (handled by formatter)
-    "W292",   # Blank line at end of file
-    
+
     # To be enabled in future
     "PLR2004", # Magic value comparisons
     "PLR0913", # Too many arguments
     "PLR0911", # Too many return statements
     "PLW1508", # Invalid environment variable default
     "C901",    # Function complexity
+    "PLR0917", # Enforces number of input parameters, simplifies function complexity
 ]
 
 [lint.per-file-ignores]
