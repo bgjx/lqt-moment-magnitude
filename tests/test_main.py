@@ -1,10 +1,12 @@
-""" Unit test for main.py """
+"""Unit test for main.py"""
 
 import pytest
+
 from lqtmoment import main
 
+
 def test_main_help(capsys):
-    """ Test main() handles help. """
+    """Test main() handles help."""
     with pytest.raises(SystemExit) as exc:
         main(["--help"])
     assert exc.value.code == 0
@@ -13,7 +15,7 @@ def test_main_help(capsys):
 
 
 def test_main_invalid_args(capsys):
-    """ Test main() rejects invalid args."""
+    """Test main() rejects invalid args."""
     with pytest.raises(SystemExit) as exc:
         main(["--nonsense"])
     assert exc.value.code != 0
