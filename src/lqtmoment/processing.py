@@ -490,7 +490,6 @@ def _process_station_data(
             azimuth,
             s_p_lag_time_sec,
             p_arr_time,
-            s_arr_time,
             lqt_mode,
         )
         (
@@ -861,7 +860,6 @@ def _rotate_stream(
     azimuth: float,
     s_p_lag_time_sec: float,
     p_arr_time: UTCDateTime,
-    s_arr_time: UTCDateTime,
     lqt_mode: bool,
 ) -> Stream:
     """
@@ -875,7 +873,6 @@ def _rotate_stream(
         azimuth (float): Azimuth from source to station in degrees.
         s_p_lag_time_sec (float): S-P lag time in seconds.
         p_arr_time (UTCDateTime): P arrival time.
-        s_arr_time (UTCDateTime): S arrival time.
         lqt_mode (bool): Use LQT rotation if True, ZRT if False.
 
     Returns:
