@@ -110,7 +110,7 @@ class LqtAnalysis:
             subset="source_id"
         )[column_name]
 
-        if not np.issubdtype(column_series.dtype, np.number):
+        if not pd.api.types.is_numeric_dtype(column_series.dtype):
             column_series = pd.to_numeric(column_series, errors="coerce")
 
         if column_series.isna().all():
