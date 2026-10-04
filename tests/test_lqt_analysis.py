@@ -205,67 +205,63 @@ def test_data():
     return pd.DataFrame(data_dict)
 
 
-def test_class(test_data):
-    """Test LqtAnalysis instantiation with valid data."""
-    data = LqtAnalysis(test_data)
-    assert isinstance(data, LqtAnalysis)
+class TestLqtAnalysis:
+    def test_class(self, test_data):
+        """Test LqtAnalysis instantiation with valid data."""
+        data = LqtAnalysis(test_data)
+        assert isinstance(data, LqtAnalysis)
 
+    def test_statistic_mean(self, test_data):
+        """Test compute_statistic for mean."""
+        data = LqtAnalysis(test_data)
+        expected_mean = 0.999
+        assert data.compute_statistic("magnitude", Statistic.MEAN) == pytest.approx(
+            expected_mean, rel=1e-5
+        )
 
-def test_statistic_mean(test_data):
-    """Test compute_statistic for mean."""
-    data = LqtAnalysis(test_data)
-    expected_mean = 0.999
-    assert data.compute_statistic("magnitude", Statistic.MEAN) == pytest.approx(
-        expected_mean, rel=1e-5
-    )
+    def test_statistic_median(self, test_data):
+        """Test compute_statistic for median."""
+        data = LqtAnalysis(test_data)
+        expected_median = 0.835
+        assert data.compute_statistic("magnitude", Statistic.MEDIAN) == pytest.approx(
+            expected_median, rel=1e-5
+        )
 
+    def test_statistic_std(self, test_data):
+        """Test compute_statistic for standard deviation."""
+        data = LqtAnalysis(test_data)
+        expected_std = 0.827868
+        assert data.compute_statistic("magnitude", Statistic.STD) == pytest.approx(
+            expected_std, rel=1e-5
+        )
 
-def test_statistic_median(test_data):
-    """Test compute_statistic for median."""
-    data = LqtAnalysis(test_data)
-    expected_median = 0.835
-    assert data.compute_statistic("magnitude", Statistic.MEDIAN) == pytest.approx(
-        expected_median, rel=1e-5
-    )
+    def test_with_invalid_column_name(self, test_data):
+        """Test with invalid column name."""
+        data = LqtAnalysis(test_data)
+        with pytest.raises(
+            KeyError, match="Column invalid does not exist in the DataFrame"
+        ):
+            data.compute_statistic("invalid", Statistic.MEAN)
 
+    def test_empty_dataframe(self):
+        """Test with empty DataFrame."""
+        with pytest.raises(ValueError, match="DataFrame cannot be empty"):
+            LqtAnalysis(pd.DataFrame())
 
-def test_statistic_std(test_data):
-    """Test compute_statistic for standard deviation."""
-    data = LqtAnalysis(test_data)
-    expected_std = 0.827868
-    assert data.compute_statistic("magnitude", Statistic.STD) == pytest.approx(
-        expected_std, rel=1e-5
-    )
+    def test_missing_source_id_column(self):
+        """Test if DataFrame does not have 'source_id' column"""
+        data = pd.DataFrame(
+            {"magnitude": [1.0, 2.0], "lat": [38.0, 38.1], "lon": [126.0, 126.1]}
+        )
+        with pytest.raises(
+            ValueError, match="DataFrame must contain a 'source_id' column"
+        ):
+            LqtAnalysis(data)
 
-
-def test_with_invalid_column_name(test_data):
-    """Test with invalid column name."""
-    data = LqtAnalysis(test_data)
-    with pytest.raises(
-        KeyError, match="Column invalid does not exist in the DataFrame"
-    ):
-        data.compute_statistic("invalid", Statistic.MEAN)
-
-
-def test_empty_dataframe():
-    """Test with empty DataFrame."""
-    with pytest.raises(ValueError, match="DataFrame cannot be empty"):
-        LqtAnalysis(pd.DataFrame())
-
-
-def test_missing_source_id_column():
-    """Test if DataFrame does not have 'source_id' column"""
-    data = pd.DataFrame(
-        {"magnitude": [1.0, 2.0], "lat": [38.0, 38.1], "lon": [126.0, 126.1]}
-    )
-    with pytest.raises(ValueError, match="DataFrame must contain a 'source_id' column"):
-        LqtAnalysis(data)
-
-
-def test_non_numeric_column(test_data):
-    "Test statistic computation with non numeric column"
-    data = LqtAnalysis(test_data)
-    with pytest.raises(
-        ValueError, match="Column remarks contains no valid numeric data"
-    ):
-        data.compute_statistic("remarks", Statistic.MEDIAN)
+    def test_non_numeric_column(self, test_data):
+        """Test statistic computation with non numeric column"""
+        data = LqtAnalysis(test_data)
+        with pytest.raises(
+            ValueError, match="Column remarks contains no valid numeric data"
+        ):
+            data.compute_statistic("remarks", Statistic.MEDIAN)

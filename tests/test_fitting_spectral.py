@@ -17,17 +17,19 @@ def sample_spectrum():
     return freq, spectrum
 
 
-def test_fit_spectrum(sample_spectrum):
-    freq, spectrum = sample_spectrum
-    omega_0, q_factor, f_c, _, _, _ = fit_spectrum_qmc(
-        freq,
-        spectrum,
-        1.75,
-        CONFIG.spectral.F_MIN,
-        CONFIG.spectral.F_MAX,
-        CONFIG.spectral.DEFAULT_N_SAMPLES,
-    )
-    assert isinstance(omega_0, float)
-    assert isinstance(q_factor, float)
-    assert isinstance(f_c, float)
-    assert 7 < f_c < 60
+class TestFittingSpectral:
+    def test_fit_spectrum(self, sample_spectrum):
+        """Test the fit_spectrum_qmc function with sample spectrum."""
+        freq, spectrum = sample_spectrum
+        omega_0, q_factor, f_c, _, _, _ = fit_spectrum_qmc(
+            freq,
+            spectrum,
+            1.75,
+            CONFIG.spectral.F_MIN,
+            CONFIG.spectral.F_MAX,
+            CONFIG.spectral.DEFAULT_N_SAMPLES,
+        )
+        assert isinstance(omega_0, float)
+        assert isinstance(q_factor, float)
+        assert isinstance(f_c, float)
+        assert 7 < f_c < 60

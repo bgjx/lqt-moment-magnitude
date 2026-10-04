@@ -2,17 +2,7 @@
 
 from typing import ClassVar
 
-import matplotlib.pyplot as plt
-import pytest
-
 from lqtmoment.plotting import plot_rays
-
-
-@pytest.fixture(autouse=True)
-def cleanup_figures():
-    """Auto-cleanup all matplotlib figures after each test."""
-    yield
-    plt.close("all")
 
 
 class TestPlotting:

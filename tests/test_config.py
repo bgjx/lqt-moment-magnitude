@@ -1,13 +1,17 @@
 """Unit test for checking data integrity of parameters built by config.py"""
 
+from typing import ClassVar
+
 from lqtmoment.config import CONFIG
 
 
-def test_wave_params():
-    """Check few default wave parameters in package default config.ini"""
+class TestConfig:
+    def test_wave_params(self):
+        """Check few default wave parameters in package default config.ini"""
+
     expected_snr = 2
     expected_water_level = 60
-    expected_pre_filter = [0.001, 0.005, 55, 60]
+    expected_pre_filter: ClassVar[list] = [0.001, 0.005, 55, 60]
     expected_post_filter_statement = True
     expected_post_filter_f_min = 0.01
     expected_post_filter_f_max = 30
@@ -41,9 +45,9 @@ def test_wave_params():
     assert expected_noise_duration == CONFIG.wave.NOISE_DURATION
     assert expected_noise_padding == CONFIG.wave.NOISE_PADDING
 
+    def test_magnitude_params(self):
+        """Check few default magnitude parameters in package default config.ini"""
 
-def test_magnitude_params():
-    """Check few default magnitude parameters in package default config.ini"""
     expected_r_pattern_p = 0.52
     expected_r_pattern_s = 0.63
     expected_free_surface = 2.0
@@ -51,8 +55,8 @@ def test_magnitude_params():
     expected_k_s = 0.21
     expected_mw_constant = 6.07
     expected_taup_model = "iasp91"
-    expected_velocity_vp = [3.82, 4.50, 4.60, 6.20, 8.00]
-    expected_velocity_vs = [2.30, 2.53, 2.53, 3.44, 4.44]
+    expected_velocity_vp: ClassVar[list] = [3.82, 4.50, 4.60, 6.20, 8.00]
+    expected_velocity_vs: ClassVar[list] = [2.30, 2.53, 2.53, 3.44, 4.44]
     assert expected_r_pattern_p == CONFIG.magnitude.R_PATTERN_P
     assert expected_r_pattern_s == CONFIG.magnitude.R_PATTERN_S
     assert expected_free_surface == CONFIG.magnitude.FREE_SURFACE_FACTOR
@@ -63,9 +67,9 @@ def test_magnitude_params():
     assert expected_velocity_vp == CONFIG.magnitude.VELOCITY_VP
     assert expected_velocity_vs == CONFIG.magnitude.VELOCITY_VS
 
+    def test_spectral_params(self):
+        """Check few default spectral parameters in package default config.ini"""
 
-def test_spectral_params():
-    """Check few default spectral parameters in package default config.ini"""
     expected_smooth_window = 3
     expected_f_min = 0.01
     expected_f_max = 30
@@ -83,8 +87,7 @@ def test_spectral_params():
     assert expected_q_max == CONFIG.spectral.Q_RANGE_MAX
     assert expected_n_samples == CONFIG.spectral.DEFAULT_N_SAMPLES
 
-
-def test_performance_params():
-    """Check few default performance parameters in package default config.ini"""
-    expected_logging_level = "INFO"
-    assert expected_logging_level == CONFIG.performance.LOGGING_LEVEL
+    def test_performance_params(self):
+        """Check few default performance parameters in package default config.ini"""
+        expected_logging_level = "INFO"
+        assert expected_logging_level == CONFIG.performance.LOGGING_LEVEL
