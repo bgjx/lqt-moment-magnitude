@@ -902,7 +902,6 @@ def _rotate_stream(
             trace_Z,
             s_p_lag_time_sec,
             p_arr_time,
-            s_arr_time,
         )
         stream_lqt_p = stream.copy()
         stream_lqt_s = stream.copy()
