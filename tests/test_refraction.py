@@ -1,5 +1,6 @@
 """Unit test for refraction.py"""
 
+import matplotlib.pyplot as plt
 import pytest
 
 from lqtmoment.refraction import (
@@ -9,6 +10,13 @@ from lqtmoment.refraction import (
     up_refract,
     upward_model,
 )
+
+
+@pytest.fixture(autouse=True)
+def cleanup_figures():
+    """Close all matplotlib figures after each test."""
+    yield
+    plt.close("all")
 
 
 @pytest.fixture
@@ -99,11 +107,11 @@ def test_calculate_inc_ange(test_data, tmp_path):
     figure_path.mkdir()
     take_off_p, total_tt_p, inc_angle_p, take_off_s, total_tt_s, inc_angle_s = (
         calculate_inc_angle(
-            hypo,
-            station,
-            boundaries,
-            velocity_p,
-            velocity_s=None,
+            hypo=hypo,
+            station=station,
+            model=boundaries,
+            velocities_p=velocity_p,
+            velocities_s=None,
             source_type="very_local_earthquake",
             generate_figure=True,
             figure_path=str(figure_path),
