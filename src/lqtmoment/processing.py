@@ -1008,7 +1008,6 @@ def calculate_moment_magnitude(
             source_id,
             source_origin_time,
             source_coordinate,
-            [source_lat, source_lon, source_depth_m],
             velocity_P,
             velocity_S,
             density_value,
