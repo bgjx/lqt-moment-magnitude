@@ -1373,7 +1373,7 @@ testing = [
 requires-dist = [
     { name = "configparser", specifier = ">=5.0.0" },
     { name = "matplotlib", specifier = ">=3.5.0" },
-    { name = "numpy", specifier = ">=1.21.0,<2.0" },
+    { name = "numpy", specifier = ">=1.21.0" },
     { name = "obspy", specifier = ">=1.3.0" },
     { name = "openpyxl", specifier = ">=3.0.0" },
     { name = "pandas", specifier = ">=1.5.0" },
