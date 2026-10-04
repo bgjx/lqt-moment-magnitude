@@ -1,28 +1,28 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel", "build>=1.0.0"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
 
 [project]
 name = "lqtmoment"
-version = "0.1.4"
+dynamic = ["version"]
 description = "Compute seismic moment in LQT systems with advanced spectral fitting"
 readme = "README.md"
 authors = [{name = "Arham Zakki Edelo", email = "edelo.arham@gmail.com"}]
-license = { file = "LICENSE" }
+license-files = ["LICENSE"]
 keywords = ["Seismology", "Moment Magnitude", "Spectral Fitting", "LQT Component", "Earthquake", "Geophysics"]
 dependencies = [
-    "numpy>=1.21.0, <2.0",
-    "pandas>=1.5.0",
-    "matplotlib>=3.5.0",
-    "scipy>=1.5.0",
-    "scikit-optimize>=0.10.0",
-    "obspy>=1.3.0",
-    "tqdm>=4.60.0",
-    "configparser>=5.0.0",
-    "openpyxl>=3.0.0",
-    "plotly>=5.20.0"
+    "numpy",
+    "pandas",
+    "matplotlib",
+    "scipy",
+    "scikit-optimize",
+    "obspy",
+    "tqdm",
+    "configparser",
+    "openpyxl",
+    "plotly"
 ]
-optional-dependencies.tests = ["pytest>=8.0.0"]
+optional-dependencies.testing = ["pytest", "pytest-cov", "ruff"]
 requires-python = ">=3.9"
 classifiers = [
     "Programming Language :: Python :: 3.9",
@@ -47,10 +47,20 @@ BugTracker = "https://github.com/bgjx/lqt-moment-magnitude/issues"
 lqtmoment = "lqtmoment.main:main"
 lqtcatalog = "lqtmoment.catalog_builder:main"
 
-[tool.setuptools]
-package-dir = {"" = "src"}
-packages = ["lqtmoment"]
-include-package-data = true
+[tool.hatch.version]
+source = "vcs"
 
-[tool.setuptools.package-data]
-"lqtmoment" = ["data/*"]
+[tool.hatch.build.targets.wheel]
+packages = ["src/lqtmoment"]
+
+[tool.uv]
+# the devcontainer bind-mounts the project dir over a different filesystem than
+# uv's cache, so hardlinking/reflinking across that boundary isn't reliable
+link-mode = "copy"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--cov=lqtmoment --cov-report=term-missing"
+
+[tool.ruff]
+target-version = "py39"

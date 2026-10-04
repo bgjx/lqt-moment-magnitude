@@ -1,0 +1,6 @@
+services:
+  package:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: lqtmoment-dev:latest
