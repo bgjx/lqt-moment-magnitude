@@ -440,7 +440,7 @@ class Config:
         except ValueError as e:
             raise ValueError(f"Invalid format for {key} in config.ini: {e}") from e
 
-    def load_from_file(self, config_file: str | None) -> None:
+    def load_from_file(self, config_file: str | None = None) -> None:
         """
         Load configuration from an INI file, with fallback to defaults.
 
