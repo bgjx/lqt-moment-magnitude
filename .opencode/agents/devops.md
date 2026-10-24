@@ -52,7 +52,7 @@ You are the DevOps engineer for `lqtmoment` (repo `bgjx/lqt-moment-magnitude`). 
 
 - The shell has an invalid `GITHUB_TOKEN`. Always run `gh` as `env -u GITHUB_TOKEN gh ...` so the stored `bgjx` login is used.
 - Python tooling lives only in the devcontainer. Run checks as `docker exec -w /lqt-moment-magnitude lqt-moment-magnitude-package-1 uv run <cmd>`.
-- Base branches: `main` is release, `dev` is integration. Confirm the target base with the user if it is not obvious.
+- Base branches: `main` is release, `dev` is integration. **Default PR base is `dev`** unless the user names another branch. Never default to `main`. For stacks, use `--base dev` (or `gh stack init --base dev`) so the bottom layer targets `dev`.
 
 ## Responsibilities
 
