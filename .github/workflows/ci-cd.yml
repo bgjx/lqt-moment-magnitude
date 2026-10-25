@@ -2,22 +2,28 @@ name: CI/CD - Test and Publish lqtmoment
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "**" ]
     tags: ["v*.*.*"]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   test:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
 
     steps:
     - uses: actions/checkout@v3
       name: Check out repository
+      with:
+        fetch-depth: 0  # hatch-vcs needs full history/tags to derive the version
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
@@ -27,13 +33,16 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -e . 
+        pip install -e ".[testing]"
         pip install build
-        pip install pytest 
+    
+    - name: Run Ruff
+      run: |
+        ruff check .
 
     - name: Run tests
       run: |
-        pytest tests/ -v
+        pytest
 
   publish-pypi:
     needs: test
@@ -43,6 +52,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         name: Check out repository
+        with:
+          fetch-depth: 0  # hatch-vcs needs full history/tags to derive the version
       
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -72,6 +83,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         name: Check out repository
+        with:
+          fetch-depth: 0  # conda-build's GIT_DESCRIBE_TAG needs full history/tags too
       
       - name: Set up Conda
         uses: conda-incubator/setup-miniconda@v3

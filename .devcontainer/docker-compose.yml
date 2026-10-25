@@ -1,0 +1,5 @@
+services:
+  package:
+    volumes:
+      - ./:/lqt-moment-magnitude
+    command: tail -f /dev/null

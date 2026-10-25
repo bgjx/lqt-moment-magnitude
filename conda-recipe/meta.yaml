@@ -1,6 +1,8 @@
+{% set version = (GIT_DESCRIBE_TAG | default("v0.0.0")) | replace("v", "") %}
+
 package:
   name: lqtmoment
-  version: "0.1.4"
+  version: "{{ version }}"
 
 source:
   path: .. 
@@ -16,8 +18,8 @@ requirements:
   host:
     - python >=3.9
     - pip
-    - setuptools >=61.0
-    - wheel
+    - hatchling
+    - hatch-vcs
   run:
     - python >=3.9
     - numpy >=1.21.0,<2.0

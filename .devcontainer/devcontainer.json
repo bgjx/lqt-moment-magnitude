@@ -1,0 +1,56 @@
+{
+	"name": "Docker Compose",
+	// Update the 'dockerComposeFile' list if you have more compose files or use different names.
+	// The .devcontainer/docker-compose.yml file contains any overrides you need/want to make.
+	"dockerComposeFile": [
+		"../docker-compose.yml",
+		"docker-compose.yml"
+	],
+	// The 'service' property is the name of the service for the container that VS Code should
+	// use. Update this value and .devcontainer/docker-compose.yml to the real service name.
+	"service": "package",
+	// The optional 'workspaceFolder' property is the path VS Code should open by default when
+	// connected. This is typically a file mount in .devcontainer/docker-compose.yml
+	"workspaceFolder": "/lqt-moment-magnitude",
+	"features": {
+		"ghcr.io/devcontainers-extra/features/starship:1": {}
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-python.python",
+				"ms-python.vscode-pylance",
+				"ms-python.debugpy",
+				"charliermarsh.ruff",
+				"ms-toolsai.jupyter",
+				"tamasfe.even-better-toml",
+				"usernamehw.errorlens",
+				"eamodio.gitlens",
+				"njpwerner.autodocstring"
+			],
+			"settings": {
+				"window.title": "${dirty}lqt-moment-magnitude${separator}${rootName}${separator}${appName}",
+				"python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python",
+				"[python]": {
+					"editor.formatOnSave": true,
+					"editor.codeActionsOnSave": {
+						"source.fixAll": "explicit",
+						"source.organizeImports": "explicit"
+					},
+					"editor.defaultFormatter": "charliermarsh.ruff"
+				},
+				"python.testing.pytestArgs": [
+					"tests"
+				],
+				"python.testing.unittestEnabled": false,
+				"python.testing.pytestEnabled": true,
+				"notebook.formatOnSave.enabled": true,
+				"notebook.codeActionsOnSave": {
+					"notebook.source.fixAll": "explicit",
+					"notebook.source.organizeImports": "explicit"
+				}
+			}
+		}
+	},
+	"postCreateCommand": "bash .devcontainer/postCreateCommand.sh"
+}
